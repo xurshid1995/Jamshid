@@ -4538,12 +4538,9 @@ def create_sale():
         if multi_location:
             for item in items:
                 if (not item.get('location_id') or not item.get('location_type')):
-                    error_msg = (f'Mahsulot "{item.get("name", "noma\'lum")}" '
-                                 f'uchun joylashuv ma\'lumoti yo\'q')
-                    return jsonify({
-                        'success': False,
-                        'error': error_msg
-                    }), 400
+                    product_name = item.get("name", "noma'lum")
+                    error_msg = f'Mahsulot "{product_name}" uchun joylashuv ma\'lumoti yo\'q'
+                    return jsonify({'success': False, 'error': error_msg}), 400
         else:
             # Eski rejim - bitta joylashuv
             location_id = data.get('location_id')
