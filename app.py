@@ -7025,7 +7025,7 @@ def dashboard():
 @app.route('/api/stock-check-session/save', methods=['POST'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def save_stock_check_session():
-    """Stock checking session holatini saqlash"""
+    """Stock checking session holatini saqlash (deprecated - heartbeat ishlatiladi)"""
     try:
         user_id = session.get('user_id')
         print(f"🔐 SESSION SAVE - User ID: {user_id}")
@@ -7035,15 +7035,12 @@ def save_stock_check_session():
             return jsonify({'error': 'User not authenticated'}), 401
 
         data = request.get_json()
-        session_data = data.get('session_data', {})
         location_type = data.get('location_type')
         location_id = data.get('location_id')
 
         print("📥 Kelgan ma'lumotlar:")
         print(f"  - Location type: {location_type}")
         print(f"  - Location ID: {location_id}")
-        print(f"  - Session data keys: {list(session_data.keys()) if session_data else 'None'}")
-        print(f"  - Session data size: {len(str(session_data))} bytes")
 
         # Permission validation
         user = User.query.get(user_id)
@@ -7051,89 +7048,29 @@ def save_stock_check_session():
             logger.error(" User not found")
             return jsonify({'error': 'User not found'}), 404
 
-        # Stock check huquqini tekshirish (admin uchun avtomatik ruxsat)
-        if user.role != 'admin':
-            permissions = user.permissions or {}
-            if not permissions.get('stock_check', False):
-                logger.error(f" User {user.username} has no stock check permission")
-                return jsonify({
-                    'error': 'Qoldiqni tekshirish huquqingiz yo\'q',
-                    'required_permission': 'stock_check'
-                }), 403
-            logger.info(f" Stock check permission verified for user: {user.username}")
-        else:
-            print("✅ Admin user - stock check permission granted")
-
-        # Foydalanuvchining location access huquqini tekshirish
-        if location_type and location_id:
-            if user.role == 'admin':
-                # Admin barcha joylashuv​larga kirishi mumkin
-                print("✅ Admin user - barcha joylashuvlarga ruxsat")
-            else:
-                # allowed_locations orqali ruxsatni tekshirish
-                allowed_locations = user.allowed_locations or []
-                location_id_int = int(location_id)
-
-                if location_id_int not in allowed_locations:
-                    logger.error(f" Access denied - User allowed locations: {allowed_locations}, Requested: {location_id}")
-                    return jsonify({
-                        'error': f'Bu {location_type}ga kirishga ruxsatingiz yo\'q',
-                        'user_allowed_locations': allowed_locations,
-                        'requested_location': location_id_int
-                    }), 403
-                logger.info(f" Access granted - User can access {location_type} {location_id}")
-        elif location_type == 'all':
-            # Barcha joylashuvlar uchun alohida tekshiruv yo'q (stock check allowed_locations bo'yicha cheklanadi)
-            print("✅ Access granted for all locations")
-
         # Mavjud active session ni topish
         existing_session = StockCheckSession.query.filter_by(
             user_id=user_id,
-            is_active=True
+            status='active'
         ).first()
 
         if existing_session:
-            logger.info(f" Mavjud session yangilanmoqda: {existing_session.session_key}")
-            # Mavjud session ni yangilash
-            existing_session.location_type = location_type
-            existing_session.location_id = location_id
-            existing_session.session_data = json.dumps(session_data)
+            logger.info(f" Mavjud session yangilanmoqda: {existing_session.id}")
+            # Mavjud session ni yangilash (heartbeat vazifasini bajaradi)
             existing_session.updated_at = db.func.current_timestamp()
-            session_key = existing_session.session_key
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Session yangilandi (heartbeat)'
+            })
         else:
-            print("🆕 Yangi session yaratilmoqda")
-            # Yangi session yaratish
-            import time
-            import random
-            session_key = f"stock_check_{user_id}_{int(time.time())}_{random.randint(1000, 9999)}"
-
-            # Unique session key ni ta'minlash uchun loop
-            max_attempts = 10
-            for attempt in range(max_attempts):
-                existing = StockCheckSession.query.filter_by(session_key=session_key).first()
-                if not existing:
-                    break
-                session_key = f"stock_check_{user_id}_{int(time.time())}_{random.randint(1000, 9999)}"
-
-            new_session = StockCheckSession(
-                user_id=user_id,
-                session_key=session_key,
-                location_type=location_type,
-                location_id=location_id,
-                is_active=True,
-                session_data=json.dumps(session_data)
-            )
-
-            db.session.add(new_session)
-
-        db.session.commit()
-        logger.info(f" Session muvaffaqiyatli saqlandi: {session_key}")
-
-        return jsonify({
-            'success': True,
-            'session_key': session_key,
-            'message': 'Session saqlandi'
-        })
+            # Active session yo'q - bu route deprecated, /api/start-stock-check ishlatilishi kerak
+            print("⚠️ Active session topilmadi - /api/start-stock-check ishlatilishi kerak")
+            return jsonify({
+                'success': False,
+                'message': 'Active session topilmadi. Avval tekshiruvni boshlang.'
+            }), 404
 
     except Exception as e:
         db.session.rollback()
