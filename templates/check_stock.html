@@ -860,6 +860,9 @@ function saveProductChanges() {
         saveButton.disabled = false;
     });
 }
+
+// Modal tashqarisiga bosilganda yopish
+document.addEventListener('click', function(e) {
     const modal = document.getElementById('productModal');
     if (e.target === modal) {
         closeProductModal();
