@@ -3026,7 +3026,7 @@ def start_stock_check():
         
         # Joylashuvda aktiv session bor yoki yo'qligini tekshirish
         existing_session = db.session.execute(text("""
-            SELECT s.id, u.full_name, s.started_at
+            SELECT s.id, u.first_name || ' ' || u.last_name as full_name, s.started_at
             FROM stock_check_sessions s
             JOIN users u ON s.user_id = u.id
             WHERE s.location_id = :location_id 
@@ -3082,7 +3082,7 @@ def get_active_sessions():
                 s.location_id, 
                 s.location_type, 
                 s.location_name,
-                u.full_name as user_name,
+                u.first_name || ' ' || u.last_name as user_name,
                 s.started_at,
                 s.updated_at
             FROM stock_check_sessions s
