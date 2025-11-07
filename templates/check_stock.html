@@ -630,10 +630,10 @@ function filterStatistics() {
 function modalQuantityInputHandler(event) {
     const inputValue = event.target.value;
     const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
-    console.log(`⌨️ [${timestamp}] Modal input o'zgardi: "${inputValue}"`);
+    console.log(`⌨️ [${timestamp}] Modal input o'zgardi: "${inputValue}" (AUTO-SAVE O'CHIRILGAN)`);
     
-    // Auto-save (input o'zgarishi bilan darhol)
-    autoSave(); // Darhol saqlash (kechikish yo'q)
+    // Auto-save o'chirildi - faqat "Saqlash" tugmasi orqali saqlash
+    // autoSave(); // DISABLED
 }
 
 // Modal oynani ochish
