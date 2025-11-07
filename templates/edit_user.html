@@ -579,13 +579,8 @@
         document.getElementById('role').value = user.role || '';
         document.getElementById('is_active').checked = user.is_active;
         
-        // Huquqlarni to'ldirish (agar mavjud bo'lsa)
-        if (user.permissions) {
-            console.log('🔄 User has permissions, calling populatePermissions');
-            populatePermissions(user.permissions);
-        } else {
-            console.log('⚠️ User has no permissions');
-        }
+        // MUHIM: Huquqlarni to'ldirish checkboxlar yaratilgandan keyin amalga oshiriladi
+        // populatePermissions() loadStoresAndWarehouses() ichida chaqiriladi
         
         // Rol bo'yicha huquqlarni ko'rsatish
         togglePermissions();
@@ -706,8 +701,18 @@
                 allWarehouses = data.warehouses || [];
                 console.log('🏪 Stores loaded:', allStores.length);
                 console.log('🏭 Warehouses loaded:', allWarehouses.length);
+                
+                // Checkboxlarni yaratish
                 populateLocationCheckboxes();
                 loadPrimaryLocations();
+                
+                // MUHIM: Checkboxlar yaratilgandan KEYIN huquqlarni to'ldirish
+                if (currentUser && currentUser.permissions) {
+                    console.log('✅ Checkboxlar yaratildi, endi huquqlarni to'ldirish');
+                    populatePermissions(currentUser.permissions);
+                } else {
+                    console.log('⚠️ User yoki permissions topilmadi');
+                }
             })
             .catch(error => {
                 console.error('❌ Error loading locations:', error);
