@@ -946,7 +946,8 @@ function addToCheckedProducts(productId, productName, oldQuantity, newQuantity) 
         </td>
     `;
     
-    tbody.appendChild(row);
+    // Yangi mahsulotni jadval boshiga qo'shish (tepada ko'rinadi)
+    tbody.insertBefore(row, tbody.firstChild);
     
     // AllOriginalProducts da bu mahsulotni tekshirilgan deb belgilash
     const productIndex = allOriginalProducts.findIndex(p => String(p.id) === String(productId));
