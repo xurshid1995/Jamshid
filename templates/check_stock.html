@@ -629,6 +629,8 @@ function filterStatistics() {
 // Modal quantity input handler funksiyasi
 function modalQuantityInputHandler(event) {
     const inputValue = event.target.value;
+    const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+    console.log(`⌨️ [${timestamp}] Modal input o'zgardi: "${inputValue}"`);
     
     // Auto-save (input o'zgarishi bilan darhol)
     autoSave(); // Darhol saqlash (kechikish yo'q)
@@ -717,6 +719,9 @@ function closeProductModal() {
 
 // Mahsulot o'zgarishlarini saqlash
 function saveProductChanges() {
+    const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+    console.log(`\n💾 [${timestamp}] ========== SAQLASH TUGMASI BOSILDI ==========`);
+    
     const productId = window.currentProductId;
     if (!productId) return;
     
@@ -724,10 +729,15 @@ function saveProductChanges() {
     const originalQuantity = window.originalQuantity;
     const productName = document.getElementById('modalProductName').textContent;
     
+    console.log(`   📦 Mahsulot: ${productName} (ID: ${productId})`);
+    console.log(`   🔢 Asl miqdor: ${originalQuantity}`);
+    console.log(`   🔢 Yangi miqdor: ${newQuantity}`);
+    
     // Miqdor validation
     if (isNaN(newQuantity) || newQuantity < 0) {
         // Input qizil rangga o'tadi
         document.getElementById('modalProductQuantity').style.borderColor = '#dc3545';
+        console.log(`   ❌ Validation xatolik: noto'g'ri miqdor`);
         return;
     } else {
         // Input rangini tiklash
@@ -765,9 +775,11 @@ function saveProductChanges() {
     })
     .then(response => response.text())
     .then(html => {
+        console.log(`   ✅ Server javob berdi`);
         
         // Modal oynani darhol yopish (tez javob uchun)
         closeProductModal();
+        console.log(`   🚪 Modal oyna yopildi`);
         
         // Background'da boshqa operatsiyalarni bajarish
         setTimeout(() => {
@@ -775,9 +787,11 @@ function saveProductChanges() {
             const isExistingProduct = updateExistingCheckedProduct(productId, productName, originalQuantity, newQuantity);
             
             if (isExistingProduct) {
+                console.log(`   🔄 Mavjud mahsulot yangilandi`);
                 // Tekshirilgan mahsulot yangilanganda ham chap jadvaldan o'chirish kerak
                 removeProductFromMainTable(productId);
             } else {
+                console.log(`   ➕ Yangi mahsulot qo'shildi`);
                 // Yangi tekshirilgan mahsulot qo'shish
                 addToCheckedProducts(productId, productName, originalQuantity, newQuantity);
                 // Mahsulotni asosiy jadvaldan olib tashlash
@@ -797,10 +811,12 @@ function saveProductChanges() {
         }, 10);
         
         // AutoSave darhol chaqirish (kechikishsiz)
+        console.log(`   🔄 AutoSave chaqirilmoqda...`);
         autoSave();
+        console.log(`========== SAQLASH JARAYONI TUGADI ==========\n`);
     })
     .catch(error => {
-        console.error('Saqlashda xatolik:', error);
+        console.error('❌ Saqlashda xatolik:', error);
         alert('Saqlashda xatolik yuz berdi. Qaytadan urinib ko\'ring.');
     })
     .finally(() => {
@@ -988,6 +1004,9 @@ function updateStatisticsAfterCheck() {
 
 // Sahifa holatini saqlash
 function savePageState() {
+    const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+    console.log(`📦 [${timestamp}] savePageState() boshlandi`);
+    
     const locationSelect = document.getElementById('locationSelect');
     const resultsSection = document.getElementById('resultsSection');
     const button = document.querySelector('.btn');
@@ -998,6 +1017,9 @@ function savePageState() {
         isCheckingActive: button.innerHTML.includes('Tekshiruvni tugatish'),
         resultsVisible: resultsSection.style.display === 'block'
     };
+    
+    console.log(`   📍 Joylashuv: ${pageState.selectedLocation}`);
+    console.log(`   🔄 Tekshiruv faol: ${pageState.isCheckingActive}`);
     
     // Mahsulotlar jadvalidagi ma'lumotlarni saqlash
     const productsTableBody = document.getElementById('productsTableBody');
@@ -1015,6 +1037,7 @@ function savePageState() {
         }
     }
     pageState.productsData = products;
+    console.log(`   📦 Mahsulotlar: ${products.length} ta`);
     
     // Tekshirilgan mahsulotlar jadvalidagi ma'lumotlarni saqlash
     const statisticsTableBody = document.getElementById('statisticsTableBody');
@@ -1036,16 +1059,21 @@ function savePageState() {
         }
     }
     pageState.checkedProductsData = checkedProducts;
+    console.log(`   ✅ Tekshirilgan: ${checkedProducts.length} ta`);
     
     // Qidiruv maydonlari har doim tozalanadi, saqlanmaydi
     
     // Local da saqlash (tez)
     localStorage.setItem('stockCheckState', JSON.stringify(pageState));
+    console.log(`   💾 localStorage'ga saqlandi (${JSON.stringify(pageState).length} bytes)`);
     
     // Server-da ham saqlash (debounced) - barcha qurilmalar uchun
     if (pageState.isCheckingActive && pageState.selectedLocation) {
         debouncedServerSave(pageState);
+        console.log(`   🌐 Server'ga yuborish rejalashtirildi`);
     }
+    
+    console.log(`✅ [${timestamp}] savePageState() tugadi`);
 }
 
 // Debounce timer
@@ -1053,38 +1081,57 @@ let saveTimeout = null;
 
 // Avtomatik saqlash funksiyasi (debounced) - jadvalda o'zgarish bo'lganda darhol saqlash
 function autoSave() {
+    // Debug: Auto-save chaqirildi
+    const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+    console.log(`🔄 [${timestamp}] AUTO-SAVE chaqirildi`);
+    
     // Oldingi timer ni bekor qilish
     if (saveTimeout) {
         clearTimeout(saveTimeout);
+        console.log(`   ⏹️ Oldingi timer bekor qilindi`);
     }
     
     // Darhol saqlash (0ms - no delay)
     saveTimeout = setTimeout(() => {
+        const saveTimestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+        console.log(`💾 [${saveTimestamp}] ✅ Saqlash BOSHLANDI`);
+        
         savePageState();
         // Real-time statistikani yangilash
         updateCheckedProductCount();
+        
+        const endTimestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+        console.log(`✅ [${endTimestamp}] Saqlash TUGADI`);
     }, 0);
 }
 
 // Darhol saqlash funksiyasi (important actions uchun)
 function immediateSave() {
+    const timestamp = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+    console.log(`⚡ [${timestamp}] IMMEDIATE SAVE chaqirildi`);
+    
     // Barcha timerlarni bekor qilish
     if (saveTimeout) {
         clearTimeout(saveTimeout);
+        console.log(`   ⏹️ saveTimeout bekor qilindi`);
     }
     if (serverSaveTimeout) {
         clearTimeout(serverSaveTimeout);
+        console.log(`   ⏹️ serverSaveTimeout bekor qilindi`);
     }
     
     // Darhol saqlash
     const pageState = getCurrentPageState();
     localStorage.setItem('stockCheckState', JSON.stringify(pageState));
+    console.log(`   💾 LocalStorage'ga saqlandi`);
     
     if (pageState.isCheckingActive && pageState.selectedLocation) {
         debouncedServerSave(pageState, true); // immediate = true
+        console.log(`   🌐 Server'ga yuborildi`);
     }
     
     updateCheckedProductCount();
+    console.log(`✅ [${timestamp}] IMMEDIATE SAVE tugadi`);
 }
 
 // Hozirgi sahifa holatini olish
