@@ -934,6 +934,7 @@ function addToCheckedProducts(productId, productName, oldQuantity, newQuantity) 
     updateCheckedProductCount();
     
     // Avtomatik saqlash
+    console.log(`📊 [JADVAL] Yangi mahsulot qo'shildi: ${productName}`);
     autoSave();
 }
 
@@ -994,6 +995,7 @@ function removeProductFromMainTable(productId) {
     updateProductCount();
     
     // Avtomatik saqlash
+    console.log(`🗑️ [JADVAL] Mahsulot o'chirildi: ID=${productId}`);
     autoSave();
 }
 
@@ -2113,6 +2115,7 @@ function updateExistingCheckedProduct(productId, productName, oldQuantity, newQu
             updateCheckedProductCount();
             
             // Avtomatik saqlash
+            console.log(`✏️ [JADVAL] Mahsulot yangilandi: ${productName} (${oldQuantity} → ${newQuantity})`);
             autoSave();
             
             return true; // Mahsulot yangilandi
