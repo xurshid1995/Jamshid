@@ -770,16 +770,17 @@
             // Transfer qilish huquqi
             const canTransfer = document.getElementById('canTransfer').checked;
             if (canTransfer) {
-                formData.permissions.can_transfer = true;
-                formData.permissions.transfer_locations = [];
+                formData.permissions.transfer = true;  // Permissions'da faqat boolean
+                
+                // Transfer locations'ni to'g'ridan-to'g'ri formData ichiga qo'shamiz (permissions ichiga emas)
+                formData.transfer_locations = [];
                 
                 const transferCheckboxes = document.querySelectorAll('#transferLocationsList input[type="checkbox"]:checked');
                 transferCheckboxes.forEach(checkbox => {
-                    formData.permissions.transfer_locations.push({
-                        id: parseInt(checkbox.value),
-                        type: checkbox.getAttribute('data-type')
-                    });
+                    formData.transfer_locations.push(parseInt(checkbox.value));  // Faqat ID
                 });
+                
+                console.log('🔍 Transfer locations collected:', formData.transfer_locations);
             }
             
             // Qoldiqni tekshirish huquqi
@@ -804,6 +805,7 @@
             }
 
             console.log('🔍 Seller permissions collected:', formData.permissions);
+            console.log('🔍 Transfer locations for server:', formData.transfer_locations);
             console.log('🔍 Stock check locations for server:', formData.stock_check_locations);
         }
 
