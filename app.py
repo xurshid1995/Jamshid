@@ -6285,7 +6285,10 @@ def api_login():
             }
         })
 
-    except Exception:
+    except Exception as e:
+        logger.error(f"Login xatoligi: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': 'Server xatoligi yuz berdi'
