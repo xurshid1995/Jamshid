@@ -2710,13 +2710,22 @@
     // Joylashuvlarni yuklash
     async function loadLocations() {
         try {
+            console.log('🔄 Fetching locations from /api/locations...');
             const response = await fetch('/api/locations');
+            console.log('📡 Response status:', response.status);
+            
             const locations = await response.json();
+            console.log('📦 Raw locations data:', locations);
+            console.log('📦 Locations count:', locations.length);
+            
             allLocations = locations;
             
             // Do'konlar va omborlarni alohida ajratish
             allStores = locations.filter(loc => loc.type === 'store');
             allWarehouses = locations.filter(loc => loc.type === 'warehouse');
+            
+            console.log('🏪 Stores:', allStores);
+            console.log('🏭 Warehouses:', allWarehouses);
             
             debugLog(`✅ ${locations.length} ta joylashuv yuklandi (${allStores.length} do'kon, ${allWarehouses.length} ombor)`);
             
