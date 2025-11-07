@@ -200,27 +200,36 @@ def extract_location_ids(locations, location_type):
     locations: list - allowed_locations yoki transfer_locations
     location_type: str - 'store' yoki 'warehouse'
     """
+    print(f"🔍 extract_location_ids called: locations={locations}, type={location_type}")
+    
     if not locations:
+        print("🔍 extract_location_ids: locations is empty, returning []")
         return []
 
     # Eski format (ID'lar ro'yxati) tekshirish
     if isinstance(locations[0], int):
+        print(f"🔍 extract_location_ids: Old format detected (int list)")
         # Eski format: [1, 2, 3]
         # Type bo'yicha filtrlash uchun ma'lumotlar bazasidan tekshirish kerak
         
         if location_type == 'store':
             # Faqat store ID'larni olish
             existing_store_ids = [s.id for s in Store.query.filter(Store.id.in_(locations)).all()]
+            print(f"🔍 extract_location_ids: Store IDs from DB: {existing_store_ids}")
             return existing_store_ids
         else:  # warehouse
             # Faqat warehouse ID'larni olish
             existing_warehouse_ids = [w.id for w in Warehouse.query.filter(Warehouse.id.in_(locations)).all()]
+            print(f"🔍 extract_location_ids: Warehouse IDs from DB: {existing_warehouse_ids}")
             return existing_warehouse_ids
 
     # Yangi format: [{'id': 1, 'type': 'store'}, {'id': 2, 'type':
     # 'warehouse'}]
-    return [loc['id'] for loc in locations if isinstance(
+    print(f"🔍 extract_location_ids: New format detected (dict list)")
+    result = [loc['id'] for loc in locations if isinstance(
         loc, dict) and loc.get('type') == location_type]
+    print(f"🔍 extract_location_ids: Result: {result}")
+    return result
 
 
 # Model yaratish - Mahsulot jadvali
@@ -1036,22 +1045,28 @@ def api_locations():
 
         print(
             f"🔍 API Locations - User: {current_user.username}, Role: {current_user.role}")
+        print(f"🔍 allowed_locations RAW: {current_user.allowed_locations}")
 
         # Foydalanuvchi huquqlarini tekshirish
         if current_user.role == 'admin':
             # Admin hamma joylashuvlarni ko'radi
             allowed_store_ids = None
             allowed_warehouse_ids = None
+            print("🔍 Admin user - showing ALL locations")
         else:
             # Oddiy foydalanuvchilar faqat allowed_locations dan ruxsat etilgan
             # joylashuvlarni ko'radi (savdo uchun)
             allowed_locations = current_user.allowed_locations or []
             logger.debug(f" Raw allowed_locations: {allowed_locations}")
+            print(f"🔍 Non-admin user - filtering locations")
+            print(f"🔍 allowed_locations: {allowed_locations}")
 
             # Helper funksiya bilan ID'larni olish (eski va yangi formatlar uchun)
             allowed_store_ids = extract_location_ids(allowed_locations, 'store')
             allowed_warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
 
+            print(f"🔍 Filtered store IDs: {allowed_store_ids}")
+            print(f"🔍 Filtered warehouse IDs: {allowed_warehouse_ids}")
             logger.debug(f" Allowed store IDs: {allowed_store_ids}")
             logger.debug(f" Allowed warehouse IDs: {allowed_warehouse_ids}")
 
