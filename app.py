@@ -85,8 +85,25 @@ def hash_password(password):
 
 
 def check_password(password, hashed):
-    """Parolni tekshirish"""
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    """Parolni tekshirish - bcrypt va eski pbkdf2 formatlarini qo'llab-quvvatlash"""
+    try:
+        # Yangi bcrypt formatini tekshirish
+        if hashed.startswith('$2b$') or hashed.startswith('$2a$') or hashed.startswith('$2y$'):
+            return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        
+        # Eski pbkdf2 formatini tekshirish (werkzeug)
+        elif hashed.startswith('pbkdf2:'):
+            from werkzeug.security import check_password_hash
+            return check_password_hash(hashed, password)
+        
+        # Noma'lum format
+        else:
+            logger.error(f"Noma'lum parol formati: {hashed[:20]}...")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Parol tekshirishda xatolik: {str(e)}")
+        return False
 
 
 # Role-based access control decorator
