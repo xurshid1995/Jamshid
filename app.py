@@ -2331,29 +2331,27 @@ def api_stores():
 
 
 @app.route('/api/stores-warehouses')
-# @role_required('admin', 'kassir', 'sotuvchi')  # Test uchun vaqtincha o'chirilgan
+@role_required('admin', 'kassir', 'sotuvchi')
 def api_stores_warehouses():
     try:
         locations = []
-
-        # Test uchun admin sifatida ishlash
-        # current_user = get_current_user()
-        # if not current_user:
-        # return jsonify({'success': False, 'error': 'Foydalanuvchi
-        # topilmadi'}), 401
+        
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'success': False, 'error': 'Foydalanuvchi topilmadi'}), 401
 
         # Foydalanuvchi huquqlarini tekshirish
-        # if current_user.role == 'admin':
-        # Admin hamma joylashuvlarni ko'radi (test uchun)
-        allowed_store_ids = None
-        allowed_warehouse_ids = None
-        # else:
-        #     # Oddiy foydalanuvchilar faqat allowed_locations dan ruxsat etilgan joylashuvlarni ko'radi (savdo uchun)
-        #     allowed_locations = current_user.allowed_locations or []
-        #
-        #     # Helper funksiya bilan ID'larni olish (eski va yangi formatlar uchun)
-        #     allowed_store_ids = extract_location_ids(allowed_locations, 'store')
-        #     allowed_warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
+        if current_user.role == 'admin':
+            # Admin hamma joylashuvlarni ko'radi
+            allowed_store_ids = None
+            allowed_warehouse_ids = None
+        else:
+            # Oddiy foydalanuvchilar faqat allowed_locations dan ruxsat etilgan joylashuvlarni ko'radi
+            allowed_locations = current_user.allowed_locations or []
+            
+            # Helper funksiya bilan ID'larni olish (eski va yangi formatlar uchun)
+            allowed_store_ids = extract_location_ids(allowed_locations, 'store')
+            allowed_warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
 
         # Do'konlarni qo'shish
         if allowed_store_ids is None:
