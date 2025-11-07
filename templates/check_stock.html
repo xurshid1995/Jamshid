@@ -302,9 +302,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Do'kon va omborlarni yuklash
-function loadLocations() {
+// Do'kon va omborlarni yuklash + aktiv sessionlarni tekshirish
+async function loadLocations() {
     const select = document.getElementById('locationSelect');
+    
+    // Avval aktiv sessionlarni yuklash
+    let activeSessions = {};
+    try {
+        const response = await fetch('/api/get-active-sessions');
+        const data = await response.json();
+        if (data.sessions) {
+            data.sessions.forEach(session => {
+                const key = `${session.location_type}_${session.location_id}`;
+                activeSessions[key] = session.user_name;
+            });
+        }
+    } catch (error) {
+        console.error('❌ Aktiv sessionlarni yuklab bo\'lmadi:', error);
+    }
     
     // Do'konlarni yuklash
     fetch('/api/stores')
@@ -313,8 +328,19 @@ function loadLocations() {
             if (Array.isArray(data)) {
                 data.forEach(store => {
                     const option = document.createElement('option');
-                    option.value = 'store_' + store.id;
-                    option.textContent = '🏪 ' + store.name;
+                    const key = 'store_' + store.id;
+                    option.value = key;
+                    
+                    // Agar bu joylashuv band bo'lsa
+                    if (activeSessions[key]) {
+                        option.textContent = `🏪 ${store.name} (${activeSessions[key]} tekshiryapti)`;
+                        option.disabled = true;
+                        option.style.color = '#999';
+                        option.style.fontStyle = 'italic';
+                    } else {
+                        option.textContent = '🏪 ' + store.name;
+                    }
+                    
                     select.appendChild(option);
                 });
             }
@@ -328,8 +354,19 @@ function loadLocations() {
             if (Array.isArray(data)) {
                 data.forEach(warehouse => {
                     const option = document.createElement('option');
-                    option.value = 'warehouse_' + warehouse.id;
-                    option.textContent = '🏭 ' + warehouse.name;
+                    const key = 'warehouse_' + warehouse.id;
+                    option.value = key;
+                    
+                    // Agar bu joylashuv band bo'lsa
+                    if (activeSessions[key]) {
+                        option.textContent = `🏭 ${warehouse.name} (${activeSessions[key]} tekshiryapti)`;
+                        option.disabled = true;
+                        option.style.color = '#999';
+                        option.style.fontStyle = 'italic';
+                    } else {
+                        option.textContent = '🏭 ' + warehouse.name;
+                    }
+                    
                     select.appendChild(option);
                 });
             }
@@ -338,7 +375,7 @@ function loadLocations() {
 }
 
 // Tekshiruvni boshlash yoki tugatish
-function startCheck() {
+async function startCheck() {
     const locationSelect = document.getElementById('locationSelect');
     const selectedValue = locationSelect.value;
     const button = document.querySelector('.btn');
@@ -370,9 +407,26 @@ function startCheck() {
             
             // Holatni tozalash (reload qilmasdan)
             localStorage.removeItem('stockCheckState');
+            
+            // Server sessionni tugatish
+            try {
+                const [type, id] = selectedValue.split('_');
+                await fetch('/api/end-stock-check', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location_id: parseInt(id),
+                        location_type: type,
+                        status: 'completed'
+                    })
+                });
+                console.log('✅ Session tugatildi');
+            } catch (error) {
+                console.error('❌ Session tugatishda xatolik:', error);
+            }
+            
             try {
                 await clearServerSession();
-                // Server session successfully cleared
             } catch (error) {
                 console.error('❌ Server session tozalashda xatolik:', error);
             }
@@ -384,6 +438,54 @@ function startCheck() {
     // Tekshiruvni boshlash
     if (!selectedValue) {
         alert('Iltimos, joylashuvni tanlang!');
+        return;
+    }
+    
+    // Joylashuvni parse qilish
+    const [type, id] = selectedValue.split('_');
+    const locationName = locationSelect.options[locationSelect.selectedIndex].text.replace('🏪 ', '').replace('🏭 ', '');
+    
+    // Server sessionni boshlash
+    try {
+        const response = await fetch('/api/start-stock-check', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                location_id: parseInt(id),
+                location_type: type,
+                location_name: locationName
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            // Agar joylashuv band bo'lsa
+            alert(data.error || 'Bu joylashuv hozir band');
+            return;
+        }
+        
+        console.log('✅ Session boshlandi');
+        
+        // Heartbeat boshlash (har 30 soniyada session aktiv ekanligini bildirish)
+        window.sessionHeartbeat = setInterval(async () => {
+            try {
+                await fetch('/api/update-stock-check-session', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location_id: parseInt(id),
+                        location_type: type
+                    })
+                });
+            } catch (error) {
+                console.error('❌ Heartbeat xatolik:', error);
+            }
+        }, 30000); // 30 soniya
+        
+    } catch (error) {
+        console.error('❌ Session boshlashda xatolik:', error);
+        alert('Xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.');
         return;
     }
     
