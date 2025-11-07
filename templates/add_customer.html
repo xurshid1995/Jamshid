@@ -172,7 +172,7 @@
 
                 <div class="form-group">
                     <label for="phone">Telefon raqami</label>
-                    <input type="tel" id="phone" name="phone" placeholder="+998(99) 406-47-49" maxlength="19">
+                    <input type="tel" id="phone" name="phone" placeholder="+998(99) 406-47-49" maxlength="18">
                     <div class="form-hint">Format: +998(99) 406-47-49</div>
                 </div>
 
@@ -277,7 +277,7 @@
         
         // Telefon raqamini validatsiya qilish
         const phone = formData.get('phone');
-        if (phone && phone.trim() !== '' && phone.length !== 19) { // +998(99) 406-47-49 = aynan 19 belgi
+        if (phone && phone.trim() !== '' && phone.length !== 18) { // +998(99) 406-47-49 = 18 belgi
             alert('❌ Telefon raqamini to\'liq formatda kiriting: +998(99) 406-47-49');
             return;
         }

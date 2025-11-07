@@ -229,7 +229,7 @@
                     <span class="emoji">📞</span>Telefon raqami
                 </label>
                 <input type="tel" id="customerPhone" class="form-control" 
-                       placeholder="+998(99) 406-47-49" maxlength="19">
+                       placeholder="+998(99) 406-47-49" maxlength="18">
             </div>
 
             <div class="form-group">
@@ -414,7 +414,7 @@
 
         // Telefon raqamini validatsiya qilish
         const phone = document.getElementById('customerPhone').value.trim();
-        if (phone && phone !== '' && phone.length !== 19) { // +998(99) 406-47-49 = aynan 19 belgi
+        if (phone && phone !== '' && phone.length !== 18) { // +998(99) 406-47-49 = 18 belgi
             alert('❌ Telefon raqamini to\'liq formatda kiriting: +998(99) 406-47-49');
             updateBtn.innerHTML = originalText;
             updateBtn.disabled = false;
