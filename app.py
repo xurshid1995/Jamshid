@@ -3008,6 +3008,213 @@ def update_warehouse_stock_quantity(warehouse_id, product_id):
         return jsonify({'error': str(e)}), 500
 
 
+# ========== STOCK CHECK SESSION API'LAR ==========
+
+# Qoldiq tekshirish sessionini boshlash
+@app.route('/api/start-stock-check', methods=['POST'])
+@login_required
+def start_stock_check():
+    """Qoldiq tekshirish sessionini boshlash"""
+    try:
+        data = request.get_json()
+        location_id = data.get('location_id')
+        location_type = data.get('location_type')  # 'store' or 'warehouse'
+        location_name = data.get('location_name')
+        
+        if not all([location_id, location_type, location_name]):
+            return jsonify({'error': 'Barcha maydonlar talab qilinadi'}), 400
+        
+        # Joylashuvda aktiv session bor yoki yo'qligini tekshirish
+        existing_session = db.session.execute(text("""
+            SELECT s.id, u.full_name, s.started_at
+            FROM stock_check_sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.location_id = :location_id 
+            AND s.location_type = :location_type 
+            AND s.status = 'active'
+        """), {
+            'location_id': location_id,
+            'location_type': location_type
+        }).first()
+        
+        if existing_session:
+            return jsonify({
+                'error': f'Bu joylashuv hozir {existing_session.full_name} tomonidan tekshirilmoqda',
+                'active_user': existing_session.full_name,
+                'started_at': existing_session.started_at.isoformat()
+            }), 409  # Conflict
+        
+        # Yangi session yaratish
+        db.session.execute(text("""
+            INSERT INTO stock_check_sessions 
+            (user_id, location_id, location_type, location_name, started_at, updated_at, status)
+            VALUES (:user_id, :location_id, :location_type, :location_name, NOW(), NOW(), 'active')
+        """), {
+            'user_id': session.get('user_id'),
+            'location_id': location_id,
+            'location_type': location_type,
+            'location_name': location_name
+        })
+        db.session.commit()
+        
+        logger.info(f"✅ Stock check session boshlandi: {location_name} ({location_type} #{location_id}) - User: {session.get('user_id')}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Qoldiq tekshirish boshlandi'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Start stock check error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# Aktiv sessionlarni olish
+@app.route('/api/get-active-sessions', methods=['GET'])
+@login_required
+def get_active_sessions():
+    """Barcha aktiv qoldiq tekshirish sessionlarini olish"""
+    try:
+        sessions = db.session.execute(text("""
+            SELECT 
+                s.id, 
+                s.location_id, 
+                s.location_type, 
+                s.location_name,
+                u.full_name as user_name,
+                s.started_at,
+                s.updated_at
+            FROM stock_check_sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.status = 'active'
+            ORDER BY s.started_at DESC
+        """)).fetchall()
+        
+        result = []
+        for s in sessions:
+            result.append({
+                'id': s.id,
+                'location_id': s.location_id,
+                'location_type': s.location_type,
+                'location_name': s.location_name,
+                'user_name': s.user_name,
+                'started_at': s.started_at.isoformat() if s.started_at else None,
+                'updated_at': s.updated_at.isoformat() if s.updated_at else None
+            })
+        
+        return jsonify({'sessions': result}), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Get active sessions error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Sessionni yangilash (heartbeat)
+@app.route('/api/update-stock-check-session', methods=['POST'])
+@login_required
+def update_stock_check_session():
+    """Session'ni aktiv deb belgilash (heartbeat)"""
+    try:
+        data = request.get_json()
+        location_id = data.get('location_id')
+        location_type = data.get('location_type')
+        
+        db.session.execute(text("""
+            UPDATE stock_check_sessions
+            SET updated_at = NOW()
+            WHERE user_id = :user_id 
+            AND location_id = :location_id 
+            AND location_type = :location_type 
+            AND status = 'active'
+        """), {
+            'user_id': session.get('user_id'),
+            'location_id': location_id,
+            'location_type': location_type
+        })
+        db.session.commit()
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Update session error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# Sessionni tugatish
+@app.route('/api/end-stock-check', methods=['POST'])
+@login_required
+def end_stock_check():
+    """Qoldiq tekshirish sessionini tugatish"""
+    try:
+        data = request.get_json()
+        location_id = data.get('location_id')
+        location_type = data.get('location_type')
+        status = data.get('status', 'completed')  # 'completed' or 'cancelled'
+        
+        if status not in ['completed', 'cancelled']:
+            return jsonify({'error': 'Noto\'g\'ri status'}), 400
+        
+        db.session.execute(text("""
+            UPDATE stock_check_sessions
+            SET status = :status, updated_at = NOW()
+            WHERE user_id = :user_id 
+            AND location_id = :location_id 
+            AND location_type = :location_type 
+            AND status = 'active'
+        """), {
+            'user_id': session.get('user_id'),
+            'location_id': location_id,
+            'location_type': location_type,
+            'status': status
+        })
+        db.session.commit()
+        
+        logger.info(f"✅ Stock check session tugatildi: {location_type} #{location_id} - Status: {status}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Session tugatildi'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ End stock check error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# Eski sessionlarni tozalash (1 soatdan ortiq)
+@app.route('/api/cleanup-old-sessions', methods=['POST'])
+@role_required('admin')
+def cleanup_old_sessions():
+    """1 soatdan ortiq aktiv sessionlarni avtomatik yopish"""
+    try:
+        result = db.session.execute(text("""
+            UPDATE stock_check_sessions
+            SET status = 'cancelled', updated_at = NOW()
+            WHERE status = 'active' 
+            AND updated_at < NOW() - INTERVAL '1 hour'
+            RETURNING id, location_name
+        """))
+        closed_sessions = result.fetchall()
+        db.session.commit()
+        
+        count = len(closed_sessions)
+        logger.info(f"🧹 Tozalash: {count} ta eski session yopildi")
+        
+        return jsonify({
+            'success': True,
+            'closed_count': count,
+            'message': f'{count} ta eski session yopildi'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Cleanup error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 # Store stock o'chirish route
 @app.route('/api/store_stock/<int:store_id>/<int:product_id>', methods=['DELETE'])
 def delete_store_stock(store_id, product_id):
