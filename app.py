@@ -3521,26 +3521,24 @@ def get_product_locations(product_id):
     """Mahsulotning barcha joylashuv va miqdorlarini qaytarish"""
     logger.debug(f" get_product_locations called for product_id: {product_id}")
     try:
-        # Do'konlardagi mahsulotlar
+        # Do'konlardagi mahsulotlar (quantity >= 0, chunki 0 ham ko'rsatilishi kerak)
         store_stocks = db.session.query(
             StoreStock.store_id,
             Store.name,
             StoreStock.quantity
         ).join(Store).filter(
-            StoreStock.product_id == product_id,
-            StoreStock.quantity > 0
+            StoreStock.product_id == product_id
         ).all()
 
         logger.info(f" Found {len(store_stocks)} store stocks")
 
-        # Omborlardagi mahsulotlar
+        # Omborlardagi mahsulotlar (quantity >= 0)
         warehouse_stocks = db.session.query(
             WarehouseStock.warehouse_id,
             Warehouse.name,
             WarehouseStock.quantity
         ).join(Warehouse).filter(
-            WarehouseStock.product_id == product_id,
-            WarehouseStock.quantity > 0
+            WarehouseStock.product_id == product_id
         ).all()
 
         logger.debug(f" Found {len(warehouse_stocks)} warehouse stocks")
@@ -3552,27 +3550,29 @@ def get_product_locations(product_id):
         for stock in warehouse_stocks:
             logger.debug(f" Warehouse Stock: warehouse_id={stock.warehouse_id}, name={stock.name}, quantity={stock.quantity}")
 
-        result = {
-            'stores': [
-                {
-                    'id': stock.store_id,
-                    'name': stock.name,
-                    'quantity': int(stock.quantity)
-                }
-                for stock in store_stocks
-            ],
-            'warehouses': [
-                {
-                    'id': stock.warehouse_id,
-                    'name': stock.name,
-                    'quantity': int(stock.quantity)
-                }
-                for stock in warehouse_stocks
-            ]
-        }
+        # Frontend uchun birlashtirish - locations array bilan
+        locations = []
+        
+        # Do'konlarni qo'shish
+        for stock in store_stocks:
+            locations.append({
+                'id': stock.store_id,
+                'type': 'store',
+                'name': stock.name,
+                'quantity': int(stock.quantity)
+            })
+        
+        # Omborlarni qo'shish
+        for stock in warehouse_stocks:
+            locations.append({
+                'id': stock.warehouse_id,
+                'type': 'warehouse',
+                'name': stock.name,
+                'quantity': int(stock.quantity)
+            })
 
-        logger.debug(f" API response: {result}")
-        return jsonify(result)
+        logger.debug(f" API response: {len(locations)} locations")
+        return jsonify(locations)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
