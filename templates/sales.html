@@ -4475,6 +4475,16 @@
         const tabData = tabs[currentTabId];
         if (!tabData) return;
         
+        // 🔒 Lock tekshiruvi - agar bu mahsulot uchun update davom etayotgan bo'lsa
+        const lockKey = `${currentTabId}_${productId}`;
+        if (quantityUpdateLocks[lockKey]) {
+            console.log(`⏸️ Edit card: Lock aktiv, saqlash skip qilindi`);
+            return;
+        }
+        
+        quantityUpdateLocks[lockKey] = true; // Lock yoqish
+        console.log(`🔒 Edit card: Lock yoqildi: ${lockKey}`);
+        
         // Yangi qiymatlarni olish
         const newQuantity = parseInt(document.getElementById('editQuantity').value) || 0;
         const newPrice = parseFloat(document.getElementById('editPrice').value) || 0;
@@ -4482,11 +4492,15 @@
         // Validatsiya
         if (newQuantity <= 0) {
             alert('Miqdor 0 dan katta bo\'lishi kerak!');
+            quantityUpdateLocks[lockKey] = false;
+            console.log(`🔓 Edit card: Lock o'chirildi (validatsiya xatosi)`);
             return;
         }
         
         if (newPrice <= 0) {
             alert('Narx 0 dan katta bo\'lishi kerak!');
+            quantityUpdateLocks[lockKey] = false;
+            console.log(`🔓 Edit card: Lock o'chirildi (validatsiya xatosi)`);
             return;
         }
         
@@ -4494,6 +4508,8 @@
         const item = tabData.cart.find(item => item.id === productId);
         if (!item) {
             alert('Mahsulot topilmadi!');
+            quantityUpdateLocks[lockKey] = false;
+            console.log(`🔓 Edit card: Lock o'chirildi (mahsulot topilmadi)`);
             closeEditCard();
             return;
         }
@@ -4502,6 +4518,8 @@
         const costPrice = parseFloat(item.cost_price) || 0;
         if (newPrice < costPrice && costPrice > 0) {
             if (!confirm(`Diqqat! Sotish narxi ($${newPrice}) tan narxidan ($${costPrice}) past. Davom etasizmi?`)) {
+                quantityUpdateLocks[lockKey] = false;
+                console.log(`🔓 Edit card: Lock o'chirildi (foydalanuvchi bekor qildi)`);
                 return;
             }
         }
@@ -4524,6 +4542,8 @@
             if (!returnSuccess) {
                 console.log(`❌ Stock qaytarib bo'lmadi`);
                 alert('Stock qaytarishda xatolik yuz berdi!');
+                quantityUpdateLocks[lockKey] = false;
+                console.log(`🔓 Edit card: Lock o'chirildi (return xatosi)`);
                 closeEditCard();
                 return;
             }
@@ -4538,6 +4558,8 @@
                 // Eski miqdorni qaytadan rezerv qilish (rollback)
                 await reserveStock(item.id, oldQuantity, item.location_id, item.location_type);
                 alert('Stock rezerv qilishda xatolik yuz berdi!');
+                quantityUpdateLocks[lockKey] = false;
+                console.log(`🔓 Edit card: Lock o'chirildi (reserve xatosi)`);
                 closeEditCard();
                 return;
             }
@@ -4559,6 +4581,10 @@
         
         // Edit card ni yopish
         closeEditCard();
+        
+        // Lock o'chirish
+        quantityUpdateLocks[lockKey] = false;
+        console.log(`🔓 Edit card: Lock o'chirildi (muvaffaqiyatli)`);
         
         showAlert('Mahsulot muvaffaqiyatli yangilandi!', 'success');
     }
