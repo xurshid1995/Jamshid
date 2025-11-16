@@ -133,6 +133,156 @@
         transform: translateY(-1px);
     }
 
+    /* Modal Styles */
+    .delete-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delete-modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        color: #e74c3c;
+    }
+
+    .modal-header i {
+        font-size: 2rem;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .modal-body p {
+        margin: 10px 0;
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .modal-body .warehouse-name-highlight {
+        font-weight: bold;
+        color: #e74c3c;
+        font-size: 1.1rem;
+        padding: 5px 10px;
+        background: #fee;
+        border-radius: 4px;
+        display: inline-block;
+        margin: 10px 0;
+    }
+
+    .modal-input-group {
+        margin: 20px 0;
+    }
+
+    .modal-input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .modal-input-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .modal-input-group input:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+
+    .modal-input-group input.error {
+        border-color: #e74c3c;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .modal-btn-cancel {
+        background: #95a5a6;
+        color: white;
+    }
+
+    .modal-btn-cancel:hover {
+        background: #7f8c8d;
+    }
+
+    .modal-btn-delete {
+        background: #e74c3c;
+        color: white;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .modal-btn-delete.enabled {
+        opacity: 1;
+        cursor: pointer;
+    }
+
+    .modal-btn-delete.enabled:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    }
+
     /* RESPONSIVE DESIGN - BIR QATORDA 3 TA */
     @media (max-width: 1200px) {
         .warehouse-grid {
@@ -154,6 +304,40 @@
 {% endblock %}
 
 {% block content %}
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="delete-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>DIQQAT! Omborni o'chirish</h3>
+        </div>
+        <div class="modal-body">
+            <p><strong>Siz quyidagi omborni o'chirmoqchisiz:</strong></p>
+            <div class="warehouse-name-highlight" id="modalWarehouseName"></div>
+            <p style="color: #e74c3c; font-weight: bold;">⚠️ Bu amal qaytarib bo'lmaydi!</p>
+            <p>Davom etish uchun ombor nomini quyidagi maydonga kiriting:</p>
+            
+            <div class="modal-input-group">
+                <label for="confirmInput">Ombor nomi:</label>
+                <input 
+                    type="text" 
+                    id="confirmInput" 
+                    placeholder="Ombor nomini kiriting..."
+                    autocomplete="off"
+                >
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">
+                ❌ Bekor qilish
+            </button>
+            <button class="modal-btn modal-btn-delete" id="confirmDeleteBtn" disabled>
+                🗑️ O'chirish
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Content Header -->
 <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
     <div>
@@ -226,36 +410,119 @@
         console.log('Omborlar sahifasi yuklandi');
     });
 
-    // Ombor o'chirish funksiyasi
+    // Modal variables
+    let currentWarehouseId = null;
+    let currentWarehouseName = null;
+
+    // Open delete modal
     function deleteWarehouse(warehouseId, warehouseName) {
         console.log('O\'chirish funksiyasi chaqirildi:', warehouseId, warehouseName);
         
-        if (confirm(`Haqiqatan ham "${warehouseName}" omborini o'chirmoqchimisiz?\n\nDiqqat: Bu amal qaytarib bo'lmaydi!`)) {
-            console.log('Foydalanuvchi tasdiqladi, API ga so\'rov yuborilmoqda...');
+        currentWarehouseId = warehouseId;
+        currentWarehouseName = warehouseName;
+        
+        // Modal ochish
+        const modal = document.getElementById('deleteModal');
+        const modalWarehouseName = document.getElementById('modalWarehouseName');
+        const confirmInput = document.getElementById('confirmInput');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        
+        modalWarehouseName.textContent = warehouseName;
+        confirmInput.value = '';
+        confirmBtn.disabled = true;
+        confirmBtn.classList.remove('enabled');
+        
+        modal.classList.add('active');
+        
+        // Input'ga fokus
+        setTimeout(() => confirmInput.focus(), 300);
+    }
+
+    // Close delete modal
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.remove('active');
+        currentWarehouseId = null;
+        currentWarehouseName = null;
+    }
+
+    // Input validation - real-time
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmInput = document.getElementById('confirmInput');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        
+        confirmInput.addEventListener('input', function() {
+            const inputValue = this.value.trim();
             
-            fetch(`/api/warehouse/${warehouseId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => {
-                console.log('API javob olindi:', response.status, response.statusText);
-                if (response.ok) {
-                    console.log('Muvaffaqiyat! Sahifa qayta yuklanmoqda...');
-                    window.location.reload();
+            if (inputValue === currentWarehouseName) {
+                confirmBtn.disabled = false;
+                confirmBtn.classList.add('enabled');
+                this.classList.remove('error');
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.remove('enabled');
+                if (inputValue.length > 0) {
+                    this.classList.add('error');
                 } else {
-                    console.error('API xatosi:', response.status);
-                    alert('Xatolik yuz berdi! Omborni o\'chirib bo\'lmadi.');
+                    this.classList.remove('error');
                 }
-            })
-            .catch(error => {
-                console.error('Fetch xatosi:', error);
-                alert('Aloqa xatosi! Qaytadan urinib ko\'ring.');
-            });
-        } else {
-            console.log('Foydalanuvchi bekor qildi');
-        }
+            }
+        });
+        
+        // Enter tugmasini bosish
+        confirmInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !confirmBtn.disabled) {
+                confirmDeleteWarehouse();
+            }
+        });
+        
+        // Modal tashqarisiga bosish
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+        
+        // Confirm delete button click
+        confirmBtn.addEventListener('click', confirmDeleteWarehouse);
+    });
+
+    // Confirm delete warehouse
+    function confirmDeleteWarehouse() {
+        if (!currentWarehouseId) return;
+        
+        console.log('Tasdiqlandi! O\'chirish boshlandi:', currentWarehouseId);
+        
+        // Tugmani o'chirish
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = '⏳ O\'chirilmoqda...';
+        
+        fetch(`/api/warehouse/${currentWarehouseId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            console.log('API javob olindi:', response.status, response.statusText);
+            if (response.ok) {
+                console.log('Muvaffaqiyat! Sahifa qayta yuklanmoqda...');
+                closeDeleteModal();
+                window.location.reload();
+            } else {
+                console.error('API xatosi:', response.status);
+                alert('Xatolik yuz berdi! Omborni o\'chirib bo\'lmadi.');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '🗑️ O\'chirish';
+            }
+        })
+        .catch(error => {
+            console.error('Fetch xatosi:', error);
+            alert('Aloqa xatosi! Qaytadan urinib ko\'ring.');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '🗑️ O\'chirish';
+        });
     }
 </script>
 {% endblock %}
