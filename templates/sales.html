@@ -4292,15 +4292,21 @@
             if (difference > 0) {
                 // Qo'shimcha stock kerak (faqat farq)
                 console.log(`🔒 ${difference} ta qo'shimcha stokdan rezerv qilinmoqda...`);
+                console.log(`   Product ID: ${item.id}, Location: ${item.location_id} (${item.location_type})`);
+                console.log(`   Mahsulot: ${item.name}`);
+                
                 const reserveSuccess = await reserveStock(item.id, difference, item.location_id, item.location_type);
                 
                 if (!reserveSuccess) {
-                    console.log(`❌ Stock rezerv qilib bo'lmadi`);
+                    console.log(`❌ Stock rezerv qilib bo'lmadi - reverting miqdor to ${oldQuantity}`);
+                    // Stock rezerv bo'lmasa, miqdorni qaytarish
+                    item.quantity = oldQuantity;
+                    updateCart(currentTabId);
                     quantityUpdateLocks[lockKey] = false;
                     console.log(`🔓 Lock o'chirildi (xatolik): ${lockKey}`);
                     return;
                 }
-                console.log(`✅ ${difference} ta stock qo'shildi`);
+                console.log(`✅ ${difference} ta stock rezerv qilindi va korzinaga qo'shildi`);
                 
             } else if (difference < 0) {
                 // Stock qaytarish kerak (faqat farq)
