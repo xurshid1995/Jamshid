@@ -4504,12 +4504,14 @@ def api_sales_history():
                 Product.name.ilike(f'%{search_term.strip()}%')
             ).distinct()
 
-        # Order by date descending (yangi savdolardan eski savdolarga)
-        query = query.order_by(Sale.sale_date.desc())
-
         # STATISTIKA: SQL aggregate funksiyalari bilan optimal hisoblash
         from sqlalchemy import func
-        stats_query = query.with_entities(
+        
+        # Base query'ni statistics uchun saqlash (ORDER BY siz)
+        base_stats_query = query
+        
+        # Asosiy statistika (count, sum)
+        stats_query = base_stats_query.with_entities(
             func.count(Sale.id).label('total_count'),
             func.sum(Sale.total_amount).label('total_revenue'),
             func.sum(Sale.total_profit).label('total_profit')
@@ -4523,6 +4525,10 @@ def api_sales_history():
         logger.info(f"📊 Filtr qo'llanilgan jami savdolar: {total_sales_count}")
         logger.info(f"💰 Jami daromad: ${total_revenue:.2f}")
         logger.info(f"💵 Jami foyda: ${total_profit:.2f}")
+        
+        # Order by date descending (yangi savdolardan eski savdolarga)
+        # Bu pagination uchun kerak
+        query = query.order_by(Sale.sale_date.desc())
 
         # Pagination parametrlarini olish
         page = request.args.get('page', 1, type=int)
@@ -4561,7 +4567,8 @@ def api_sales_history():
         )
 
         # Payment method breakdown - SQL GROUP BY bilan optimal
-        payment_stats_query = query.with_entities(
+        # base_stats_query ishlatamiz (ORDER BY siz)
+        payment_stats_query = base_stats_query.with_entities(
             Sale.payment_method,
             func.count(Sale.id).label('count'),
             func.sum(Sale.total_amount).label('total')
