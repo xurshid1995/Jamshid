@@ -4416,13 +4416,16 @@ def api_sales_history():
         # Statistika uchun logika: 
         # - Agar sana filtri berilgan bo'lsa, shu sanalar bo'yicha statistika
         # - Agar sana filtri yo'q bo'lsa, faqat bugungi kun statistikasi
-        stats_date_filter = request.args.get('stats_date_filter', 'filtered')  # 'filtered', 'today' yoki 'all'
         
-        # Agar sana tanlangan bo'lsa, statistikani shu sana bo'yicha hisoblash
-        if start_date or end_date:
+        # Sana filtri tekshirish (empty string ham yo'q deb hisoblanadi)
+        has_date_filter = bool(start_date and start_date.strip()) or bool(end_date and end_date.strip())
+        
+        if has_date_filter:
             stats_date_filter = 'filtered'  # Tanlangan sana oralig'i
-        elif stats_date_filter == 'filtered':
+            logger.info(f"📅 Sana filtri aniqlandi: {start_date} - {end_date}")
+        else:
             stats_date_filter = 'today'  # Default: bugungi kun
+            logger.info(f"📅 Sana filtri yo'q, default bugungi kun")
         
         print(
             f"📋 Query parameters: start_date={start_date}, end_date={end_date}, customer_id={customer_id}, payment_status={payment_status}, location_filter={location_filter}, search_term={search_term}, stats_date_filter={stats_date_filter}")
