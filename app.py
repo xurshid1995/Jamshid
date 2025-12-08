@@ -4586,8 +4586,15 @@ def api_sales_history():
             print(f"   - Birinchi 3 ta savdo ID: {sale_ids}")
 
         # STATISTIKA: To'liq hisoblashlar uchun alohida querylar
-        # Jami mahsulotlar soni (hozircha joriy sahifadan)
-        total_items = sum(len(sale.items) for sale in sales) if sales else 0
+        # Jami mahsulotlar soni - barcha filtrlangan savdolardan
+        total_items = 0
+        if filtered_sale_ids:
+            items_count_query = db.session.query(
+                func.sum(SaleItem.quantity)
+            ).filter(
+                SaleItem.sale_id.in_(filtered_sale_ids)
+            )
+            total_items = float(items_count_query.scalar() or 0)
 
         # Average order value
         avg_order_value = total_revenue / total_sales_count if total_sales_count > 0 else 0
