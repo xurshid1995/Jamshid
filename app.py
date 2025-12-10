@@ -7015,10 +7015,22 @@ def api_sales_chart():
         conditions = []
         params = {}
 
-        # Joylashuv filtri (store_id ustuni orqali)
+        # Joylashuv filtri (store_id yoki warehouse_id ustuni orqali)
+        location_type = request.args.get('location_type')
         if location_id:
-            conditions.append("s.store_id = :location_id")
-            params['location_id'] = int(location_id)
+            if location_type == 'store':
+                conditions.append("s.store_id = :location_id")
+                params['location_id'] = int(location_id)
+                print(f"🏪 Store filtri: store_id={location_id}")
+            elif location_type == 'warehouse':
+                conditions.append("s.warehouse_id = :location_id")
+                params['location_id'] = int(location_id)
+                print(f"🏭 Warehouse filtri: warehouse_id={location_id}")
+            else:
+                # Type berilmagan, ikkisini ham tekshiramiz (store yoki warehouse)
+                conditions.append("(s.store_id = :location_id OR s.warehouse_id = :location_id)")
+                params['location_id'] = int(location_id)
+                print(f"🏢 Umumiy filtri: location_id={location_id}")
 
         if date_from:
             conditions.append("DATE(s.sale_date) >= :date_from")

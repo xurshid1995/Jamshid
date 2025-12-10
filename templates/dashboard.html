@@ -329,7 +329,8 @@ async function loadLocations() {
             const button = document.createElement('button');
             button.className = 'btn btn-sm me-2 mb-2 location-btn';
             button.setAttribute('data-location', location.id);
-            button.onclick = () => selectLocation(button, location.id);
+            button.setAttribute('data-location-type', location.type);
+            button.onclick = () => selectLocation(button, location.id, location.type);
             
             // Tugma stili CSS orqali boshqariladi
             
@@ -343,7 +344,7 @@ async function loadLocations() {
     }
 }
 
-function selectLocation(clickedButton, locationId) {
+function selectLocation(clickedButton, locationId, locationType = null) {
     document.querySelectorAll('.location-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -352,7 +353,7 @@ function selectLocation(clickedButton, locationId) {
     
     // Aktiv vaqt filtrini ham yuboramiz
     const activePeriod = document.querySelector('.time-btn.active')?.getAttribute('data-period') || 'today';
-    loadSalesChart(locationId, activePeriod);
+    loadSalesChart(locationId, activePeriod, locationType);
 }
 
 function selectTimePeriod(clickedButton, period) {
@@ -364,15 +365,28 @@ function selectTimePeriod(clickedButton, period) {
     
     console.log('Tanlangan vaqt:', period);
     
-    // Aktiv joylashuvni topamiz va period bilan birga yuboramiz
-    const activeLocation = document.querySelector('.location-btn.active')?.getAttribute('data-location') || '';
-    loadSalesChart(activeLocation, period);
+    // Aktiv joylashuvni va turini topamiz
+    const activeLocationBtn = document.querySelector('.location-btn.active');
+    const activeLocation = activeLocationBtn?.getAttribute('data-location') || '';
+    const activeLocationType = activeLocationBtn?.getAttribute('data-location-type') || null;
+    loadSalesChart(activeLocation, period, activeLocationType);
 }
 
-async function loadSalesChart(locationId = null, period = null) {
+async function loadSalesChart(locationId = null, period = null, locationType = null) {
     try {
         const params = new URLSearchParams();
-        if (locationId) params.append('location_id', locationId);
+        if (locationId) {
+            params.append('location_id', locationId);
+            
+            // Agar type berilmasa, active tugmadan olamiz
+            if (!locationType) {
+                const activeBtn = document.querySelector('.location-btn.active');
+                locationType = activeBtn ? activeBtn.getAttribute('data-location-type') : null;
+            }
+            if (locationType) {
+                params.append('location_type', locationType);
+            }
+        }
         
         // Agar period berilmasa, aktiv period tugmasidan olamiz
         if (!period) {
