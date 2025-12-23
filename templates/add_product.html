@@ -1442,16 +1442,17 @@
         // Vaqtinchalik ro'yxatga qo'shish
         function addToTempList() {
             const productName = document.getElementById('product_name').value.trim();
+            // Tan narx maydonidagi qiymatni olish (bu ortacha narx bo'lishi mumkin)
             let costPrice = parseFloat(document.getElementById('cost_price').value);
             const sellPrice = parseFloat(document.getElementById('sell_price').value);
             const quantity = parseInt(document.getElementById('quantity').value);
             const minStock = parseInt(document.getElementById('min_stock').value) || 0;
             const location = document.getElementById('location').value;
             
-            // MUHIM: Agar userEnteredCostPrice mavjud bo'lsa (foydalanuvchi kiritgan qiymat), uni ishlatish
-            if (userEnteredCostPrice && userEnteredCostPrice > 0) {
-                costPrice = userEnteredCostPrice;
-                console.log(`✅ Backend uchun asl tan narx ishlatildi: $${costPrice} (ekranda ko'rsatilgan: ${document.getElementById('cost_price').value})`);
+            // MUHIM: Tan narx maydonidagi qiymatni (ortacha narx) ishlatish
+            console.log(`✅ Tan narx maydonidan olingan qiymat: $${costPrice}`);
+            if (userEnteredCostPrice) {
+                console.log(`ℹ️ Foydalanuvchi kiritgan asl qiymat: $${userEnteredCostPrice}, lekin tan narx maydonidagi ortacha narx ishlatiladi`);
             }
             
             // Validatsiya

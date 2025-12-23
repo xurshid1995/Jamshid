@@ -1361,32 +1361,15 @@ def api_add_product():
                 existing_product = Product.query.filter_by(
                     name=product_data['name']).first()
                 if existing_product:
-                    # Mavjud mahsulot - ortacha tan narxni hisoblash
-                    # Joriy stock miqdorini olish
-                    current_total_quantity = 0
-                    for ws in existing_product.warehouse_stocks:
-                        current_total_quantity += ws.quantity
-                    for ss in existing_product.store_stocks:
-                        current_total_quantity += ss.quantity
+                    # Mavjud mahsulot - Frontend allaqachon ortacha narxni hisoblagan
+                    # Backend to'g'ridan-to'g'ri qabul qiladi, qayta hisoblash yo'q
                     
-                    # Ortacha tan narxni hisoblash
-                    if current_total_quantity > 0:
-                        current_total_value = float(existing_product.cost_price) * current_total_quantity
-                        new_batch_value = float(cost_price) * quantity
-                        new_total_value = current_total_value + new_batch_value
-                        new_total_quantity = current_total_quantity + quantity
-                        new_average_cost = Decimal(str(new_total_value / new_total_quantity))
-                        
-                        logger.info(f"📊 Ortacha tan narx hisoblash:")
-                        logger.info(f"   Eski: {current_total_quantity} ta × ${existing_product.cost_price} = ${current_total_value}")
-                        logger.info(f"   Yangi: {quantity} ta × ${cost_price} = ${new_batch_value}")
-                        logger.info(f"   Jami: {new_total_quantity} ta = ${new_total_value}")
-                        logger.info(f"   Yangi ortacha: ${new_average_cost}")
-                        
-                        existing_product.cost_price = new_average_cost
-                    else:
-                        # Agar stock 0 bo'lsa, yangi narxni to'g'ridan-to'g'ri qo'yamiz
-                        existing_product.cost_price = cost_price
+                    logger.info(f"📊 Mavjud mahsulot yangilanmoqda:")
+                    logger.info(f"   Eski tan narx: ${existing_product.cost_price}")
+                    logger.info(f"   Frontend dan kelgan (allaqachon ortacha): ${cost_price}")
+                    
+                    # Frontend'dan kelgan ortacha narxni to'g'ridan-to'g'ri o'rnatish
+                    existing_product.cost_price = cost_price
                     
                     # Oxirgi partiya ma'lumotlarini saqlash
                     existing_product.last_batch_cost = cost_price
@@ -1559,34 +1542,13 @@ def api_batch_products():
                 db.session.flush()  # ID olish uchun
                 logger.info(f"✅ Yangi mahsulot yaratildi - ID: {product.id}, cost_price: ${product.cost_price}, last_batch_cost: ${product.last_batch_cost}")
             else:
-                # Mavjud mahsulot - ortacha tan narxni hisoblash
+                # Mavjud mahsulot - Frontend allaqachon ortacha narxni hisoblagan
                 logger.info(f"♻️ Mavjud mahsulot yangilanmoqda - ID: {product.id}")
                 logger.info(f"   Eski cost_price: ${product.cost_price}")
-                logger.info(f"   Eski last_batch_cost: ${product.last_batch_cost}")
+                logger.info(f"   Frontend dan kelgan (allaqachon ortacha): ${cost_price}")
                 
-                current_total_quantity = 0
-                for ws in product.warehouse_stocks:
-                    current_total_quantity += ws.quantity
-                for ss in product.store_stocks:
-                    current_total_quantity += ss.quantity
-                
-                # Ortacha tan narxni hisoblash
-                if current_total_quantity > 0:
-                    current_total_value = float(product.cost_price) * current_total_quantity
-                    new_batch_value = float(cost_price) * quantity
-                    new_total_value = current_total_value + new_batch_value
-                    new_total_quantity = current_total_quantity + quantity
-                    new_average_cost = Decimal(str(new_total_value / new_total_quantity))
-                    
-                    logger.info(f"📊 Ortacha narx hisoblash:")
-                    logger.info(f"   Eski: {current_total_quantity} ta × ${product.cost_price} = ${current_total_value}")
-                    logger.info(f"   Yangi: {quantity} ta × ${cost_price} = ${new_batch_value}")
-                    logger.info(f"   Yangi ortacha: ${new_average_cost}")
-                    
-                    product.cost_price = new_average_cost
-                else:
-                    logger.info(f"   Stock 0 - yangi narx to'g'ridan qo'yilmoqda")
-                    product.cost_price = cost_price
+                # Frontend'dan kelgan ortacha narxni to'g'ridan-to'g'ri o'rnatish
+                product.cost_price = cost_price
                 
                 # Oxirgi partiya ma'lumotlarini saqlash
                 product.last_batch_cost = cost_price
