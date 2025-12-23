@@ -1519,9 +1519,11 @@ def api_batch_products():
             cost_price = Decimal(str(product_data['cost_price']))
             sell_price = Decimal(str(product_data['sell_price']))
             min_stock = int(product_data['min_stock'])
+            last_batch_cost = Decimal(str(product_data.get('lastBatchCost', cost_price)))
             
             logger.info(f"🔍 Batch mahsulot qo'shilmoqda: {name}")
-            logger.info(f"   Tan narx (cost_price): ${cost_price}")
+            logger.info(f"   Tan narx (cost_price - ortacha): ${cost_price}")
+            logger.info(f"   Asl tan narx (lastBatchCost): ${last_batch_cost}")
             logger.info(f"   Sotish narx: ${sell_price}")
             logger.info(f"   Miqdor: {quantity}")
 
@@ -1534,7 +1536,7 @@ def api_batch_products():
                     name=name,
                     cost_price=cost_price,
                     sell_price=sell_price,
-                    last_batch_cost=cost_price,  # Birinchi partiya
+                    last_batch_cost=last_batch_cost,  # Frontend'dan kelgan qiymat
                     last_batch_date=datetime.now(timezone.utc),
                     min_stock=min_stock
                 )
@@ -1552,7 +1554,7 @@ def api_batch_products():
                 product.cost_price = cost_price
                 
                 # Oxirgi partiya ma'lumotlarini saqlash
-                product.last_batch_cost = Decimal(str(product_data.get('lastBatchCost', cost_price)))
+                product.last_batch_cost = last_batch_cost
                 product.last_batch_date = datetime.now(timezone.utc)
                 
                 logger.info(f"✅ Yangilandi - cost_price: ${product.cost_price}, last_batch_cost: ${product.last_batch_cost}")
