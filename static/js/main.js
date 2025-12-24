@@ -1,8 +1,17 @@
 // JavaScript funksiyalar
 
-// Global fetch interceptor - 401 xatolik uchun
+// Global fetch interceptor - 401 xatolik uchun va credentials qo'shish
 const originalFetch = window.fetch;
 window.fetch = function(...args) {
+    // Agar options yo'q bo'lsa yoki credentials yo'q bo'lsa, qo'shish
+    if (typeof args[1] !== 'object') {
+        args[1] = {};
+    }
+    // Cookie yuborilishini ta'minlash
+    if (!args[1].credentials) {
+        args[1].credentials = 'same-origin';  // Cookie'larni har doim yuborish
+    }
+    
     return originalFetch.apply(this, args)
         .then(response => {
             // Agar 401 xatolik bo'lsa va logout kerak bo'lsa

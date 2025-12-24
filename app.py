@@ -80,10 +80,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 # Session xavfsizligi
-app.config['SESSION_COOKIE_SECURE'] = False  # HTTPS yo'q, shuning uchun False
+app.config['SESSION_COOKIE_SECURE'] = False  # HTTP uchun False, HTTPS uchun True
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # JavaScript orqali o'qib bo'lmaydi
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF himoyasi
+app.config['SESSION_COOKIE_SAMESITE'] = 'None' if app.config['SESSION_COOKIE_SECURE'] else 'Lax'  # Cross-site uchun None, HTTP uchun Lax
 app.config['PERMANENT_SESSION_LIFETIME'] = 43200  # 12 soat (uzaytirilgan ish vaqti)
+app.config['SESSION_COOKIE_DOMAIN'] = None  # Subdomen muammosini hal qilish
 
 # SQLAlchemy obyektini yaratish
 db = SQLAlchemy(app)
