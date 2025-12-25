@@ -148,7 +148,7 @@
                 </h3>
                 <!-- Qidiruv maydoni -->
                 <div style="margin-bottom: 0.7rem;">
-                    <input type="text" id="statisticsSearchInput" placeholder="Ko'rsatkichni qidiring..." 
+                    <input type="text" id="statisticsSearchInput" placeholder="Qidirish (masalan: Mat gra weis)..." 
                            style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;"
                            onkeyup="filterStatistics()">
                 </div>
@@ -674,7 +674,7 @@ function filterProducts() {
 // Statistikalarni qidirish
 function filterStatistics() {
     const searchInput = document.getElementById('statisticsSearchInput');
-    const searchTerm = searchInput.value.toLowerCase();
+    const searchTerm = searchInput.value.trim();
     const tableBody = document.getElementById('statisticsTableBody');
     const rows = tableBody.getElementsByTagName('tr');
     
@@ -690,11 +690,37 @@ function filterStatistics() {
         }
         
         if (cells.length > 0) {
-            const indicatorName = cells[0].textContent.toLowerCase();
+            // Asl mahsulot nomini olish (data attribute'dan)
+            const originalName = row.dataset.originalStatsName || cells[0].textContent;
             
-            if (indicatorName.includes(searchTerm)) {
+            // Agar data attribute bo'lmasa, birinchi marta saqlash
+            if (!row.dataset.originalStatsName) {
+                row.dataset.originalStatsName = cells[0].textContent;
+            }
+            
+            // Qisman so'zlar bilan qidirish
+            const searchWords = searchTerm.toLowerCase().trim().split(/\s+/);
+            let matchesAll = true;
+            
+            if (searchTerm.trim()) {
+                for (const word of searchWords) {
+                    if (word && !originalName.toLowerCase().includes(word)) {
+                        matchesAll = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (matchesAll) {
                 row.style.display = '';
                 visibleCount++;
+                
+                // Qidiruv matnini highlight qilish
+                if (searchTerm.trim()) {
+                    cells[0].innerHTML = highlightSearchText(originalName, searchTerm);
+                } else {
+                    cells[0].textContent = originalName;
+                }
             } else {
                 row.style.display = 'none';
             }
