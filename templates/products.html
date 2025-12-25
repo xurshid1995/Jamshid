@@ -582,14 +582,25 @@
         }
     }
 
-    // Qidiruv matnini ajratib ko'rsatish funksiyasi
+    // Qidiruv matnini ajratib ko'rsatish funksiyasi (har bir so'zni alohida)
     function highlightSearchText(text, searchTerm) {
         if (!searchTerm || searchTerm.trim() === '') {
             return text;
         }
         
-        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-        return text.replace(regex, '<span class="search-highlight">$1</span>');
+        // Qidiruv so'zlarini ajratish
+        const searchWords = searchTerm.trim().split(/\s+/);
+        let highlightedText = text;
+        
+        // Har bir so'zni highlight qilish
+        searchWords.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                highlightedText = highlightedText.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+        });
+        
+        return highlightedText;
     }
 
     // Sahifa yuklanganda
