@@ -2782,7 +2782,7 @@
     }
 
     // Mijozlar qidirish funksiyasi
-    function searchCustomers(tabId) {
+    async function searchCustomers(tabId) {
         const currentTabId = tabId || activeTabId;
         if (!currentTabId) {
             console.error('searchCustomers: Tab ID topilmadi');
@@ -2797,7 +2797,7 @@
             return;
         }
         
-        const searchTerm = customerSearch.value.toLowerCase().trim();
+        const searchTerm = customerSearch.value.trim();
         
         if (!searchTerm) {
             dropdown.style.display = 'none';
@@ -2818,16 +2818,24 @@
             return;
         }
 
-        const filteredCustomers = allCustomers.filter(customer => 
-            (customer.name && customer.name.toLowerCase().includes(searchTerm)) ||
-            (customer.phone && customer.phone.includes(searchTerm)) ||
-            (customer.email && customer.email && customer.email.toLowerCase().includes(searchTerm))
-        );
-        
-        // Keyboard navigation uchun barcha natijalarni saqlash
-        filteredCustomersForNav = filteredCustomers; // Barcha mijozlarni ko'rsatish
-        
-        displayCustomerDropdown(filteredCustomers, currentTabId);
+        // Serverdan mijozlarni qidirish
+        try {
+            const response = await fetch(`/api/customers?search=${encodeURIComponent(searchTerm)}`);
+            const customers = await response.json();
+            
+            console.log(`🔍 Server tomonidan ${customers.length} ta mijoz topildi: "${searchTerm}"`);
+            
+            // Keyboard navigation uchun barcha natijalarni saqlash
+            filteredCustomersForNav = customers;
+            
+            displayCustomerDropdown(customers, currentTabId);
+        } catch (error) {
+            console.error('Error searching customers:', error);
+            dropdown.innerHTML = '<div class="dropdown-item" style="text-align: center; color: #dc3545;">⚠️ Qidirishda xatolik yuz berdi</div>';
+            setTimeout(() => {
+                dropdown.style.display = 'none';
+            }, 2000);
+        }
     }
 
     function displayCustomerDropdown(customers, tabId) {
