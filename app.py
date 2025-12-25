@@ -2057,9 +2057,15 @@ def api_store_stock(store_id):
         # Base query
         query = StoreStock.query.filter_by(store_id=store_id)
 
-        # Search filter
+        # Search filter - qisman so'zlar bilan qidirish
         if search:
-            query = query.join(Product).filter(Product.name.ilike(f'%{search}%'))
+            query = query.join(Product)
+            # Qidiruv so'zlarini bo'laklarga ajratish
+            search_words = search.lower().split()
+            # Har bir so'z uchun filter qo'shish
+            for word in search_words:
+                if word:  # Bo'sh so'zlarni o'tkazib yuborish
+                    query = query.filter(Product.name.ilike(f'%{word}%'))
 
         # Execute query with pagination
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -2272,9 +2278,15 @@ def api_warehouse_stock(warehouse_id):
         # Base query
         query = WarehouseStock.query.filter_by(warehouse_id=warehouse_id)
 
-        # Search filter
+        # Search filter - qisman so'zlar bilan qidirish
         if search:
-            query = query.join(Product).filter(Product.name.ilike(f'%{search}%'))
+            query = query.join(Product)
+            # Qidiruv so'zlarini bo'laklarga ajratish
+            search_words = search.lower().split()
+            # Har bir so'z uchun filter qo'shish
+            for word in search_words:
+                if word:  # Bo'sh so'zlarni o'tkazib yuborish
+                    query = query.filter(Product.name.ilike(f'%{word}%'))
 
         # Execute query with pagination
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)

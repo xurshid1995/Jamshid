@@ -145,6 +145,14 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    /* Search highlight styles */
+    .search-highlight {
+        background-color: #ffeb3b;
+        padding: 1px 2px;
+        border-radius: 2px;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
@@ -205,7 +213,7 @@
 <div style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
     <div style="overflow-x: auto;">
         <div class="search-container" style="padding: 1rem; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: flex-start; gap: 10px; align-items: center;">
-            <input type="text" id="search-input" class="search-box" placeholder="Mahsulot nomini qidiring..." onkeyup="filterTable()" style="width: 500px !important; max-width: 500px; border-radius: 25px; padding: 12px 20px; border: 2px solid #ddd;">
+            <input type="text" id="search-input" class="search-box" placeholder="Misol: Mat gra weis (qisman so'zlar)" onkeyup="filterTable()" style="width: 500px !important; max-width: 500px; border-radius: 25px; padding: 12px 20px; border: 2px solid #ddd;">
             <select id="status-filter" class="filter-select" onchange="handleFilterChange()" style="border-radius: 20px; padding: 10px 15px;">
                 <option value="">Barcha holatlar</option>
                 <option value="normal">Yetarli</option>
@@ -266,6 +274,28 @@
     let totalPages = 1;
     const itemsPerPage = 50;
     const storeId = {{ store.id }};
+    let currentSearchTerm = ''; // Qidiruv matnini saqlash
+
+    // Qidiruv matnini ajratib ko'rsatish funksiyasi (har bir so'zni alohida)
+    function highlightSearchText(text, searchTerm) {
+        if (!searchTerm || searchTerm.trim() === '') {
+            return text;
+        }
+        
+        // Qidiruv so'zlarini ajratish
+        const searchWords = searchTerm.trim().split(/\s+/);
+        let highlightedText = text;
+        
+        // Har bir so'zni highlight qilish
+        searchWords.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                highlightedText = highlightedText.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+        });
+        
+        return highlightedText;
+    }
 
     // DOM yuklanganida pagination sistemasini ishga tushirish
     document.addEventListener('DOMContentLoaded', function() {
@@ -282,6 +312,9 @@
         const tbody = document.querySelector('#stock-table tbody');
         const paginationInfo = document.querySelector('#pagination-info');
         const paginationButtons = document.querySelector('#pagination-buttons');
+        
+        // Qidiruv matnini saqlash
+        currentSearchTerm = search;
         
         // Yuklash indikatorini ko'rsatish
         tbody.innerHTML = `
@@ -342,13 +375,18 @@
             return;
         }
 
-        tbody.innerHTML = stockInfo.map(item => `
+        tbody.innerHTML = stockInfo.map(item => {
+            // Mahsulot nomini highlight qilish
+            const highlightedName = highlightSearchText(item.stock.product.name, currentSearchTerm);
+            
+            return `
             <tr class="stock-row" data-status="${item.status}" style="border-bottom: 1px solid #dee2e6;">
-                <td style="padding: 12px; text-align: left;"><strong>${item.stock.product.name}</strong></td>
+                <td style="padding: 12px; text-align: left;"><strong>${highlightedName}</strong></td>
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${item.stock.quantity}</td>                    <td style="padding: 12px; text-align: right; font-weight: bold; color: #9b59b6;">$${item.stock.product.last_batch_cost ? item.stock.product.last_batch_cost.toFixed(2) : '0.00'}</td>                <td style="padding: 12px; text-align: right; font-weight: bold; color: #3498db;">$${item.stock.product.cost_price.toFixed(2)}</td>
                 <td style="padding: 12px; text-align: right; font-weight: bold;">$${item.stock.product.sell_price.toFixed(2)}</td>
                 <td style="padding: 12px; text-align: right; color: #27ae60; font-weight: bold;">$${item.unit_profit.toFixed(2)}</td>
-                <td style="padding: 12px; text-align: center; color: #3498db; font-weight: bold;">${item.profit_percentage.toFixed(1)}%</td>
+                <td style="padding: 12px; text-align: center; color: #3498db; font-weight: bold;">${item.profit_percentage.toFixed(1)}%</td>`
+        }).join('');
                 <td style="padding: 12px; text-align: center;">
                     ${item.status === 'critical' ? '<span style="color: #000000; font-weight: bold;">🚫 Tugagan</span>' :
                       item.status === 'low' ? '<span style="color: #e74c3c; font-weight: bold;">⚠️ Kam qolgan</span>' :
