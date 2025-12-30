@@ -4657,15 +4657,34 @@ def api_sales_history():
                 f"🔍 Seller allowed locations for sales history: {allowed_locations}")
 
             if allowed_locations:
-                # Faqat ruxsat berilgan joylashuvlardagi savdolar
-                query = query.filter(Sale.store_id.in_(allowed_locations))
-                print(
-                    f"🔍 Filtering sales history by locations: {allowed_locations}")
+                # Extract store IDs from allowed locations (faqat type='store' bo'lganlar)
+                store_ids = []
+                for loc in allowed_locations:
+                    if isinstance(loc, dict):
+                        # New format: {'id': 4, 'type': 'store'}
+                        if loc.get('type') == 'store':
+                            store_ids.append(loc.get('id'))
+                    elif isinstance(loc, (int, str)):
+                        # Old format: just ID
+                        try:
+                            store_ids.append(int(loc))
+                        except (ValueError, TypeError):
+                            pass
+                
+                if store_ids:
+                    # Faqat ruxsat berilgan do'konlardagi savdolar
+                    query = query.filter(Sale.store_id.in_(store_ids))
+                    print(
+                        f"🔍 Filtering sales history by store IDs: {store_ids}")
+                else:
+                    # Hech qaysi do'kon ruxsat berilmagan
+                    query = query.filter(Sale.id == -1)
+                    logger.debug("⚠️ No store locations allowed, returning empty sales history")
             else:
                 # Ruxsat berilgan joylashuv bo'lmasa, bo'sh natija
                 # Hech qaysi savdo topilmaydi
                 query = query.filter(Sale.id == -1)
-                logger.debug(" No allowed locations, returning empty sales history")
+                logger.debug("⚠️ No allowed locations, returning empty sales history")
 
         # Apply date filters
         start_date_obj = None
