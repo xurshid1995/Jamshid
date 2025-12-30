@@ -4799,14 +4799,19 @@
             console.log(`   Asl miqdor: ${originalQuantity}, Joriy: ${currentQuantity}`);
             
             
-            // Tahrirlash yuklanayotganda stock operatsiyalarini skip qilish
+            // Tahrirlash yuklanayotganda yoki tahrirlash uchun remove qilinayotganda stock operatsiyalarini skip qilish
             if (tabData.isLoadingEditData) {
-                console.log('Tahrirlash yuklanmoqda - stock qaytarish skip qilindi');
+                console.log('⏸️ Tahrirlash yuklanmoqda - stock qaytarish skip qilindi');
+                stockReturnSuccess = true; // Skip qilindi deb belgilash
+            } else if (tabData.currentEditingItem && tabData.currentEditingItem.id === productId) {
+                // Agar mahsulot tahrirlash uchun olib tashlanayotgan bo'lsa
+                console.log('✏️ Mahsulot tahrirlash uchun olib tashlanmoqda - stock qaytarish skip qilindi');
+                console.log('   (Stock allaqachon addSelectedProductAsync da qaytariladi)');
                 stockReturnSuccess = true; // Skip qilindi deb belgilash
             } else {
                 // ODDIY MANTIQ: Har doim stock qaytarish
                 // Korzinadan olib tashlanganda har doim stock qaytariladi
-                console.log('Mahsulot korzinadan olib tashlanmoqda - stock qaytarish:', currentQuantity, 'ta');
+                console.log('🗑️ Mahsulot korzinadan o\'chirilmoqda - stock qaytarish:', currentQuantity, 'ta');
                 
                 try {
                     stockReturnSuccess = await addStock(
@@ -4817,13 +4822,13 @@
                     );
                     
                     if (stockReturnSuccess) {
-                        console.log('Stock muvaffaqiyatli qaytarildi:', currentQuantity, 'ta');
+                        console.log('✅ Stock muvaffaqiyatli qaytarildi:', currentQuantity, 'ta');
                         showAlert('Mahsulot uchun ' + currentQuantity + ' ta stock qaytarildi!', 'success');
                     } else {
-                        console.log('Stock qaytarishda muammo');
+                        console.log('❌ Stock qaytarishda muammo');
                     }
                 } catch (error) {
-                    console.error('Stock qaytarishda xatolik:', error);
+                    console.error('❌ Stock qaytarishda xatolik:', error);
                     stockReturnSuccess = false;
                 }
             }
@@ -5946,14 +5951,21 @@
         console.log('🔍 Tahrirlashga tayyorlanayotgan mahsulot:', itemCopy);
         
         // MUHIM: Tahrirlash rejimini oldindan o'rnatish (removeFromCart chaqirishdan oldin)
+        // Bu removeFromCart'ga signal beradi: stock qaytarish kerak emas
         tabData.currentEditingItem = itemCopy;
         
-        // Mahsulotni korzinadan olib tashlash (stock qaytarish bilan)
-        console.log(`🗑️ Mahsulotni korzinadan olib tashlash: ${itemCopy.name} (ID: ${productId})`);
+        // Mahsulotni korzinadan olib tashlash (STOCK QAYTARMASDAN!)
+        // removeFromCart funksiyasi currentEditingItem ni tekshiradi va skip qiladi
+        console.log(`🗑️ Mahsulotni korzinadan olib tashlash (tahrirlash uchun): ${itemCopy.name} (ID: ${productId})`);
+        console.log(`   ⚠️ DIQQAT: Stock qaytarilMAYDI - faqat korzinadan olib tashlanadi`);
+        
         const stockReturned = await removeFromCart(productId, currentTabId);
+        
+        // removeFromCart funksiyasi currentEditingItem tekshirganda true qaytaradi (skip qilgani)
         if (!stockReturned) {
-            console.error(`❌ Stock qaytarishda muammo bo'ldi.`);
+            console.error(`❌ Korzinadan olib tashlashda muammo bo'ldi.`);
             showAlert(`❌ Mahsulotni tahrirlashda xatolik yuz berdi`, 'error');
+            tabData.currentEditingItem = null; // Reset qilish
             return;
         }
         
