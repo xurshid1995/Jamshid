@@ -5843,56 +5843,21 @@ def create_pending_sale(data):
 
         # Agar asl savdo ID'si berilgan bo'lsa, uni o'chirish
         if original_sale_id:
-            logger.info(f" Asl savdoni pending qilish: ID={original_sale_id}")
+            logger.info(f"📝 Asl savdoni pending qilish: ID={original_sale_id}")
             original_sale = Sale.query.get(original_sale_id)
             if original_sale:
-                # Stock'ni qaytarish (faqat skip_stock_return False bo'lsa)
-                if not skip_stock_return:
-                    logger.info(
-                        f"📦 Stock qaytarilmoqda asl savdo uchun: {original_sale_id}")
-                    for item in original_sale.items:
-                        product_id = item.product_id
-                        original_qty = item.quantity
-                        
-                        # Yangi miqdorni topish
-                        new_qty = 0
-                        for new_item in items:
-                            if new_item.get('product_id') == product_id:
-                                new_qty = new_item.get('quantity', 0)
-                                break
-                        
-                        # Faqat farqni qaytarish (agar kamaygan bo'lsa)
-                        diff = original_qty - new_qty
-                        logger.info(f"   Mahsulot {product_id}: asl={original_qty}, yangi={new_qty}, farq={diff}")
-                        
-                        if diff > 0:  # Faqat kamaygan bo'lsa qaytarish
-                            if item.source_type == 'store':
-                                stock = StoreStock.query.filter_by(
-                                    store_id=item.source_id,
-                                    product_id=item.product_id
-                                ).first()
-                                if stock:
-                                    stock.quantity += diff
-                                    logger.info(f"   ✅ Store stockga qaytarildi: +{diff}")
-                            elif item.source_type == 'warehouse':
-                                stock = WarehouseStock.query.filter_by(
-                                    warehouse_id=item.source_id,
-                                    product_id=item.product_id
-                                ).first()
-                                if stock:
-                                    stock.quantity += diff
-                                    logger.info(f"   ✅ Warehouse stockga qaytarildi: +{diff}")
-                        elif diff < 0:  # Agar oshgan bo'lsa, frontend allaqachon reserve qilgan
-                            logger.info(f"   ⏭️ Miqdor oshgan, frontend allaqachon reserve qilgan: {diff}")
-                        else:
-                            logger.info("   ⏭️ Miqdor o'zgarmagan")
-                else:
-                    logger.info(
-                        "⏭️ Stock qaytarish o'tkazib yuborildi (skip_stock_return=True)")
+                # ⚠️ MUHIM: Stock qaytarilmasligi kerak!
+                # Frontend allaqachon real-time stock boshqaradi:
+                # - Miqdor kamaysa: frontend stock qaytaradi
+                # - Miqdor oshsa: frontend stock rezerv qiladi
+                # Backend'da stock qaytarish duplicate yaratadi!
+                logger.info("⏭️ Stock qaytarilmaydi - frontend real-time boshqaradi")
 
                 # Asl savdoni o'chirish
                 db.session.delete(original_sale)
                 logger.info("✅ Asl savdo o'chirildi")
+        else:
+            logger.info("📝 Yangi pending savdo yaratilmoqda (asl savdo yo'q)")
 
         # Customer ID ni int ga o'girish
         final_customer_id = None
