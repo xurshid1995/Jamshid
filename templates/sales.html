@@ -2447,7 +2447,7 @@
                             </div>
                             <div class="form-group" style="margin: 0;">
                                 <label for="quantity-{TAB_ID}" style="font-size: 0.85rem; color: #666;">📦 Miqdor:</label>
-                                <input type="number" id="quantity-{TAB_ID}" class="form-input" placeholder="0" min="0" onkeydown="if(event.key==='Enter') addSelectedProduct('{TAB_ID}')">
+                                <input type="number" id="quantity-{TAB_ID}" class="form-input" placeholder="0" min="0" oninput="validateQuantityInput('{TAB_ID}')" onkeydown="if(event.key==='Enter') addSelectedProduct('{TAB_ID}')">
                             </div>
                         </div>
                     </div>
@@ -3421,6 +3421,11 @@
             if (quantityInput) {
                 quantityInput.focus();
                 quantityInput.select(); // Agar oldingi qiymat bo'lsa, uni tanlab qo'yish
+                
+                // Agar oldingi qiymat bo'lsa, validatsiya qilish
+                if (quantityInput.value && parseInt(quantityInput.value) > 0) {
+                    validateQuantityInput(currentTabId);
+                }
             }
         }, 100);
     }
@@ -3731,6 +3736,68 @@
         if (editPriceInput) {
             editPriceInput.style.border = '';
             editPriceInput.style.backgroundColor = '';
+        }
+    }
+
+    // Miqdor input'dagi qiymatni real-time validatsiya qilish
+    function validateQuantityInput(tabId) {
+        const currentTabId = tabId || activeTabId;
+        if (!currentTabId) return;
+
+        const tabData = tabs[currentTabId];
+        if (!tabData) return;
+
+        const quantityInput = document.getElementById(`quantity-${currentTabId}`);
+        if (!quantityInput) return;
+
+        const enteredQuantity = parseInt(quantityInput.value) || 0;
+        
+        // Agar mahsulot tanlanmagan bo'lsa, validatsiya qilmaslik
+        if (!tabData.selectedProduct && !tabData.currentEditingItem) {
+            return;
+        }
+
+        // Mavjud stock miqdorini aniqlash
+        let availableQty = 0;
+        let locationText = '';
+
+        if (tabData.currentEditingItem) {
+            // Tahrirlash rejimida
+            const stockQty = tabData.selectedProduct?.available_quantity || tabData.selectedProduct?.total_stock || 0;
+            
+            // Asl miqdorni hisobga olish
+            if (tabData.isEditMode && tabData.originalQuantities && tabData.originalQuantities[tabData.currentEditingItem.id]) {
+                const originalQty = tabData.originalQuantities[tabData.currentEditingItem.id] || 0;
+                availableQty = stockQty + originalQty;
+            } else {
+                availableQty = stockQty;
+            }
+            locationText = tabData.currentEditingItem.location_type === 'warehouse' ? 'omborda' : 'do\'konda';
+        } else if (tabData.selectedProduct) {
+            // Oddiy qo'shish rejimida
+            availableQty = tabData.selectedProduct.available_quantity || tabData.selectedProduct.total_stock || 0;
+            locationText = tabData.selectedProduct.location_type === 'warehouse' ? 'omborda' : 'do\'konda';
+            
+            // Korzinada mavjud miqdorni ham hisobga olish
+            const existingItem = tabData.cart.find(item => item.id === tabData.selectedProduct.id);
+            if (existingItem) {
+                availableQty = availableQty - existingItem.quantity;
+            }
+        }
+
+        // Qizil rang bilan ko'rsatish agar miqdor stokdan oshsa
+        if (enteredQuantity > availableQty) {
+            quantityInput.style.border = '2px solid #e74c3c';
+            quantityInput.style.backgroundColor = '#ffe6e6';
+            quantityInput.title = `⚠️ Maksimal ${availableQty} ta ${locationText} mavjud!`;
+        } else if (enteredQuantity > 0) {
+            quantityInput.style.border = '2px solid #2ecc71';
+            quantityInput.style.backgroundColor = '#e8f8f5';
+            quantityInput.title = `✅ To'g'ri miqdor. ${availableQty} ta ${locationText} mavjud.`;
+        } else {
+            quantityInput.style.border = '';
+            quantityInput.style.backgroundColor = '';
+            quantityInput.title = '';
         }
     }
 
