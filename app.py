@@ -6,9 +6,10 @@ import os
 import sys
 import urllib.parse
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal, getcontext
 from functools import wraps
+import pytz
 
 from dotenv import load_dotenv
 from flask import (Flask, render_template, request, jsonify, redirect,
@@ -91,6 +92,13 @@ db = SQLAlchemy(app)
 
 # Decimal aniqlik o'rnatish
 getcontext().prec = 10
+
+# O'zbekiston vaqt zonasi
+TASHKENT_TZ = pytz.timezone('Asia/Tashkent')
+
+def get_tashkent_time():
+    """O'zbekiston vaqtini qaytaradi"""
+    return datetime.now(TASHKENT_TZ)
 
 # Konstantalar
 DEFAULT_PHONE_PLACEHOLDER = os.getenv('DEFAULT_PHONE_PLACEHOLDER', 'Telefon kiritilmagan')
@@ -264,7 +272,7 @@ class Product(db.Model):
     last_batch_cost = db.Column(db.DECIMAL(precision=10, scale=2))  # Oxirgi partiya tan narxi
     last_batch_date = db.Column(db.DateTime)  # Oxirgi partiya sanasi
     created_at = db.Column(db.DateTime,
-                           default=lambda: datetime.now(timezone.utc))  # Qo'shilgan sana
+                           default=lambda: get_tashkent_time())  # Qo'shilgan sana
     is_checked = db.Column(
         db.Boolean,
         default=False,
@@ -880,7 +888,7 @@ class StockChange(db.Model):
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True)
     store_id = db.Column(db.Integer, db.ForeignKey('stores.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    change_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    change_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     notes = db.Column(db.Text, nullable=True)
     
     # Relationships (backref olib tashlandi - delete muammosini keltirib chiqaradi)
@@ -902,7 +910,7 @@ class ProductAddHistory(db.Model):
     location_type = db.Column(db.String(20), nullable=False)  # 'warehouse' or 'store'
     location_name = db.Column(db.String(200), nullable=False)  # Ombor yoki do'kon nomi
     added_by = db.Column(db.String(100), nullable=True)  # Qo'shgan foydalanuvchi
-    added_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    added_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     notes = db.Column(db.Text, nullable=True)
 
 
@@ -913,8 +921,8 @@ class CurrencyRate(db.Model):
     from_currency = db.Column(db.String(3), nullable=False, default='USD')
     to_currency = db.Column(db.String(3), nullable=False, default='UZS')
     rate = db.Column(db.DECIMAL(precision=15, scale=4), nullable=False)
-    created_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
+    updated_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     is_active = db.Column(db.Boolean, default=True)
     updated_by = db.Column(db.String(100), default='system')
 
@@ -1394,7 +1402,7 @@ def api_add_product():
                     
                     # Oxirgi partiya ma'lumotlarini saqlash
                     existing_product.last_batch_cost = Decimal(str(product_data.get('lastBatchCost', cost_price)))
-                    existing_product.last_batch_date = datetime.now(timezone.utc)
+                    existing_product.last_batch_date = get_tashkent_time()
                     
                     # Boshqa maydonlar
                     existing_product.sell_price = sell_price
@@ -1408,7 +1416,7 @@ def api_add_product():
                         cost_price=cost_price,
                         sell_price=sell_price,
                         last_batch_cost=cost_price,  # Birinchi partiya
-                        last_batch_date=datetime.now(timezone.utc),
+                        last_batch_date=get_tashkent_time(),
                         stock_quantity=0,  # Global stock 0 ga qo'yamiz
                         min_stock=product_data.get('minStock', 0)
                     )
@@ -1558,7 +1566,7 @@ def api_batch_products():
                     cost_price=cost_price,
                     sell_price=sell_price,
                     last_batch_cost=last_batch_cost,  # Frontend'dan kelgan qiymat
-                    last_batch_date=datetime.now(timezone.utc),
+                    last_batch_date=get_tashkent_time(),
                     min_stock=min_stock
                 )
                 db.session.add(product)
@@ -1576,7 +1584,7 @@ def api_batch_products():
                 
                 # Oxirgi partiya ma'lumotlarini saqlash
                 product.last_batch_cost = last_batch_cost
-                product.last_batch_date = datetime.now(timezone.utc)
+                product.last_batch_date = get_tashkent_time()
                 
                 logger.info(f"✅ Yangilandi - cost_price: ${product.cost_price}, last_batch_cost: ${product.last_batch_cost}")
                 
@@ -1888,7 +1896,7 @@ def add_customer():
                 email=email,
                 address=address,
                 store_id=store_id,
-                created_at=datetime.now()
+                created_at=get_tashkent_time()
             )
 
             db.session.add(new_customer)
@@ -3942,7 +3950,7 @@ def get_transfer_history():
         cleanup_old_transfers()
 
         # 40 kun oldini hisoblash
-        forty_days_ago = datetime.now() - timedelta(days=40)
+        forty_days_ago = get_tashkent_time() - timedelta(days=40)
 
         # Faqat so'nggi 40 kun ichidagi transferlarni olish
         transfers = Transfer.query.filter(
@@ -3962,10 +3970,8 @@ def get_transfer_history():
 def cleanup_old_transfers():
     """40 kundan eski transferlarni o'chirish"""
     try:
-        from datetime import datetime, timedelta
-
         # 40 kun oldini hisoblash
-        forty_days_ago = datetime.now() - timedelta(days=40)
+        forty_days_ago = get_tashkent_time() - timedelta(days=40)
 
         # Eski transferlarni topish
         old_transfers = Transfer.query.filter(
@@ -3991,10 +3997,8 @@ def cleanup_old_transfers():
 def manual_cleanup_transfers():
     """Qo'lda eski transferlarni tozalash"""
     try:
-        from datetime import datetime, timedelta
-
         # 40 kun oldini hisoblash
-        forty_days_ago = datetime.now() - timedelta(days=40)
+        forty_days_ago = get_tashkent_time() - timedelta(days=40)
 
         # Eski transferlarni topish
         old_transfers = Transfer.query.filter(
@@ -4753,7 +4757,7 @@ def api_sales_history():
         # Statistika uchun alohida query yaratish
         if stats_date_filter == 'today':
             # Faqat bugungi kun
-            today = datetime.now().date()
+            today = get_tashkent_time().date()
             today_start = datetime.combine(today, datetime.min.time())
             today_end = datetime.combine(today, datetime.max.time())
             stats_filtered_query = base_stats_query.filter(
@@ -6008,7 +6012,7 @@ def api_reserve_stock():
         print(f"   Product ID: {product_id}")
         print(f"   Quantity: {quantity}")
         print(f"   Location: {location_id} ({location_type})")
-        print(f"   Timestamp: {datetime.now()}")
+        print(f"   Timestamp: {get_tashkent_time()}")
         print(f"{'='*80}\n")
 
         # Mahsulotni tekshirish
@@ -6108,7 +6112,7 @@ def api_return_stock():
         print(f"   Product ID: {product_id}")
         print(f"   Quantity: {quantity}")
         print(f"   Location: {location_id} ({location_type})")
-        print(f"   Timestamp: {datetime.now()}")
+        print(f"   Timestamp: {get_tashkent_time()}")
         print(f"{'='*80}\n")
 
         # Mahsulotni tekshirish
@@ -6268,7 +6272,7 @@ def api_update_pending_sale(sale_id):
             existing_sale.customer_id = data['customer_id']
 
         existing_sale.total_amount = Decimal(str(data.get('total_amount', 0)))
-        existing_sale.updated_date = datetime.now()
+        existing_sale.updated_date = get_tashkent_time()
 
         if data.get('notes'):
             existing_sale.notes = data['notes']
@@ -6419,7 +6423,7 @@ def update_currency_rate():
             to_currency='UZS',
             rate=new_rate,
             updated_by=updated_by,
-            updated_date=datetime.now()
+            updated_date=get_tashkent_time()
         )
 
         # Eski kurslarni nofaol qilish
@@ -7089,7 +7093,7 @@ def api_sales_chart():
 
         # Vaqt filtri bo'yicha date_from va date_to ni belgilaymiz
         if not date_from:
-            today = datetime.now().date()
+            today = get_tashkent_time().date()
 
             if period == 'today':
                 date_from = today.strftime('%Y-%m-%d')
@@ -7410,7 +7414,7 @@ def save_settings():
             if setting:
                 # Mavjud sozlamani yangilash
                 setting.value = str(value)
-                setting.updated_at = datetime.now()
+                setting.updated_at = get_tashkent_time()
             else:
                 # Yangi sozlama yaratish
                 setting = Settings(
