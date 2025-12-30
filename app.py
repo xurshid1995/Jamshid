@@ -796,7 +796,7 @@ class Sale(db.Model):
         db.Integer,
         db.ForeignKey('users.id'),
         nullable=True)
-    sale_date = db.Column(db.DateTime, default=db.func.current_timestamp())
+    sale_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     total_amount = db.Column(
         db.DECIMAL(
             precision=12,
@@ -825,7 +825,7 @@ class Sale(db.Model):
         nullable=False,
         default=12500.0000)
     created_by = db.Column(db.String(100), default='System')
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default=lambda: get_tashkent_time())
 
     # Relationships
     customer = db.relationship('Customer', backref='sales')
@@ -5846,10 +5846,15 @@ def create_pending_sale(data):
                 logger.info(f" Eski pending savdo o'chirildi: {pending_sale_id}")
 
         # Agar asl savdo ID'si berilgan bo'lsa, uni o'chirish
+        original_sale_date = None  # Asl savdo vaqtini saqlash uchun
         if original_sale_id:
             logger.info(f"📝 Asl savdoni pending qilish: ID={original_sale_id}")
             original_sale = Sale.query.get(original_sale_id)
             if original_sale:
+                # Asl savdo vaqtini saqlash
+                original_sale_date = original_sale.sale_date
+                logger.info(f"🕐 Asl savdo vaqti saqlandi: {original_sale_date}")
+                
                 # ⚠️ MUHIM: Stock qaytarilmasligi kerak!
                 # Frontend allaqachon real-time stock boshqaradi:
                 # - Miqdor kamaysa: frontend stock qaytaradi
@@ -5898,6 +5903,11 @@ def create_pending_sale(data):
             currency_rate=current_rate,
             created_by=f'{current_user.first_name} {current_user.last_name} - Pending'
         )
+        
+        # Agar asl savdo vaqti mavjud bo'lsa, uni o'rnatish
+        if original_sale_date:
+            new_sale.sale_date = original_sale_date
+            logger.info(f"✅ Asl savdo vaqti o'rnatildi: {original_sale_date}")
 
         db.session.add(new_sale)
         db.session.flush()  # ID ni olish uchun
