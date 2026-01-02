@@ -308,9 +308,19 @@
     
     // USD dan UZS ga avtomatik konversiya
     function updateUZSPrice() {
-        const usdPrice = parseFloat(document.getElementById('modalPriceUSD').value) || 0;
+        const usdInput = document.getElementById('modalPriceUSD');
+        const uzsInput = document.getElementById('modalPriceUZS');
+        
+        if (!usdInput || !uzsInput) {
+            console.error('❌ Modal input elementlari topilmadi');
+            return;
+        }
+        
+        const usdPrice = parseFloat(usdInput.value) || 0;
         const uzsPrice = usdPrice * exchangeRate;
-        document.getElementById('modalPriceUZS').value = uzsPrice.toFixed(2);
+        uzsInput.value = uzsPrice.toFixed(2);
+        
+        console.log('💱 Konversiya:', usdPrice, 'USD ×', exchangeRate, '=', uzsPrice.toFixed(2), 'UZS');
     }
     
     // Modal ochish
