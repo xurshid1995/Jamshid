@@ -92,19 +92,31 @@
     
     <!-- Modal oyna -->
     <div id="quantityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-        <div style="background: white; border-radius: 8px; padding: 30px; width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-            <h3 style="margin: 0 0 20px 0; color: #333;">Miqdorni kiriting</h3>
+        <div style="background: white; border-radius: 8px; padding: 30px; width: 450px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <h3 style="margin: 0 0 20px 0; color: #333;">Mahsulot ma'lumotlari</h3>
             <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mahsulot:</label>
+                <label style="display: block; margin-bottom: 5px; font-weight: 500;">📦 Mahsulot:</label>
                 <div id="modalProductName" style="padding: 10px; background: #f8f9fa; border-radius: 4px; font-weight: 500;"></div>
             </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mavjud:</label>
-                <div id="modalAvailable" style="padding: 10px; background: #f8f9fa; border-radius: 4px; color: #28a745;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">📊 Mavjud:</label>
+                    <input type="number" id="modalAvailable" readonly style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; background: #e9ecef;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">🔢 Miqdor:</label>
+                    <input type="number" id="modalQuantity" min="1" value="0" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                </div>
             </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Miqdor:</label>
-                <input type="number" id="modalQuantity" min="1" value="1" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">💵 Sotish narxi ($):</label>
+                    <input type="number" id="modalPriceUSD" step="0.01" value="0.00" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">💰 Sotish narxi (UZS):</label>
+                    <input type="number" id="modalPriceUZS" readonly style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; background: #e9ecef;">
+                </div>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeModal()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Bekor qilish</button>
@@ -277,14 +289,40 @@
         }
     }
     
+    // Valyuta kursi (global o'zgaruvchi)
+    let exchangeRate = 12700; // Default kurs
+    
+    // Valyuta kursini olish
+    async function loadExchangeRate() {
+        try {
+            const response = await fetch('/api/currency-rate');
+            const data = await response.json();
+            if (data.rate) {
+                exchangeRate = parseFloat(data.rate);
+                console.log('✅ Valyuta kursi yuklandi:', exchangeRate);
+            }
+        } catch (error) {
+            console.error('Kursni yuklashda xatolik:', error);
+        }
+    }
+    
+    // USD dan UZS ga avtomatik konversiya
+    function updateUZSPrice() {
+        const usdPrice = parseFloat(document.getElementById('modalPriceUSD').value) || 0;
+        const uzsPrice = usdPrice * exchangeRate;
+        document.getElementById('modalPriceUZS').value = uzsPrice.toFixed(2);
+    }
+    
     // Modal ochish
     function addToCart(productId, productName, quantity, price) {
         currentProduct = { id: productId, name: productName, available: quantity, price: price };
         
         document.getElementById('modalProductName').textContent = productName;
-        document.getElementById('modalAvailable').textContent = `${quantity} dona`;
+        document.getElementById('modalAvailable').value = quantity;
         document.getElementById('modalQuantity').value = 1;
         document.getElementById('modalQuantity').max = quantity;
+        document.getElementById('modalPriceUSD').value = price.toFixed(2);
+        updateUZSPrice();
         
         document.getElementById('quantityModal').style.display = 'flex';
     }
@@ -298,9 +336,16 @@
     // Savatga qo'shish
     function confirmAddToCart() {
         const quantity = parseInt(document.getElementById('modalQuantity').value);
+        const priceUSD = parseFloat(document.getElementById('modalPriceUSD').value);
+        const priceUZS = parseFloat(document.getElementById('modalPriceUZS').value);
         
         if (quantity <= 0 || quantity > currentProduct.available) {
             alert('Noto\'g\'ri miqdor!');
+            return;
+        }
+        
+        if (priceUSD <= 0) {
+            alert('Narx kiritilishi shart!');
             return;
         }
         
@@ -309,18 +354,21 @@
         
         if (existingItem) {
             existingItem.quantity += quantity;
+            existingItem.priceUSD = priceUSD;
+            existingItem.priceUZS = priceUZS;
         } else {
             cart.push({
                 id: currentProduct.id,
                 name: currentProduct.name,
-                price: currentProduct.price,
+                priceUSD: priceUSD,
+                priceUZS: priceUZS,
                 quantity: quantity
             });
         }
         
         updateCart();
         closeModal();
-        console.log('✅ Savatga qo\'shildi:', currentProduct.name, quantity, 'dona');
+        console.log('✅ Savatga qo\'shildi:', currentProduct.name, quantity, 'dona, $' + priceUSD);
     }
     
     // Savatni yangilash
@@ -335,18 +383,24 @@
         }
         
         let html = '';
-        let total = 0;
+        let totalUSD = 0;
+        let totalUZS = 0;
         
         cart.forEach((item, index) => {
-            const itemTotal = item.price * item.quantity;
-            total += itemTotal;
+            const subtotalUSD = item.priceUSD * item.quantity;
+            const subtotalUZS = item.priceUZS * item.quantity;
+            totalUSD += subtotalUSD;
+            totalUZS += subtotalUZS;
             
             html += `
                 <div style="padding: 15px; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; background: white;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                         <div style="flex: 1;">
                             <div style="font-weight: 500; color: #333; margin-bottom: 5px;">${item.name}</div>
-                            <div style="font-size: 13px; color: #6c757d;">$${formatPrice(item.price)} × ${item.quantity} = $${formatPrice(itemTotal)}</div>
+                            <div style="font-size: 13px; color: #6c757d;">
+                                $${item.priceUSD.toFixed(2)} × ${item.quantity} = $${subtotalUSD.toFixed(2)}<br>
+                                ${formatPrice(item.priceUZS)} so'm × ${item.quantity} = ${formatPrice(subtotalUZS)} so'm
+                            </div>
                         </div>
                         <button onclick="removeFromCart(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">×</button>
                     </div>
@@ -355,7 +409,10 @@
         });
         
         cartItemsDiv.innerHTML = html;
-        cartTotalDiv.innerHTML = `Jami: <span style="color: #007bff;">$${formatPrice(total)}</span>`;
+        cartTotalDiv.innerHTML = `
+            <div style="font-size: 16px; color: #333; margin-bottom: 5px;">Jami ($): <span style="color: #007bff; font-weight: bold;">$${totalUSD.toFixed(2)}</span></div>
+            <div style="font-size: 18px; color: #28a745; font-weight: bold;">Jami (UZS): ${formatPrice(totalUZS)} so'm</div>
+        `;
     }
     
     // Savatdan o'chirish
@@ -449,6 +506,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadLocations();
         loadCustomers();
+        loadExchangeRate();
         
         // Mahsulot qidirish input'ga event listener qo'shish
         const productSearchInput = document.getElementById('productSearch');
@@ -461,6 +519,11 @@
         if (customerSearchInput) {
             customerSearchInput.addEventListener('input', function() {
                 searchCustomers(this.value);
+            });
+        }
+        
+        // USD narx o'zgarganda avtomatik UZS hisoblash
+        document.getElementById('modalPriceUSD').addEventListener('input', updateUZSPrice);
             });
             
             // Input focus bo'lganda dropdown'ni ko'rsatish
