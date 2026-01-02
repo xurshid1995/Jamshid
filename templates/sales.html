@@ -2814,20 +2814,36 @@
     
     // Yangi jadval uchun joylashuvlarni to'ldirish
     function populateNewLocationSelect() {
+        console.log('🔍 populateNewLocationSelect ishga tushdi');
+        console.log('🔍 allLocations:', allLocations);
+        console.log('🔍 allLocations.length:', allLocations.length);
+        
         const locationSelect = document.getElementById('newLocationSelect');
-        if (locationSelect && allLocations.length > 0) {
-            locationSelect.innerHTML = '<option value="">Tanlang...</option>';
+        console.log('🔍 locationSelect element:', locationSelect);
+        
+        if (!locationSelect) {
+            console.error('❌ newLocationSelect elementi topilmadi!');
+            return;
+        }
+        
+        if (allLocations.length === 0) {
+            console.warn('⚠️ allLocations bo\'sh array!');
+            return;
+        }
+        
+        locationSelect.innerHTML = '<option value="">Tanlang...</option>';
+        
+        allLocations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = `${location.type}_${location.id}`;
             
-            allLocations.forEach(location => {
-                const option = document.createElement('option');
-                option.value = `${location.type}_${location.id}`;
-                
-                let locationType = location.type === 'warehouse' ? '🏭 Ombor' : '🏪 Do\'kon';
-                option.textContent = `${locationType}: ${location.name}`;
-                locationSelect.appendChild(option);
-            });
-            
-            console.log(`✅ Yangi jadval uchun ${allLocations.length} ta joylashuv to'ldirildi`);
+            let locationType = location.type === 'warehouse' ? '🏭 Ombor' : '🏪 Do\'kon';
+            option.textContent = `${locationType}: ${location.name}`;
+            locationSelect.appendChild(option);
+            console.log(`✅ Qo'shildi: ${option.textContent}`);
+        });
+        
+        console.log(`✅ Yangi jadval uchun ${allLocations.length} ta joylashuv to'ldirildi`);
         }
     }
     
