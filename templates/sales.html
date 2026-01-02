@@ -196,9 +196,15 @@
         const tbody = document.getElementById('productsTable');
         const rows = tbody.getElementsByTagName('tr');
         
-        // Bo'sh qidiruv - barchasini ko'rsat
+        // Bo'sh qidiruv - barchasini ko'rsat, highlight yo'q
         if (!searchText) {
             for (let i = 0; i < rows.length; i++) {
+                const productNameCell = rows[i].getElementsByTagName('td')[0];
+                if (productNameCell) {
+                    // Highlight ni olib tashlash
+                    const originalText = productNameCell.getAttribute('data-original-text') || productNameCell.textContent;
+                    productNameCell.innerHTML = originalText;
+                }
                 rows[i].style.display = '';
             }
             return;
@@ -209,16 +215,30 @@
         
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            const productName = row.getElementsByTagName('td')[0];
+            const productNameCell = row.getElementsByTagName('td')[0];
             
-            if (productName) {
-                const textValue = (productName.textContent || productName.innerText).toLowerCase();
+            if (productNameCell) {
+                // Original textni saqlash
+                if (!productNameCell.getAttribute('data-original-text')) {
+                    productNameCell.setAttribute('data-original-text', productNameCell.textContent);
+                }
+                
+                const originalText = productNameCell.getAttribute('data-original-text');
+                const textValue = originalText.toLowerCase();
                 
                 // Barcha so'zlar topilishi kerak
                 const allWordsFound = searchWords.every(word => textValue.indexOf(word) > -1);
                 
                 if (allWordsFound) {
                     row.style.display = '';
+                    
+                    // Highlight qilish
+                    let highlightedText = originalText;
+                    searchWords.forEach(word => {
+                        const regex = new RegExp(`(${word})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<span style="background-color: #ffeb3b; padding: 2px 4px; border-radius: 2px;">$1</span>');
+                    });
+                    productNameCell.innerHTML = highlightedText;
                 } else {
                     row.style.display = 'none';
                 }
