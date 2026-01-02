@@ -101,7 +101,8 @@ body {
 .sidebar-menu a {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
+    padding: 12px 10px; /* Kichik padding */
+    justify-content: flex-start; /* Oddiy holatda chapda */
     color: #ffffff;
     text-decoration: none;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -110,6 +111,11 @@ body {
     position: relative;
     overflow: hidden;
     white-space: nowrap; /* Matnni bir qatorda saqlash */
+}
+
+/* Hover qilganda padding kengayadi */
+.sidebar:hover .sidebar-menu a {
+    padding: 12px 20px;
 }
 
 /* Oddiy holatda matn yashirin */
