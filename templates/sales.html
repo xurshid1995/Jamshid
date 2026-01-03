@@ -200,9 +200,11 @@
     }
     
     function searchCustomers(searchText) {
+        console.log('🔍 searchCustomers chaqirildi:', searchText, 'Jami mijozlar:', allCustomers.length);
         const dropdown = document.getElementById('customerDropdown');
         
         if (!searchText || searchText.length < 2) {
+            console.log('⚠️ Qidiruv matni 2 ta belgidan kam');
             dropdown.style.display = 'none';
             return;
         }
@@ -213,6 +215,8 @@
             const search = searchText.toLowerCase();
             return name.includes(search) || phone.includes(search);
         });
+        
+        console.log('📋 Filterlangan mijozlar soni:', filtered.length);
         
         if (filtered.length === 0) {
             dropdown.innerHTML = '<div style="padding: 10px; color: #999; text-align: center;">Mijoz topilmadi</div>';
@@ -651,10 +655,15 @@
         
         // Mijoz qidirish input'ga event listener qo'shish
         const customerSearchInput = document.getElementById('customerSearch');
+        console.log('🔧 customerSearchInput elementi:', customerSearchInput);
         if (customerSearchInput) {
+            console.log('✅ Event listener qo\'shilmoqda...');
             customerSearchInput.addEventListener('input', function() {
+                console.log('⌨️ Input event: ', this.value);
                 searchCustomers(this.value);
             });
+        } else {
+            console.error('❌ customerSearch elementi topilmadi!');
         }
         
         // USD narx o'zgarganda avtomatik UZS hisoblash
