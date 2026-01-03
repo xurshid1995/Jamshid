@@ -124,22 +124,6 @@
         <div style="background: white; border-radius: 8px; padding: 30px; width: 650px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
             <h3 style="margin: 0 0 20px 0; color: #333;">💳 To'lov turlari</h3>
             
-            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600;">Jami to'lov:</span>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 2px;">$ Qiymat</div>
-                            <span id="paymentTotalAmountUSD" style="font-weight: 700; color: #28a745; font-size: 18px;">$0.00</span>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 2px;">UZS Qiymat</div>
-                            <span id="paymentTotalAmountUZS" style="font-weight: 700; color: #28a745; font-size: 18px;">0 so'm</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">💵 Naxt:</label>
@@ -601,8 +585,16 @@
         
         // Jami qiymatlarni sarlavha yoniga qo'yamiz
         cartTotalHeader.innerHTML = `
-            <div style="font-size: 14px; color: #28a745; font-weight: bold;">Jami ($): $${totalUSD.toFixed(2)}</div>
-            <div style="font-size: 16px; color: #333; font-weight: bold;">Jami (UZS): ${formatPrice(totalUZS)} so'm</div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #666; margin-bottom: 2px;">$ Qiymat</div>
+                    <span style="font-weight: 700; color: #28a745; font-size: 18px;">$${totalUSD.toFixed(2)}</span>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #666; margin-bottom: 2px;">UZS Qiymat</div>
+                    <span style="font-weight: 700; color: #28a745; font-size: 18px;">${formatPrice(totalUZS)} so'm</span>
+                </div>
+            </div>
         `;
     }
     
@@ -821,8 +813,6 @@
         const totalUZS = totalUSD * exchangeRate;
         
         // To'lov modal oynasini ochish
-        document.getElementById('paymentTotalAmountUSD').textContent = `$${totalUSD.toFixed(2)}`;
-        document.getElementById('paymentTotalAmountUZS').textContent = `${Math.round(totalUZS).toLocaleString('uz-UZ')} so'm`;
         document.getElementById('paymentCashUSD').value = totalUSD.toFixed(2);
         document.getElementById('paymentCashUZS').value = '0';
         document.getElementById('paymentClickUSD').value = '0.00';
