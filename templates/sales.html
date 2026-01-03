@@ -1370,6 +1370,22 @@
             });
         }
         
+        // Modal oynada Enter tugmasi bosilganda savatga qo'shish
+        const modalQuantity = document.getElementById('modalQuantity');
+        const modalPriceUSD = document.getElementById('modalPriceUSD');
+        const modalPriceUZS = document.getElementById('modalPriceUZS');
+        
+        [modalQuantity, modalPriceUSD, modalPriceUZS].forEach(input => {
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmAddToCart();
+                    }
+                });
+            }
+        });
+        
         // Dropdown tashqarisiga bosilganda yopish
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('customerDropdown');
