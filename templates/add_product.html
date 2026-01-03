@@ -492,18 +492,27 @@
                         </select>
                     </div>
 
-                    <!-- 2-qator: Mahsulot nomi -->
-                    <div class="form-group">
-                        <label for="product_name">📝 Mahsulot nomi:</label>
-                        <div class="product-name-container">
-                            <input type="text" id="product_name" name="product_name" class="form-control" 
-                                   placeholder="Mahsulot nomini kiriting..." 
-                                   oninput="searchProduct(); calculateProfit();"
-                                   onfocus="showSearchResults()"
-                                   onkeydown="handleProductNameKeyDown(event)"
-                                   autocomplete="off">
-                            <!-- Qidiruv natijasi - maydon ostida -->
-                            <div id="searchResult" class="search-result"></div>
+                    <!-- 2-qator: Mahsulot nomi va Barcode -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label for="product_name">📝 Mahsulot nomi:</label>
+                            <div class="product-name-container">
+                                <input type="text" id="product_name" name="product_name" class="form-control" 
+                                       placeholder="Mahsulot nomini kiriting..." 
+                                       oninput="searchProduct(); calculateProfit();"
+                                       onfocus="showSearchResults()"
+                                       onkeydown="handleProductNameKeyDown(event)"
+                                       autocomplete="off">
+                                <!-- Qidiruv natijasi - maydon ostida -->
+                                <div id="searchResult" class="search-result"></div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="barcode">📷 Barcode:</label>
+                            <input type="text" id="barcode" name="barcode" class="form-control" 
+                                   placeholder="Barcode raqami (optional)" 
+                                   autocomplete="off"
+                                   style="border: 2px solid #28a745;">
                         </div>
                     </div>
 
@@ -1440,6 +1449,7 @@
         // Vaqtinchalik ro'yxatga qo'shish
         function addToTempList() {
             const productName = document.getElementById('product_name').value.trim();
+            const barcode = document.getElementById('barcode').value.trim();
             // Tan narx maydonidagi qiymatni olish (bu ortacha narx bo'lishi mumkin)
             const costPriceFromField = parseFloat(document.getElementById('cost_price').value);
             const sellPrice = parseFloat(document.getElementById('sell_price').value);
@@ -1495,6 +1505,7 @@
             const product = {
                 id: Date.now(),
                 name: productName,
+                barcode: barcode || null, // Barcode qo'shish
                 cost_price: finalCostPrice, // Tan narx maydonidagi ortacha narx
                 last_batch_cost: finalLastBatchCost, // Foydalanuvchi kiritgan asl qiymat
                 sell_price: sellPrice,

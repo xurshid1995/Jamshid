@@ -263,6 +263,7 @@ class Product(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    barcode = db.Column(db.String(100), unique=True, nullable=True, index=True)  # Barcode raqami
     cost_price = db.Column(db.DECIMAL(precision=10, scale=2),
                            nullable=False)  # Ortacha tan narxi
     sell_price = db.Column(db.DECIMAL(precision=10, scale=2),
@@ -1340,6 +1341,64 @@ def api_products_by_location(location_type, location_id):
         return jsonify({'error': 'Server xatosi'}), 500
 
 
+# API endpoint - barcode bo'yicha mahsulot qidirish
+@app.route('/api/search-product-by-barcode', methods=['POST'])
+def search_product_by_barcode():
+    """Barcode bo'yicha mahsulot qidirish"""
+    try:
+        data = request.get_json()
+        barcode = data.get('barcode', '').strip()
+        location_type = data.get('location_type')
+        location_id = data.get('location_id')
+
+        if not barcode:
+            return jsonify({'error': 'Barcode kiritilmagan'}), 400
+
+        if not location_type or not location_id:
+            return jsonify({'error': 'Joylashuv tanlanmagan'}), 400
+
+        # Mahsulotni barcode bo'yicha qidirish
+        product = Product.query.filter_by(barcode=barcode).first()
+        
+        if not product:
+            return jsonify({'error': f'Barcode {barcode} topilmadi'}), 404
+
+        # Joylashuvdagi miqdorni tekshirish
+        available_quantity = 0
+        location_name = ''
+        
+        if location_type == 'warehouse':
+            stock = WarehouseStock.query.filter_by(
+                product_id=product.id, 
+                warehouse_id=location_id
+            ).first()
+            if stock:
+                available_quantity = stock.quantity
+                location_name = stock.warehouse.name if stock.warehouse else 'Noma\'lum ombor'
+        elif location_type == 'store':
+            stock = StoreStock.query.filter_by(
+                product_id=product.id,
+                store_id=location_id
+            ).first()
+            if stock:
+                available_quantity = stock.quantity
+                location_name = stock.store.name if stock.store else 'Noma\'lum do\'kon'
+
+        # Mahsulot ma'lumotlarini qaytarish
+        product_dict = product.to_dict()
+        product_dict['available_quantity'] = available_quantity
+        product_dict['location_type'] = location_type
+        product_dict['location_id'] = location_id
+        product_dict['location_name'] = location_name
+
+        logger.info(f"✅ Barcode {barcode} topildi: {product.name}, Miqdor: {available_quantity}")
+        return jsonify(product_dict)
+
+    except Exception as e:
+        logger.error(f"❌ Barcode qidiruv xatosi: {e}")
+        return jsonify({'error': 'Server xatosi'}), 500
+
+
 # API endpoint - mahsulot nomini tekshirish
 @app.route('/api/check-product-name', methods=['POST'])
 def check_product_name():
@@ -1408,11 +1467,17 @@ def api_add_product():
                     existing_product.sell_price = sell_price
                     existing_product.min_stock = product_data.get(
                         'minStock', existing_product.min_stock)
+                    
+                    # Barcode yangilash (agar kiritilgan bo'lsa)
+                    if 'barcode' in product_data and product_data['barcode']:
+                        existing_product.barcode = product_data['barcode']
+                    
                     product = existing_product
                 else:
                     # Yangi mahsulot yaratish
                     product = Product(
                         name=product_data['name'],
+                        barcode=product_data.get('barcode', None),  # Barcode qo'shish
                         cost_price=cost_price,
                         sell_price=sell_price,
                         last_batch_cost=cost_price,  # Birinchi partiya
@@ -2932,6 +2997,7 @@ def edit_stock(warehouse_id, product_id):
             # Form ma'lumotlarini olish
             new_quantity = int(request.form['quantity'])
             new_product_name = request.form['productName'].strip()
+            new_barcode = request.form.get('barcode', '').strip()
             new_cost_price = float(request.form['costPrice'])
             new_sell_price = float(request.form['sellPrice'])
             new_min_stock = int(request.form.get('minStock', 0))
@@ -2968,6 +3034,7 @@ def edit_stock(warehouse_id, product_id):
 
             # Mahsulot ma'lumotlarini yangilash
             stock.product.name = new_product_name
+            stock.product.barcode = new_barcode if new_barcode else None  # Barcode yangilash
             stock.product.min_stock = new_min_stock
 
             # Cost price va sell price ni alohida saqlash
@@ -3092,6 +3159,7 @@ def edit_store_stock(store_id, product_id):
             # Form ma'lumotlarini olish
             new_quantity = int(request.form['quantity'])
             new_product_name = request.form['productName'].strip()
+            new_barcode = request.form.get('barcode', '').strip()
             new_cost_price = float(request.form['costPrice'])
             new_sell_price = float(request.form['sellPrice'])
             new_min_stock = int(request.form.get('minStock', 0))
@@ -3132,6 +3200,7 @@ def edit_store_stock(store_id, product_id):
 
             # Mahsulot ma'lumotlarini yangilash
             stock.product.name = new_product_name
+            stock.product.barcode = new_barcode if new_barcode else None  # Barcode yangilash
             stock.product.min_stock = new_min_stock
 
             # Cost price va sell price ni alohida saqlash

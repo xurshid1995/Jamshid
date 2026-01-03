@@ -53,9 +53,23 @@
                 </div>
             </div>
             
-            <!-- Mahsulot qidirish -->
-            <div style="margin-bottom: 15px;">
-                <input type="text" id="productSearch" placeholder="Mahsulot nomini kiriting..." style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+            <!-- Barcode va Mahsulot qidirish -->
+            <div style="display: grid; grid-template-columns: 2fr 3fr; gap: 10px; margin-bottom: 15px;">
+                <div style="position: relative;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 500; color: #495057;">📷 Barcode Scanner</label>
+                    <input type="text" 
+                           id="barcodeInput" 
+                           placeholder="Barcode skanerlang yoki kiriting..." 
+                           autocomplete="off"
+                           style="width: 100%; padding: 10px 10px 10px 35px; border: 2px solid #28a745; border-radius: 6px; font-size: 14px; background: white url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"%2328a745\" viewBox=\"0 0 16 16\"><path d=\"M0 3h1v10H0V3zm2 0h1v10H2V3zm2 0h.5v10H4V3zm2.5 0h1v10h-1V3zM8 3h.5v10H8V3zm2 0h1v10h-1V3zm2.5 0h.5v10h-.5V3zm2 0h1v10h-1V3z\"/></svg>') no-repeat 10px center;">
+                    <div id="barcodeStatus" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px; padding: 8px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; font-size: 12px; color: #155724; z-index: 100;">
+                        ✓ Mahsulot topildi!
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 500; color: #495057;">🔍 Mahsulot qidirish</label>
+                    <input type="text" id="productSearch" placeholder="Mahsulot nomini kiriting..." style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                </div>
             </div>
             
             <!-- Mahsulotlar jadvali -->
@@ -227,6 +241,125 @@
             console.error('Joylashuvlarni yuklashda xatolik:', error);
         }
     }
+    
+    // BARCODE SCANNER FUNKSIYASI
+    let barcodeBuffer = '';
+    let barcodeTimeout = null;
+    
+    async function searchProductByBarcode(barcode) {
+        console.log('🔍 Barcode qidiruvi:', barcode);
+        
+        // Joylashuv tanlanganligini tekshirish
+        if (!selectedLocationId || !selectedLocationType) {
+            showBarcodeStatus('⚠️ Avval joylashuvni tanlang!', 'error');
+            return;
+        }
+        
+        showBarcodeStatus('⏳ Qidirilmoqda...', 'loading');
+        
+        try {
+            const response = await fetch('/api/search-product-by-barcode', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    barcode: barcode,
+                    location_type: selectedLocationType,
+                    location_id: selectedLocationId
+                })
+            });
+            
+            const product = await response.json();
+            
+            if (!response.ok) {
+                showBarcodeStatus(`❌ ${product.error || 'Mahsulot topilmadi'}`, 'error');
+                // Barcode inputni tozalash
+                document.getElementById('barcodeInput').value = '';
+                return;
+            }
+            
+            console.log('✅ Mahsulot topildi:', product);
+            
+            // Mahsulotni avtomatik savatga qo'shish
+            showBarcodeStatus(`✓ ${product.name} topildi!`, 'success');
+            
+            // 1 soniyadan keyin avtomatik savatga qo'shish
+            setTimeout(() => {
+                addToCart(product.id, product.name, product.available_quantity, product.sell_price);
+                // Barcode inputni tozalash
+                document.getElementById('barcodeInput').value = '';
+                // Statusni yashirish
+                document.getElementById('barcodeStatus').style.display = 'none';
+            }, 500);
+            
+        } catch (error) {
+            console.error('❌ Barcode qidiruv xatosi:', error);
+            showBarcodeStatus('❌ Server xatosi', 'error');
+            document.getElementById('barcodeInput').value = '';
+        }
+    }
+    
+    function showBarcodeStatus(message, type) {
+        const statusDiv = document.getElementById('barcodeStatus');
+        statusDiv.textContent = message;
+        statusDiv.style.display = 'block';
+        
+        // Rang o'zgartirish
+        if (type === 'success') {
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.borderColor = '#c3e6cb';
+            statusDiv.style.color = '#155724';
+        } else if (type === 'error') {
+            statusDiv.style.background = '#f8d7da';
+            statusDiv.style.borderColor = '#f5c6cb';
+            statusDiv.style.color = '#721c24';
+        } else if (type === 'loading') {
+            statusDiv.style.background = '#d1ecf1';
+            statusDiv.style.borderColor = '#bee5eb';
+            statusDiv.style.color = '#0c5460';
+        }
+        
+        // Agar error yoki success bo'lsa, 3 soniyadan keyin yashirish
+        if (type === 'error' || type === 'success') {
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+    }
+    
+    // Barcode input hodisalari
+    document.addEventListener('DOMContentLoaded', function() {
+        const barcodeInput = document.getElementById('barcodeInput');
+        
+        // Barcode scanner ko'pincha enter tugmasini avtomatik bosadi
+        barcodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const barcode = barcodeInput.value.trim();
+                if (barcode) {
+                    searchProductByBarcode(barcode);
+                }
+            }
+        });
+        
+        // Klaviaturadan kiritish (Bluetooth scanner uchun)
+        barcodeInput.addEventListener('input', function(e) {
+            const value = e.target.value.trim();
+            
+            // Agar scanner tez yozayotgan bo'lsa (buffer)
+            clearTimeout(barcodeTimeout);
+            barcodeTimeout = setTimeout(() => {
+                if (value.length >= 5) { // Minimal barcode uzunligi
+                    searchProductByBarcode(value);
+                }
+            }, 100); // 100ms kutish - scanner tez yozadi
+        });
+        
+        // Focus qilganda eski ma'lumotni tozalash
+        barcodeInput.addEventListener('focus', function() {
+            this.value = '';
+            document.getElementById('barcodeStatus').style.display = 'none';
+        });
+    });
     
     // Mijozlarni yuklash va qidirish
     let allCustomers = [];
