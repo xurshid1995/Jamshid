@@ -252,7 +252,7 @@
         // Savdo korzinasi sarlavhasida mijoz ma'lumotlarini ko'rsatish
         const cartCustomerInfo = document.getElementById('cartCustomerInfo');
         const customerDisplay = phone ? `👤 ${name} ${phone}` : `👤 ${name}`;
-        cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #007bff; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+        cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
         
         console.log(`✅ Mijoz tanlandi: ${name} (ID: ${id})`);
     }
@@ -533,8 +533,8 @@
         
         // Jami qiymatlarni sarlavha yoniga qo'yamiz
         cartTotalHeader.innerHTML = `
-            <div style="font-size: 14px; color: #007bff; font-weight: bold;">Jami ($): $${totalUSD.toFixed(2)}</div>
-            <div style="font-size: 16px; color: #28a745; font-weight: bold;">Jami (UZS): ${formatPrice(totalUZS)} so'm</div>
+            <div style="font-size: 14px; color: #28a745; font-weight: bold;">Jami ($): $${totalUSD.toFixed(2)}</div>
+            <div style="font-size: 16px; color: #333; font-weight: bold;">Jami (UZS): ${formatPrice(totalUZS)} so'm</div>
         `;
     }
     
