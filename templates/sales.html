@@ -232,6 +232,8 @@
     let allCustomers = [];
     let cart = [];
     let currentProduct = null;
+    let selectedLocationId = null;
+    let selectedLocationType = null;
     
     async function loadCustomers() {
         try {
@@ -318,13 +320,19 @@
         
         if (!locationValue) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 30px; color: #999;">Joylashuvni tanlang</td></tr>';
+            selectedLocationId = null;
+            selectedLocationType = null;
             return;
         }
+        
+        // Tanlangan joylashuvni saqlash
+        const [type, id] = locationValue.split('_');
+        selectedLocationType = type;
+        selectedLocationId = parseInt(id);
         
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #999;">⏳ Yuklanmoqda...</td></tr>';
         
         try {
-            const [type, id] = locationValue.split('_');
             const response = await fetch(`/api/products?location=${locationValue}`);
             const data = await response.json();
             
