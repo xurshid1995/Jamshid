@@ -134,19 +134,31 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">💵 Naxt ($):</label>
-                    <input type="number" id="paymentCash" step="0.01" value="0.00" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="paymentCash" step="0.01" value="0.00" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                        <button onclick="addRemainingToField('paymentCash')" style="padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">+ Qolgan</button>
+                    </div>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">📱 Click ($):</label>
-                    <input type="number" id="paymentClick" step="0.01" value="0.00" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="paymentClick" step="0.01" value="0.00" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                        <button onclick="addRemainingToField('paymentClick')" style="padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">+ Qolgan</button>
+                    </div>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">🏧 Terminal ($):</label>
-                    <input type="number" id="paymentTerminal" step="0.01" value="0.00" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="paymentTerminal" step="0.01" value="0.00" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                        <button onclick="addRemainingToField('paymentTerminal')" style="padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">+ Qolgan</button>
+                    </div>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">📋 Qarz ($):</label>
-                    <input type="number" id="paymentDebt" step="0.01" value="0.00" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="paymentDebt" step="0.01" value="0.00" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                        <button onclick="addRemainingToField('paymentDebt')" style="padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">+ Qolgan</button>
+                    </div>
                 </div>
             </div>
             
@@ -808,6 +820,32 @@
     // To'lov modal oynasini yopish
     function closePaymentModal() {
         document.getElementById('paymentModal').style.display = 'none';
+    }
+    
+    // Qolgan summani maydonga qo'shish
+    function addRemainingToField(fieldId) {
+        // Jami summani hisoblash
+        let totalUSD = 0;
+        cart.forEach(item => {
+            totalUSD += item.priceUSD * item.quantity;
+        });
+        
+        // Hozirgi to'lovlarni hisoblash
+        const cash = parseFloat(document.getElementById('paymentCash').value) || 0;
+        const click = parseFloat(document.getElementById('paymentClick').value) || 0;
+        const terminal = parseFloat(document.getElementById('paymentTerminal').value) || 0;
+        const debt = parseFloat(document.getElementById('paymentDebt').value) || 0;
+        
+        const currentTotal = cash + click + terminal + debt;
+        const remaining = totalUSD - currentTotal;
+        
+        if (remaining > 0) {
+            const currentValue = parseFloat(document.getElementById(fieldId).value) || 0;
+            document.getElementById(fieldId).value = (currentValue + remaining).toFixed(2);
+            console.log(`➕ Qolgan $${remaining.toFixed(2)} ${fieldId} ga qo'shildi`);
+        } else {
+            console.log('✅ To\'lov to\'liq');
+        }
     }
     
     // To'lovni tasdiqlash
