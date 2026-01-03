@@ -391,8 +391,8 @@
         try {
             const response = await fetch('/api/currency-rate');
             const data = await response.json();
-            if (data.rate) {
-                const newRate = parseFloat(data.rate);
+            if (data.success && data.rate && data.rate.rate) {
+                const newRate = parseFloat(data.rate.rate);
                 if (!isNaN(newRate) && newRate > 0) {
                     exchangeRate = newRate;
                     console.log('✅ Valyuta kursi yuklandi:', exchangeRate);
