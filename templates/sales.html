@@ -179,11 +179,32 @@
         }
     }
     
-    // Mijozlarni qidirish (database'dan to'g'ridan-to'g'ri)
-    let searchTimeout;
+    // Mijozlarni yuklash va qidirish
+    let allCustomers = [];
+    let cart = [];
+    let currentProduct = null;
     
-    async function searchCustomers(searchText) {
-        console.log('🔍 searchCustomers chaqirildi:', searchText);
+    async function loadCustomers() {
+        try {
+            console.log('🔄 Mijozlarni yuklash boshlandi...');
+            const response = await fetch('/api/customers');
+            console.log('📡 API response status:', response.status);
+            if (!response.ok) {
+                console.error('❌ Mijozlarni yuklashda xatolik: HTTP', response.status);
+                return;
+            }
+            const data = await response.json();
+            console.log('📦 API response data:', data);
+            // API to'g'ridan-to'g'ri array qaytaradi
+            allCustomers = Array.isArray(data) ? data : (data.customers || []);
+            console.log(`✅ ${allCustomers.length} ta mijoz yuklandi`, allCustomers);
+        } catch (error) {
+            console.error('❌ Mijozlarni yuklashda xatolik:', error);
+        }
+    }
+    
+    function searchCustomers(searchText) {
+        console.log('🔍 searchCustomers chaqirildi:', searchText, 'Jami mijozlar:', allCustomers.length);
         const dropdown = document.getElementById('customerDropdown');
         
         if (!searchText || searchText.length < 2) {
@@ -192,50 +213,35 @@
             return;
         }
         
-        // Debounce - har belgida emas, 300ms kutib so'ng qidirish
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(async () => {
-            try {
-                console.log('📡 API'ga qidiruv so\'rovi yuborilmoqda...');
-                const response = await fetch(`/api/customers?search=${encodeURIComponent(searchText)}`);
-                
-                if (!response.ok) {
-                    console.error('❌ Qidirishda xatolik: HTTP', response.status);
-                    dropdown.innerHTML = '<div style="padding: 10px; color: #dc3545; text-align: center;">Xatolik yuz berdi</div>';
-                    dropdown.style.display = 'block';
-                    return;
-                }
-                
-                const customers = await response.json();
-                console.log('📋 Topilgan mijozlar:', customers.length);
-                
-                if (customers.length === 0) {
-                    dropdown.innerHTML = '<div style="padding: 10px; color: #999; text-align: center;">Mijoz topilmadi</div>';
-                    dropdown.style.display = 'block';
-                    return;
-                }
-                
-                dropdown.innerHTML = customers.map(customer => {
-                    return `<div onclick="selectCustomer(${customer.id}, '${customer.name.replace(/'/g, "\\'")}', '${customer.phone || ''}')" 
-                            style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.2s;"
-                            onmouseover="this.style.background='#f8f9fa'"
-                            onmouseout="this.style.background='white'">
-                            <div style="font-weight: 500; color: #333;">${customer.name}</div>
-                            <div style="font-size: 12px; color: #6c757d;">${customer.phone || 'Telefon yo\'q'}</div>
-                        </div>`;
-                }).join('');
-                
-                dropdown.style.display = 'block';
-            } catch (error) {
-                console.error('❌ Qidirishda xatolik:', error);
-                dropdown.innerHTML = '<div style="padding: 10px; color: #dc3545; text-align: center;">Xatolik yuz berdi</div>';
-                dropdown.style.display = 'block';
-            }
-        }, 300);
+        const filtered = allCustomers.filter(customer => {
+            const name = customer.name ? customer.name.toLowerCase() : '';
+            const phone = customer.phone ? customer.phone : '';
+            const search = searchText.toLowerCase();
+            return name.includes(search) || phone.includes(search);
+        });
+        
+        console.log('📋 Filterlangan mijozlar soni:', filtered.length);
+        
+        if (filtered.length === 0) {
+            dropdown.innerHTML = '<div style="padding: 10px; color: #999; text-align: center;">Mijoz topilmadi</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(customer => {
+            return `<div onclick="selectCustomer(${customer.id}, '${customer.name.replace(/'/g, "\\'")}', '${customer.phone || ''}')" 
+                    style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.2s;"
+                    onmouseover="this.style.background='#f8f9fa'"
+                    onmouseout="this.style.background='white'">
+                    <div style="font-weight: 500; color: #333;">${customer.name}</div>
+                    <div style="font-size: 12px; color: #6c757d;">${customer.phone || 'Telefon yo\'q'}</div>
+                </div>`;
+        }).join('');
+        
+        dropdown.style.display = 'block';
     }
-    // Global o'zgaruvchilar
-    let cart = [];
-    let currentProduct = null;
+    
+    function selectCustomer(id, name, phone) {
         document.getElementById('customerSearch').value = name;
         document.getElementById('selectedCustomerId').value = id;
         document.getElementById('customerDropdown').style.display = 'none';
@@ -642,6 +648,7 @@
     // Sahifa yuklanganda joylashuvlarni yuklash
     document.addEventListener('DOMContentLoaded', function() {
         loadLocations();
+        loadCustomers();
         loadExchangeRate();
         
         // Mahsulot qidirish input'ga event listener qo'shish
