@@ -187,11 +187,15 @@
     async function loadCustomers() {
         try {
             const response = await fetch('/api/customers');
+            if (!response.ok) {
+                console.error('❌ Mijozlarni yuklashda xatolik: HTTP', response.status);
+                return;
+            }
             const data = await response.json();
             allCustomers = data.customers || [];
-            console.log(`✅ ${allCustomers.length} ta mijoz yuklandi`);
+            console.log(`✅ ${allCustomers.length} ta mijoz yuklandi`, allCustomers);
         } catch (error) {
-            console.error('Mijozlarni yuklashda xatolik:', error);
+            console.error('❌ Mijozlarni yuklashda xatolik:', error);
         }
     }
     
