@@ -580,10 +580,12 @@
             <thead>
                 <tr>
                     <th>Mahsulot nomi</th>
+                    <th>Barcode</th>
                     <th>Narx</th>
                     <th>Joylashuv</th>
                     <th><span id="quantityHeader">Umumiy miqdor</span></th>
                     <th>Holat</th>
+                    <th>Amal</th>
                 </tr>
             </thead>
             <tbody id="productsTableBody">
@@ -939,9 +941,23 @@
                 // Qidiruv matnini highlight qilish
                 const highlightedName = highlightSearchText(product.name, currentSearch);
                 
+                // Barcode tugmasi
+                const barcodeCell = product.barcode 
+                    ? `<span style="font-family: monospace; font-size: 12px;">${product.barcode}</span>`
+                    : '<span style="color: #999;">-</span>';
+                
+                const printButton = product.barcode
+                    ? `<button onclick="printBarcode('${product.name.replace(/'/g, "\\'")}', '${product.barcode}')" 
+                               style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                               title="Barcode chop etish">
+                            🖨️
+                        </button>`
+                    : '<span style="color: #999;">-</span>';
+                
                 tableHtml += `
                     <tr>
                         <td class="product-name">${highlightedName}</td>
+                        <td style="text-align: center;">${barcodeCell}</td>
                         <td class="price-cell">
                             <span style="background-color: #28a745; color: white; font-weight: 600; padding: 2px 8px; border-radius: 4px;">$${formatPrice(product.sell_price)}</span>
                             <span style="background-color: #007bff; color: white; font-size: 0.9rem; margin-left: 0.5rem; padding: 2px 8px; border-radius: 4px;">${formatPrice(product.sell_price * currencyRate)} so'm</span>
@@ -949,6 +965,7 @@
                         <td class="location-cell">${locations}</td>
                         <td><span class="quantity-cell">${totalStock}</span></td>
                         <td><span class="stock-badge ${stockClass}">${stockText}</span></td>
+                        <td style="text-align: center;">${printButton}</td>
                     </tr>
                 `;
             });
@@ -1248,6 +1265,12 @@
             console.error('Mahsulot o\'chirishda xatolik:', error);
             alert('Mahsulot o\'chirishda xatolik yuz berdi');
         }
+    }
+
+    // Barcode chop etish
+    function printBarcode(productName, barcode) {
+        const printUrl = `/print-barcode?name=${encodeURIComponent(productName)}&barcode=${encodeURIComponent(barcode)}`;
+        window.open(printUrl, '_blank', 'width=600,height=400');
     }
 
     // Xatolik ko'rsatish
