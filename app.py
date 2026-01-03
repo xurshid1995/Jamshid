@@ -5284,13 +5284,28 @@ def create_sale():
                 'error': 'Foydalanuvchi topilmadi'
             }), 401
 
+        # Payment status ni frontend dan olish (default: 'paid')
+        final_payment_status = data.get('payment_status', 'paid')
+        
+        # Payment ma'lumotlarini olish
+        payment_info = data.get('payment', {})
+        
+        # Payment method ni aniqlash (birinchi to'lov turini olish)
+        payment_method = 'cash'  # default
+        if payment_info.get('click_usd', 0) > 0:
+            payment_method = 'click'
+        elif payment_info.get('terminal_usd', 0) > 0:
+            payment_method = 'terminal'
+        elif payment_info.get('debt_usd', 0) > 0:
+            payment_method = 'debt'
+
         # Bitta savdo yaratish
         new_sale = Sale(
             customer_id=final_customer_id,
             store_id=store.id,
             seller_id=current_user.id,
-            payment_method='cash',
-            payment_status='paid',
+            payment_method=payment_method,
+            payment_status=final_payment_status,
             notes=f'Multi-location savdo - {len(items)} ta mahsulot',
             currency_rate=current_rate,
             created_by=f'{current_user.first_name} {current_user.last_name}'
