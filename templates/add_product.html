@@ -998,8 +998,19 @@
                 }
             }, 500); // Joylashuvlar yuklanishini kutish uchun kechikish
             
-            // Mahsulot nomi maydoniga blur event qo'shish
+            // Mahsulot nomi maydoniga input event - foydalanuvchi yozayotgan bo'lsa barcode'ni unlock qilish
             const productNameField = document.getElementById('product_name');
+            productNameField.addEventListener('input', function() {
+                const barcodeInput = document.getElementById('barcode');
+                // Agar foydalanuvchi mahsulot nomini o'zgartirsa, barcode'ni yozish mumkin qilish
+                if (!selectedProductData || this.value.trim() !== selectedProductData.name) {
+                    barcodeInput.removeAttribute('readonly');
+                    barcodeInput.style.backgroundColor = '#fff';
+                    barcodeInput.style.cursor = 'text';
+                }
+            });
+            
+            // Mahsulot nomi maydoniga blur event qo'shish
             productNameField.addEventListener('blur', function() {
                 // Kichik kechikish bilan yashirish - mahsulotni tanlash imkoniyatini berish uchun
                 setTimeout(function() {
@@ -1366,9 +1377,24 @@
             document.getElementById('cost_price').value = costPrice || ''; // Tan narxni to'ldirish
             document.getElementById('sell_price').value = sellPrice;
             document.getElementById('min_stock').value = minStock;
-            document.getElementById('barcode').value = barcode || ''; // Barcode to'ldirish
             
-            console.log('📝 Barcode maydoniga yozildi:', document.getElementById('barcode').value);
+            const barcodeInput = document.getElementById('barcode');
+            barcodeInput.value = barcode || ''; // Barcode to'ldirish
+            
+            // Agar barcode mavjud bo'lsa - readonly qilish, agar yo'q bo'lsa - yozish mumkin
+            if (barcode && barcode.trim() !== '') {
+                barcodeInput.setAttribute('readonly', 'readonly');
+                barcodeInput.style.backgroundColor = '#e9ecef'; // Kulrang fon
+                barcodeInput.style.cursor = 'not-allowed';
+                console.log('🔒 Barcode mavjud - readonly');
+            } else {
+                barcodeInput.removeAttribute('readonly');
+                barcodeInput.style.backgroundColor = '#fff'; // Oq fon
+                barcodeInput.style.cursor = 'text';
+                console.log('✏️ Barcode yo\'q - yozish mumkin');
+            }
+            
+            console.log('📝 Barcode maydoniga yozildi:', barcodeInput.value);
             
             // Asl tan narxni ko'rsatish (oxirgi partiya narxi)
             const originalCostField = document.getElementById('original_cost');
