@@ -91,8 +91,8 @@
                     <table class="cart-table" style="width: 620px !important; max-width: 620px !important; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed !important;">
                         <thead>
                             <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                                <th style="padding: 8px 5px; text-align: left; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 322px;">Mahsulot</th>
-                                <th style="padding: 8px 5px; text-align: center; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 74px;">Soni</th>
+                                <th style="padding: 8px 5px; text-align: left; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 312px;">Mahsulot</th>
+                                <th style="padding: 8px 5px; text-align: center; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 84px;">Soni</th>
                                 <th style="padding: 8px 5px; text-align: right; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 90px;">Narxi</th>
                                 <th style="padding: 8px 5px; text-align: right; font-size: 14px; color: #495057; border-right: 1px solid #dee2e6; width: 84px;">Jami</th>
                                 <th style="padding: 8px 5px; text-align: center; font-size: 14px; color: #495057; width: 50px;">Amal</th>
@@ -463,9 +463,6 @@
             cartTotalHeader.innerHTML = '';
             return;
         }
-            cartTotalDiv.innerHTML = '';
-            return;
-        }
         
         let html = '';
         let totalUSD = 0;
@@ -479,9 +476,9 @@
             
             html += `
                 <tr style="border-bottom: 1px solid #f0f0f0;">
-                    <td style="padding: 8px 5px; font-size: 16px; color: #333; border-right: 1px solid #f0f0f0; word-wrap: break-word; width: 322px; max-width: 322px; overflow: hidden;">${item.name}</td>
-                    <td style="padding: 8px 5px; text-align: center; font-size: 16px; color: #333; border-right: 1px solid #f0f0f0; width: 74px;">
-                        <input type="number" value="${item.quantity}" min="1" onchange="updateCartQuantity(${index}, this.value)" style="width: 50px; text-align: center; border: 1px solid #ced4da; border-radius: 4px; padding: 4px; font-size: 15px; font-weight: 500;">
+                    <td style="padding: 8px 5px; font-size: 16px; color: #333; border-right: 1px solid #f0f0f0; word-wrap: break-word; width: 312px; max-width: 312px; overflow: hidden;">${item.name}</td>
+                    <td style="padding: 8px 5px; text-align: center; font-size: 16px; color: #333; border-right: 1px solid #f0f0f0; width: 84px;">
+                        <input type="number" value="${item.quantity}" min="1" onchange="updateCartQuantity(${index}, this.value)" style="width: 60px; text-align: center; border: 1px solid #ced4da; border-radius: 4px; padding: 4px; font-size: 15px; font-weight: 500;">
                     </td>
                     <td style="padding: 8px 5px; text-align: right; font-size: 15px; color: #333; border-right: 1px solid #f0f0f0; width: 90px;">
                         <div style="margin-bottom: 2px; font-weight: 600; color: #333; font-size: 15px;">$${item.priceUSD.toFixed(2)}</div>
