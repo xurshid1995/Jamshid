@@ -616,6 +616,14 @@
         document.getElementById('quantityModal').style.display = 'none';
         currentProduct = null;
         delete window.editingCartIndex; // Tahrirlash rejimini tozalash
+        
+        // Fokusni universal qidiruv maydoniga qaytarish
+        setTimeout(() => {
+            const universalSearch = document.getElementById('universalSearch');
+            if (universalSearch) {
+                universalSearch.focus();
+            }
+        }, 100);
     }
     
     // Savatga qo'shish
@@ -753,6 +761,15 @@
         
         // Chap tomondagi mahsulotlar jadvalini yangilash
         await loadProducts();
+        
+        // Fokusni universal qidiruv maydoniga qaytarish
+        setTimeout(() => {
+            const universalSearch = document.getElementById('universalSearch');
+            if (universalSearch) {
+                universalSearch.focus();
+                universalSearch.select(); // Matnni belgilash
+            }
+        }, 200);
         
         console.log('✅ Savatga qo\'shildi:', currentProduct?.name || 'Noma\'lum mahsulot', quantity, 'dona, $' + priceUSD);
     }
