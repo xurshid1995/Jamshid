@@ -94,7 +94,38 @@
         <span id="resultsText"></span>
     </div>
 
-    <!-- Jadval bu yerga qayta yoziladi -->
+    <div class="table-responsive">
+        <div class="table-container">
+            <table class="sales-table">
+                <thead>
+                    <tr>
+                        <th>Sana va vaqt</th>
+                        <th>Mijoz</th>
+                        <th>Sotuvchi</th>
+                        <th>Joylashuv</th>
+                        <th>Mahsulot</th>
+                        <th>Miqdor</th>
+                        <th>Narx</th>
+                        <th>Yig'indi</th>
+                        <th>Jami yig'indi</th>
+                        <th>Amal</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                    <tr>
+                        <td colspan="10" class="loading">Ma'lumotlar yuklanmoqda...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <div id="paginationButtons">
+                    <!-- Pagination tugmalari bu yerga yuklanadi -->
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
