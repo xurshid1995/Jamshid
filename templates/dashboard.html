@@ -465,11 +465,11 @@ async function loadSalesChart(locationId = null, period = null, locationType = n
                         titleAlign: 'left',
                         bodyAlign: 'left',
                         titleFont: {
-                            size: 12,
+                            size: 16,
                             weight: 'bold'
                         },
                         bodyFont: {
-                            size: 11
+                            size: 16
                         },
                         padding: 8,
                         cornerRadius: 4,
@@ -627,10 +627,10 @@ function updateStatistics(data) {
     if (data.payment_totals) {
         console.log('💰 To\'lov turlari yangilanmoqda:', data.payment_totals);
         const payments = [];
-        if (data.payment_totals.cash > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #28a745; font-size: 14px;">💵 Naqd pul: <strong>$${Math.floor(data.payment_totals.cash)}</strong></span>`);
-        if (data.payment_totals.click > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #007bff; font-size: 14px;">📱 Click: <strong>$${Math.floor(data.payment_totals.click)}</strong></span>`);
-        if (data.payment_totals.terminal > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #17a2b8; font-size: 14px;">💳 Terminal: <strong>$${Math.floor(data.payment_totals.terminal)}</strong></span>`);
-        if (data.payment_totals.debt > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #dc3545; font-size: 14px;">📝 Qarz: <strong>$${Math.floor(data.payment_totals.debt)}</strong></span>`);
+        if (data.payment_totals.cash > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #28a745; font-size: 16px;">💵 Naqd pul: <strong>$${Math.floor(data.payment_totals.cash)}</strong></span>`);
+        if (data.payment_totals.click > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #007bff; font-size: 16px;">📱 Click: <strong>$${Math.floor(data.payment_totals.click)}</strong></span>`);
+        if (data.payment_totals.terminal > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #17a2b8; font-size: 16px;">💳 Terminal: <strong>$${Math.floor(data.payment_totals.terminal)}</strong></span>`);
+        if (data.payment_totals.debt > 0) payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #dc3545; font-size: 16px;">📝 Qarz: <strong>$${Math.floor(data.payment_totals.debt)}</strong></span>`);
         
         document.getElementById('paymentMethods').innerHTML = payments.length > 0 ? payments.join('') : '-';
         console.log('✅ HTML yangilandi:', payments.length, 'ta tolov turi');
