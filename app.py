@@ -5104,6 +5104,25 @@ def api_sales_history():
         }), 500
 
 
+# Bitta savdo ma'lumotlarini olish API'si (tahrirlash uchun)
+@app.route('/api/sale/<int:sale_id>', methods=['GET'])
+@role_required('admin', 'kassir', 'sotuvchi')
+def get_sale(sale_id):
+    """Bitta savdo ma'lumotlarini olish"""
+    try:
+        sale = Sale.query.get(sale_id)
+        if not sale:
+            return jsonify({'success': False, 'error': 'Savdo topilmadi'}), 404
+        
+        return jsonify({
+            'success': True,
+            'sale': sale.to_dict()
+        })
+    except Exception as e:
+        app.logger.error(f"Error fetching sale {sale_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # Savdoni tasdiqlash API'si
 @app.route('/api/approve-sale/<int:sale_id>', methods=['POST'])
 def approve_sale(sale_id):

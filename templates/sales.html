@@ -1291,11 +1291,116 @@
         return Number(price).toLocaleString('uz-UZ');
     }
     
+    // URL parametrlarini tekshirish va savdo ma'lumotlarini yuklash
+    async function checkURLParametersAndLoadSale() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const editGroupId = urlParams.get('edit_group');
+        const editId = urlParams.get('edit');
+        
+        if (editGroupId) {
+            console.log(`✏️ Savdo guruhi ${editGroupId} yuklanmoqda...`);
+            await loadSaleGroup(editGroupId);
+        } else if (editId) {
+            console.log(`✏️ Savdo ${editId} yuklanmoqda...`);
+            await loadSingleSale(editId);
+        }
+    }
+    
+    // Savdo guruhini yuklash (bir xil sale_date, customer, location)
+    async function loadSaleGroup(saleId) {
+        try {
+            const response = await fetch(`/api/sale/${saleId}`);
+            if (!response.ok) {
+                throw new Error('Savdoni yuklashda xatolik');
+            }
+            
+            const data = await response.json();
+            console.log('📦 Savdo guruhi ma\'lumotlari:', data);
+            
+            if (data.success && data.sale) {
+                const sale = data.sale;
+                
+                // Joylashuvni tanlash
+                const locationSelect = document.getElementById('locationSelect');
+                const locationValue = sale.location_type === 'store' ? `store_${sale.location_id}` : `warehouse_${sale.location_id}`;
+                locationSelect.value = locationValue;
+                await loadProducts(); // Mahsulotlarni yuklash
+                
+                // Mijozni tanlash
+                document.getElementById('customerSearch').value = sale.customer_name || '';
+                document.getElementById('selectedCustomerId').value = sale.customer_id || '';
+                
+                // Savdo elementlarini savatga qo'shish
+                if (sale.items && sale.items.length > 0) {
+                    for (const item of sale.items) {
+                        addToCart(
+                            item.product_id,
+                            item.product_name,
+                            item.quantity,
+                            item.unit_price
+                        );
+                    }
+                    console.log(`✅ ${sale.items.length} ta mahsulot savatga qo'shildi`);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Savdo guruhini yuklashda xatolik:', error);
+            alert('Savdo ma\'lumotlarini yuklashda xatolik: ' + error.message);
+        }
+    }
+    
+    // Bitta savdoni yuklash
+    async function loadSingleSale(saleId) {
+        try {
+            const response = await fetch(`/api/sale/${saleId}`);
+            if (!response.ok) {
+                throw new Error('Savdoni yuklashda xatolik');
+            }
+            
+            const data = await response.json();
+            console.log('📦 Savdo ma\'lumotlari:', data);
+            
+            if (data.success && data.sale) {
+                const sale = data.sale;
+                
+                // Joylashuvni tanlash
+                const locationSelect = document.getElementById('locationSelect');
+                const locationValue = sale.location_type === 'store' ? `store_${sale.location_id}` : `warehouse_${sale.location_id}`;
+                locationSelect.value = locationValue;
+                await loadProducts(); // Mahsulotlarni yuklash
+                
+                // Mijozni tanlash
+                document.getElementById('customerSearch').value = sale.customer_name || '';
+                document.getElementById('selectedCustomerId').value = sale.customer_id || '';
+                
+                // Savdo elementini savatga qo'shish
+                if (sale.items && sale.items.length > 0) {
+                    const item = sale.items[0]; // Birinchi element
+                    addToCart(
+                        item.product_id,
+                        item.product_name,
+                        item.quantity,
+                        item.unit_price
+                    );
+                    console.log('✅ Mahsulot savatga qo\'shildi');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Savdoni yuklashda xatolik:', error);
+            alert('Savdo ma\'lumotlarini yuklashda xatolik: ' + error.message);
+        }
+    }
+        return Number(price).toLocaleString('uz-UZ');
+    }
+    
     // Sahifa yuklanganda joylashuvlarni yuklash
     document.addEventListener('DOMContentLoaded', function() {
         loadLocations();
         loadCustomers();
         loadExchangeRate();
+        
+        // URL parametrlarini tekshirish va savdo ma'lumotlarini yuklash
+        checkURLParametersAndLoadSale();
         
         // Universal qidiruv uchun event listener allaqachon DOMContentLoaded da qo'shilgan
         
