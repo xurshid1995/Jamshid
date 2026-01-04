@@ -5645,11 +5645,17 @@ def create_sale():
         elif payment_info.get('debt_usd', 0) > 0:
             payment_method = 'debt'
         
-        # Har bir to'lov turining summasini olish
-        cash_amount = float(payment_info.get('cash_usd', 0))
-        click_amount = float(payment_info.get('click_usd', 0))
-        terminal_amount = float(payment_info.get('terminal_usd', 0))
-        debt_amount = float(payment_info.get('debt_usd', 0))
+        # Har bir to'lov turining summasini olish (USD)
+        cash_usd = float(payment_info.get('cash_usd', 0))
+        click_usd = float(payment_info.get('click_usd', 0))
+        terminal_usd = float(payment_info.get('terminal_usd', 0))
+        debt_usd = float(payment_info.get('debt_usd', 0))
+        
+        # UZS ga konvertatsiya qilish
+        cash_amount = cash_usd * current_rate
+        click_amount = click_usd * current_rate
+        terminal_amount = terminal_usd * current_rate
+        debt_amount = debt_usd * current_rate
 
         # Savdo uchun asosiy joylashuvni aniqlash
         # Multi-location bo'lsa - eng ko'p ishlatiladigan
@@ -5687,10 +5693,16 @@ def create_sale():
             current_sale.seller_id = current_user.id
             current_sale.payment_method = payment_method
             current_sale.payment_status = final_payment_status
+            # UZS summalar
             current_sale.cash_amount = Decimal(str(cash_amount))
             current_sale.click_amount = Decimal(str(click_amount))
             current_sale.terminal_amount = Decimal(str(terminal_amount))
             current_sale.debt_amount = Decimal(str(debt_amount))
+            # USD summalar
+            current_sale.cash_usd = Decimal(str(cash_usd))
+            current_sale.click_usd = Decimal(str(click_usd))
+            current_sale.terminal_usd = Decimal(str(terminal_usd))
+            current_sale.debt_usd = Decimal(str(debt_usd))
             current_sale.notes = f'Tahrirlandi - {len(items)} ta mahsulot' if multi_location else 'Tahrirlandi'
             current_sale.currency_rate = current_rate
             
@@ -5706,15 +5718,16 @@ def create_sale():
                 seller_id=current_user.id,
                 payment_method=payment_method,
                 payment_status=final_payment_status,
+                # UZS summalar
                 cash_amount=Decimal(str(cash_amount)),
                 click_amount=Decimal(str(click_amount)),
                 terminal_amount=Decimal(str(terminal_amount)),
                 debt_amount=Decimal(str(debt_amount)),
-                # USD ustunlari
-                cash_usd=Decimal(str(cash_amount)),
-                click_usd=Decimal(str(click_amount)),
-                terminal_usd=Decimal(str(terminal_amount)),
-                debt_usd=Decimal(str(debt_amount)),
+                # USD summalar
+                cash_usd=Decimal(str(cash_usd)),
+                click_usd=Decimal(str(click_usd)),
+                terminal_usd=Decimal(str(terminal_usd)),
+                debt_usd=Decimal(str(debt_usd)),
                 notes=f'Multi-location savdo - {len(items)} ta mahsulot' if multi_location else None,
                 currency_rate=current_rate,
                 created_by=f'{current_user.first_name} {current_user.last_name}'
