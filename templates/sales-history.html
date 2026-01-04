@@ -94,50 +94,7 @@
         <span id="resultsText"></span>
     </div>
 
-    <div class="table-responsive">
-        <div class="table-container">
-        <table class="sales-table">
-            <thead>
-                <tr>
-                    <th class="col-datetime">Sana va Vaqt</th>
-                    <th class="col-customer">Mijoz</th>
-                    <th class="col-seller">Sotuvchi</th>
-                    <th class="col-location">Joylashuv</th>
-                    <th class="col-product compact-hide">Mahsulot</th>
-                    <th class="col-quantity compact-hide">Miqdori</th>
-                    <th class="col-price compact-hide">Narx</th>
-                    <th class="col-subtotal compact-hide">Yig'indi</th>
-                    <th class="col-total">Jami Yig'indi</th>
-                    {% if session.role != 'sotuvchi' %}
-                    <th class="col-profit">Jami Foyda</th>
-                    {% endif %}
-                    <th class="col-actions">Amallar</th>
-                </tr>
-            </thead>
-            <tbody id="salesTableBody">
-                <tr>
-                    <td colspan="{% if session.role == 'sotuvchi' %}10{% else %}11{% endif %}" class="loading">Ma'lumotlar yuklanmoqda...</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <div class="pagination" id="pagination" style="display: none;">
-            <div id="paginationButtons">
-                <!-- Pagination tugmalari bu yerga yuklanadi -->
-            </div>
-        </div>
-        </div>
-    </div>
-    
-    <!-- Mobile versiya -->
-    <div class="mobile-sales-cards" id="mobileSalesCards">
-        <div class="mobile-sale-card">
-            <div class="sale-header">
-                <span class="sale-date">Ma'lumotlar yuklanmoqda...</span>
-            </div>
-        </div>
-    </div>
+    <!-- Jadval bu yerga qayta yoziladi -->
 </div>
 
 <style>
