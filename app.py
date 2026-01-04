@@ -4851,13 +4851,19 @@ def api_sales_history():
                 )
                 print(f"🏭 Location filtri: warehouse_id={warehouse_filter_id}")
 
-        # Qidiruv filtri (mahsulot nomi bo'yicha)
+        # Qidiruv filtri (mahsulot nomi bo'yicha - bir nechta so'z bilan)
         if search_term and search_term.strip():
-            # SaleItem va Product orqali qidiruv
+            search_term_cleaned = search_term.strip()
+            # Bo'sh joy bo'yicha so'zlarga ajratish
+            search_words = search_term_cleaned.split()
+            
+            # Har bir so'z mahsulot nomida bo'lishi kerak (AND logic)
+            search_conditions = [Product.name.ilike(f'%{word}%') for word in search_words]
+            
             query = query.join(SaleItem).join(Product).filter(
-                Product.name.ilike(f'%{search_term.strip()}%')
+                db.and_(*search_conditions)
             ).distinct()
-            print(f"🔍 Qidiruv: '{search_term.strip()}' (mahsulot nomi)")
+            print(f"🔍 Qidiruv: '{search_term_cleaned}' ({len(search_words)} ta so'z)")
 
         # STATISTIKA: SQL aggregate funksiyalari bilan optimal hisoblash
         from sqlalchemy import func
