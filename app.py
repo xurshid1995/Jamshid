@@ -864,6 +864,8 @@ class Sale(db.Model):
             'customer_phone': self.customer.phone if self.customer and self.customer.phone else DEFAULT_PHONE_PLACEHOLDER,
             'store_id': self.store_id,
             'store_name': self.store.name if self.store else '🚫 O\'chirilgan do\'kon',
+            'location_id': self.location_id if self.location_id else self.store_id,
+            'location_type': self.location_type if self.location_type else ('store' if self.store_id else None),
             'seller_id': self.seller_id,
             'seller_name': f"{self.seller.first_name} {self.seller.last_name}" if self.seller else 'Admin',
             'seller_phone': self.seller.phone if self.seller and self.seller.phone else None,
