@@ -626,10 +626,10 @@ function updateStatistics(data) {
     // To'lov turlarini ko'rsatish
     if (data.payment_totals) {
         const payments = [];
-        if (data.payment_totals.cash > 0) payments.push(`💵 $${Math.floor(data.payment_totals.cash)}`);
-        if (data.payment_totals.click > 0) payments.push(`📱 $${Math.floor(data.payment_totals.click)}`);
-        if (data.payment_totals.terminal > 0) payments.push(`💳 $${Math.floor(data.payment_totals.terminal)}`);
-        if (data.payment_totals.debt > 0) payments.push(`📝 $${Math.floor(data.payment_totals.debt)}`);
+        if (data.payment_totals.cash > 0) payments.push(`💵 Naqd: $${Math.floor(data.payment_totals.cash)}`);
+        if (data.payment_totals.click > 0) payments.push(`📱 Click: $${Math.floor(data.payment_totals.click)}`);
+        if (data.payment_totals.terminal > 0) payments.push(`💳 Terminal: $${Math.floor(data.payment_totals.terminal)}`);
+        if (data.payment_totals.debt > 0) payments.push(`📝 Qarz: $${Math.floor(data.payment_totals.debt)}`);
         
         document.getElementById('paymentMethods').textContent = payments.length > 0 ? payments.join(' • ') : '-';
     }
