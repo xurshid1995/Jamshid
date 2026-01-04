@@ -1956,6 +1956,17 @@ def debts():
         icon='💰')
 
 
+@app.route('/debts/customer/<int:customer_id>')
+@role_required('admin', 'kassir')
+def customer_debt_detail(customer_id):
+    """Mijoz qarz tafsilotlari sahifasi"""
+    return render_template(
+        'customer_debt_detail.html',
+        customer_id=customer_id,
+        page_title='Qarz ma\'lumotlari',
+        icon='💰')
+
+
 @app.route('/customer/<int:customer_id>')
 def customer_detail(customer_id):
     """Mijoz tafsilotlari sahifasi"""

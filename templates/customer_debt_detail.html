@@ -1,0 +1,431 @@
+{% extends "base_with_sidebar.html" %}
+
+{% block title %}Mijoz qarz ma'lumotlari - Dokon Boshqaruv Tizimi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .debt-detail-container {
+        padding: 20px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #333;
+        font-size: 28px;
+    }
+
+    .back-button {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .back-button:hover {
+        background: #5a6268;
+        color: white;
+    }
+
+    .customer-info-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .customer-info-card h2 {
+        margin: 0 0 20px 0;
+        color: #333;
+        font-size: 22px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .debt-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid;
+    }
+
+    .stat-card.total { border-left-color: #dc3545; }
+    .stat-card.paid { border-left-color: #28a745; }
+    .stat-card.remaining { border-left-color: #ffc107; }
+
+    .stat-card h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .history-table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .history-table-container h2 {
+        margin: 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-size: 20px;
+        color: #333;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .history-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+        font-size: 14px;
+    }
+
+    .history-table td {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .history-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.debt {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.paid {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .payment-form {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .payment-form h2 {
+        margin: 0 0 20px 0;
+        font-size: 20px;
+        color: #333;
+    }
+
+    .payment-input-group {
+        margin-bottom: 20px;
+    }
+
+    .payment-input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .payment-input-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #ced4da;
+        border-radius: 6px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .payment-input-group input:focus {
+        outline: none;
+        border-color: #28a745;
+    }
+
+    .payment-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-submit {
+        flex: 1;
+        padding: 15px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .btn-submit:hover {
+        background: #218838;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="debt-detail-container">
+    <div class="page-header">
+        <h1>💰 Qarz ma'lumotlari</h1>
+        <a href="/debts" class="back-button">
+            ← Orqaga
+        </a>
+    </div>
+
+    <!-- Mijoz ma'lumotlari -->
+    <div class="customer-info-card">
+        <h2 id="customerName">-</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">📞 Telefon</span>
+                <span class="info-value" id="customerPhone">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">📍 Manzil</span>
+                <span class="info-value" id="customerAddress">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qarz statistikasi -->
+    <div class="debt-stats">
+        <div class="stat-card total">
+            <h3>💰 Umumiy qarz</h3>
+            <div class="value" id="totalDebt">$0.00</div>
+        </div>
+        <div class="stat-card paid">
+            <h3>✅ To'langan</h3>
+            <div class="value" id="totalPaid">$0.00</div>
+        </div>
+        <div class="stat-card remaining">
+            <h3>📊 Qolgan</h3>
+            <div class="value" id="remainingDebt">$0.00</div>
+        </div>
+    </div>
+
+    <!-- Qarzlar tarixi -->
+    <div class="history-table-container">
+        <h2>📜 Qarzlar tarixi</h2>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>📅 Sana</th>
+                    <th>🛒 Savdo №</th>
+                    <th>💵 Qarz summasi</th>
+                    <th>✅ To'langan</th>
+                    <th>📊 Qolgan</th>
+                    <th>🏷️ Status</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <tr>
+                    <td colspan="6" class="no-data">Ma'lumotlar yuklanmoqda...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- To'lov qilish -->
+    <div class="payment-form">
+        <h2>💳 Qarzga to'lov qilish</h2>
+        <div class="payment-input-group">
+            <label for="paymentAmount">To'lov summasi ($)</label>
+            <input type="number" id="paymentAmount" step="0.01" placeholder="Summasini kiriting..." value="0.00">
+        </div>
+        <div class="payment-buttons">
+            <button class="btn-submit" onclick="submitPayment()">✅ To'lovni tasdiqlash</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const customerId = {{ customer_id }};
+    let debtData = null;
+
+    // Ma'lumotlarni yuklash
+    async function loadDebtData() {
+        try {
+            const response = await fetch(`/api/debts/${customerId}`);
+            if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
+            
+            debtData = await response.json();
+            
+            // Mijoz ma'lumotlarini to'ldirish
+            document.getElementById('customerName').textContent = debtData.customer.name;
+            document.getElementById('customerPhone').textContent = debtData.customer.phone || '-';
+            document.getElementById('customerAddress').textContent = debtData.customer.address || '-';
+            
+            // Statistika
+            document.getElementById('totalDebt').textContent = `$${debtData.total_debt.toFixed(2)}`;
+            document.getElementById('totalPaid').textContent = `$${debtData.total_paid.toFixed(2)}`;
+            document.getElementById('remainingDebt').textContent = `$${debtData.remaining_debt.toFixed(2)}`;
+            
+            // Qarzlar tarixi
+            renderHistory();
+            
+        } catch (error) {
+            console.error('Xatolik:', error);
+            document.getElementById('historyBody').innerHTML = 
+                '<tr><td colspan="6" class="no-data">❌ Ma\'lumotlarni yuklashda xatolik</td></tr>';
+        }
+    }
+
+    // Tarixni render qilish
+    function renderHistory() {
+        const tbody = document.getElementById('historyBody');
+        
+        if (!debtData.history || debtData.history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">📭 Qarzlar tarixi yo\'q</td></tr>';
+            return;
+        }
+
+        const html = debtData.history.map(h => {
+            const remaining = h.debt_amount - h.paid_amount;
+            const status = remaining > 0 ? 'debt' : 'paid';
+            const statusText = remaining > 0 ? '💳 Qarzli' : '✅ To\'langan';
+            
+            return `
+                <tr>
+                    <td>${h.sale_date}</td>
+                    <td>#${h.sale_id}</td>
+                    <td><strong>$${h.debt_amount.toFixed(2)}</strong></td>
+                    <td>$${h.paid_amount.toFixed(2)}</td>
+                    <td><strong style="color: ${remaining > 0 ? '#dc3545' : '#28a745'}">$${remaining.toFixed(2)}</strong></td>
+                    <td><span class="status-badge ${status}">${statusText}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = html;
+    }
+
+    // To'lovni tasdiqlash
+    async function submitPayment() {
+        const paymentSum = parseFloat(document.getElementById('paymentAmount').value) || 0;
+        
+        if (paymentSum <= 0) {
+            alert('❌ To\'lov summasini kiriting');
+            return;
+        }
+
+        if (paymentSum > debtData.remaining_debt) {
+            if (!confirm(`Qarz summasi ($${debtData.remaining_debt.toFixed(2)}) dan ortiq. Davom etasizmi?`)) {
+                return;
+            }
+        }
+
+        const paymentData = {
+            customer_id: customerId,
+            payment_usd: paymentSum
+        };
+
+        try {
+            const response = await fetch('/api/debts/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert('✅ To\'lov muvaffaqiyatli amalga oshirildi!');
+                // Sahifani yangilash
+                location.reload();
+            } else {
+                alert('❌ Xatolik: ' + (result.error || 'Noma\'lum xatolik'));
+            }
+        } catch (error) {
+            console.error('Xatolik:', error);
+            alert('❌ To\'lovni amalga oshirishda xatolik yuz berdi');
+        }
+    }
+
+    // Sahifa yuklanganda
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDebtData();
+    });
+</script>
+{% endblock %}
