@@ -1352,18 +1352,26 @@
                 await loadProducts();
                 console.log('📦 Mahsulotlar yuklandi');
                 
-                // Mijozni tanlash
+                // Mijozni to'ldirish (ID bilan)
                 const customerSearchInput = document.getElementById('customerSearch');
                 const selectedCustomerIdInput = document.getElementById('selectedCustomerId');
                 console.log('👤 customerSearch element:', customerSearchInput);
                 console.log('👤 selectedCustomerId element:', selectedCustomerIdInput);
                 
-                // selectCustomer funksiyasini chaqirish - to'liq tanlash
+                // Mijoz ma'lumotlarini o'rnatish
                 if (sale.customer_id && sale.customer_name) {
-                    selectCustomer(sale.customer_id, sale.customer_name, sale.customer_phone || '');
-                    console.log(`👤 Mijoz to'liq tanlandi: ${sale.customer_name} (ID: ${sale.customer_id})`);
+                    const displayText = sale.customer_phone ? `${sale.customer_name} - ${sale.customer_phone}` : sale.customer_name;
+                    customerSearchInput.value = displayText;
+                    selectedCustomerIdInput.value = sale.customer_id;
+                    
+                    // Korzina sarlavhasida mijoz ko'rsatish
+                    const cartCustomerInfo = document.getElementById('cartCustomerInfo');
+                    const customerDisplay = sale.customer_phone ? `👤 ${sale.customer_name} ${sale.customer_phone}` : `👤 ${sale.customer_name}`;
+                    cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+                    
+                    console.log(`👤 Mijoz ID bilan to'ldirildi: ${sale.customer_name} (ID: ${sale.customer_id})`);
                 } else {
-                    console.warn('⚠️ Mijoz ma\'lumotlari to\'liq emas');
+                    console.warn('⚠️ Mijoz ma\'lumotlari topilmadi');
                 }
                 
                 // Kichik kutish - mahsulotlar DOM'ga qo'shilishi uchun
@@ -1431,12 +1439,20 @@
                 console.log('📦 Mahsulotlar yuklanmoqda...');
                 await loadProducts();
                 
-                // Mijozni tanlash - selectCustomer funksiyasini chaqirish
+                // Mijozni to'ldirish (ID bilan)
                 if (sale.customer_id && sale.customer_name) {
-                    selectCustomer(sale.customer_id, sale.customer_name, sale.customer_phone || '');
-                    console.log(`👤 Mijoz to'liq tanlandi: ${sale.customer_name} (ID: ${sale.customer_id})`);
+                    const displayText = sale.customer_phone ? `${sale.customer_name} - ${sale.customer_phone}` : sale.customer_name;
+                    document.getElementById('customerSearch').value = displayText;
+                    document.getElementById('selectedCustomerId').value = sale.customer_id;
+                    
+                    // Korzina sarlavhasida mijoz ko'rsatish
+                    const cartCustomerInfo = document.getElementById('cartCustomerInfo');
+                    const customerDisplay = sale.customer_phone ? `👤 ${sale.customer_name} ${sale.customer_phone}` : `👤 ${sale.customer_name}`;
+                    cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+                    
+                    console.log(`👤 Mijoz ID bilan to'ldirildi: ${sale.customer_name} (ID: ${sale.customer_id})`);
                 } else {
-                    console.warn('⚠️ Mijoz ma\'lumotlari to\'liq emas');
+                    console.warn('⚠️ Mijoz ma\'lumotlari topilmadi');
                 }
                 
                 // Kichik kutish - mahsulotlar DOM'ga qo'shilishi uchun
