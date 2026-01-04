@@ -1571,18 +1571,16 @@ function highlightSearchTerms(text, searchTerm) {
     }
     
     // Bo'sh joy bo'yicha so'zlarga ajratish
-    const searchWords = searchTerm.trim().split(/\s+/);
-    let highlightedText = text;
+    const searchWords = searchTerm.trim().split(/\s+/).filter(w => w.length > 0);
+    if (searchWords.length === 0) return text;
     
-    // Har bir so'zni sariq fonda ko'rsatish
-    searchWords.forEach(word => {
-        if (word.length > 0) {
-            const regex = new RegExp(`(${word})`, 'gi');
-            highlightedText = highlightedText.replace(regex, '<mark style="background-color: #ffeb3b; padding: 2px 4px; border-radius: 2px;">$1</mark>');
-        }
-    });
+    // Barcha so'zlarni bitta regex pattern'ga birlashtirish (nested tags muammosini hal qiladi)
+    // Regex maxsus belgilarni escape qilish
+    const pattern = searchWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    const regex = new RegExp(`(${pattern})`, 'gi');
     
-    return highlightedText;
+    // Bitta marta replace - nested tags muammosi yo'q
+    return text.replace(regex, '<mark style="background-color: #ffeb3b; padding: 2px 4px; border-radius: 2px;">$1</mark>');
 }
 
 // Narxni formatlash (USD va som) - savdo kursidan foydalanish
