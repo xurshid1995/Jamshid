@@ -5710,6 +5710,11 @@ def create_sale():
                 click_amount=Decimal(str(click_amount)),
                 terminal_amount=Decimal(str(terminal_amount)),
                 debt_amount=Decimal(str(debt_amount)),
+                # USD ustunlari
+                cash_usd=Decimal(str(cash_amount)),
+                click_usd=Decimal(str(click_amount)),
+                terminal_usd=Decimal(str(terminal_amount)),
+                debt_usd=Decimal(str(debt_amount)),
                 notes=f'Multi-location savdo - {len(items)} ta mahsulot' if multi_location else None,
                 currency_rate=current_rate,
                 created_by=f'{current_user.first_name} {current_user.last_name}'
