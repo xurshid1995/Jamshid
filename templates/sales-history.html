@@ -1553,6 +1553,27 @@ function convertToUZS(usdAmount, saleRate = null) {
     return (parseFloat(usdAmount) * rate).toFixed(0);
 }
 
+// Telefon raqamini formatlash +998(91) 406-47-49
+function formatPhoneNumber(phone) {
+    if (!phone) return '';
+    
+    // Faqat raqamlarni qoldirish
+    let value = phone.replace(/\D/g, '');
+    
+    // Agar 998 bilan boshlanmasa, qaytarish
+    if (!value.startsWith('998')) {
+        return phone; // Asl formatida qaytarish
+    }
+    
+    // Formatlash: +998(99) 406-47-49
+    if (value.length >= 12) {
+        return '+' + value.substring(0, 3) + '(' + value.substring(3, 5) + ') ' + 
+               value.substring(5, 8) + '-' + value.substring(8, 10) + '-' + value.substring(10, 12);
+    }
+    
+    return phone; // Agar to'liq bo'lmasa, asl formatida qaytarish
+}
+
 // Narxni formatlash (USD va som) - savdo kursidan foydalanish
 function formatPrice(usdAmount, saleRate = null) {
     const usdFormatted = parseFloat(usdAmount).toFixed(2);
@@ -1910,7 +1931,7 @@ function displaySalesData(data) {
                 <td rowspan="${items.length}" class="group-cell group-seller">
                     <div style="line-height: 1.4;">
                         <div style="font-size: 14px; font-weight: 600; color: #495057;">${sale.seller_name || 'Admin'}</div>
-                        ${sale.seller_phone ? `<div style="font-size: 14px; color: #6c757d; font-style: italic;">${sale.seller_phone}</div>` : ''}
+                        ${sale.seller_phone ? `<div style="font-size: 14px; color: #6c757d; font-style: italic;">${formatPhoneNumber(sale.seller_phone)}</div>` : ''}
                     </div>
                 </td>
                 <td class="group-cell group-location">
