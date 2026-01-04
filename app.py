@@ -5440,32 +5440,66 @@ def create_sale():
             sale_location_id = location_id
             sale_location_type = location_type
 
-        # Bitta savdo yaratish
-        new_sale = Sale(
-            customer_id=final_customer_id,
-            store_id=store.id,
-            location_id=sale_location_id,
-            location_type=sale_location_type,
-            seller_id=current_user.id,
-            payment_method=payment_method,
-            payment_status=final_payment_status,
-            cash_amount=Decimal(str(cash_amount)),
-            click_amount=Decimal(str(click_amount)),
-            terminal_amount=Decimal(str(terminal_amount)),
-            debt_amount=Decimal(str(debt_amount)),
-            notes=f'Multi-location savdo - {len(items)} ta mahsulot' if multi_location else None,
-            currency_rate=current_rate,
-            created_by=f'{current_user.first_name} {current_user.last_name}'
-        )
-
-        db.session.add(new_sale)
-        db.session.flush()  # ID ni olish uchun
+        # TAHRIRLASH yoki YANGI SAVDO?
+        if is_edit_mode and original_sale_id:
+            print(f"\n🔄 TAHRIRLASH REJIMI: Sale ID={original_sale_id}")
+            
+            current_sale = Sale.query.get(original_sale_id)
+            if not current_sale:
+                return jsonify({
+                    'success': False,
+                    'error': f'Tahrirlash uchun savdo topilmadi: {original_sale_id}'
+                }), 404
+            
+            print(f"✅ Asl savdo topildi - UPDATE qilinmoqda")
+            
+            # Eski SaleItem'larni o'chirish
+            SaleItem.query.filter_by(sale_id=original_sale_id).delete()
+            print(f"🗑️  Eski mahsulotlar o'chirildi")
+            
+            # Sale ma'lumotlarini yangilash
+            current_sale.customer_id = final_customer_id
+            current_sale.store_id = store.id
+            current_sale.location_id = sale_location_id
+            current_sale.location_type = sale_location_type
+            current_sale.seller_id = current_user.id
+            current_sale.payment_method = payment_method
+            current_sale.payment_status = final_payment_status
+            current_sale.cash_amount = Decimal(str(cash_amount))
+            current_sale.click_amount = Decimal(str(click_amount))
+            current_sale.terminal_amount = Decimal(str(terminal_amount))
+            current_sale.debt_amount = Decimal(str(debt_amount))
+            current_sale.notes = f'Tahrirlandi - {len(items)} ta mahsulot' if multi_location else 'Tahrirlandi'
+            current_sale.currency_rate = current_rate
+            
+        else:
+            # Yangi savdo yaratish
+            print(f"\n✅ YANGI SAVDO yaratilmoqda")
+            
+            current_sale = Sale(
+                customer_id=final_customer_id,
+                store_id=store.id,
+                location_id=sale_location_id,
+                location_type=sale_location_type,
+                seller_id=current_user.id,
+                payment_method=payment_method,
+                payment_status=final_payment_status,
+                cash_amount=Decimal(str(cash_amount)),
+                click_amount=Decimal(str(click_amount)),
+                terminal_amount=Decimal(str(terminal_amount)),
+                debt_amount=Decimal(str(debt_amount)),
+                notes=f'Multi-location savdo - {len(items)} ta mahsulot' if multi_location else None,
+                currency_rate=current_rate,
+                created_by=f'{current_user.first_name} {current_user.last_name}'
+            )
+            db.session.add(current_sale)
+            db.session.flush()  # ID ni olish uchun
 
         total_profit = 0
         total_revenue = 0
         total_cost = 0
 
-        # Har bir mahsulot uchun SaleItem yaratish
+        # Har bir mahsulot uchun SaleItem yaratish (ham yangi, ham tahrirlashda bir xil)
         for item in items:
             # product_id ni id yoki product_id dan olish
             product_id = item.get('product_id') or item.get('id')
@@ -5623,7 +5657,7 @@ def create_sale():
 
             # SaleItem yaratish
             sale_item = SaleItem(
-                sale_id=new_sale.id,
+                sale_id=current_sale.id,  # Yangi yoki tahrirlangan sale ID
                 product_id=product_id,
                 quantity=quantity,
                 unit_price=Decimal(str(unit_price)),
@@ -5640,39 +5674,22 @@ def create_sale():
             total_revenue += total_amount
             total_cost += total_cost_price
 
-        # Asosiy savdoning jami summasini yangilash
-        new_sale.total_amount = Decimal(str(total_revenue))
-        new_sale.total_cost = Decimal(str(total_cost))
-        new_sale.total_profit = Decimal(str(total_profit))
-
-        # Tahrirlash rejimida faqat pending savdoni o'chirish
-        # PAID sale'ning stockini QAYTARMAYMIZ - frontend real-time boshqaradi!
-        if is_edit_mode and original_sale_id:
-            print(f"🔄 Edit mode: Asl savdo ID={original_sale_id}")
-            original_sale = Sale.query.get(original_sale_id)
-            
-            if original_sale:
-                print(f"📝 Asl savdo holati: {original_sale.payment_status}")
-                
-                # Faqat pending savdoni o'chirish (stockni frontend allaqachon boshqargan)
-                if original_sale.payment_status == 'pending':
-                    db.session.delete(original_sale)
-                    print(f"🗑️ Pending savdo o'chirildi: ID={original_sale_id}")
-                    print(f"ℹ️ Stock real-time API'lar orqali boshqarilgan (qaytarilmaydi)")
-                else:
-                    print(f"ℹ️ Paid sale tahrirlash: stock frontend orqali boshqariladi")
-                    print(f"ℹ️ Backend faqat DB record'ni yangilaydi (stock'ga tegmaydi)")
-            else:
-                print(f"⚠️ Asl savdo topilmadi: ID={original_sale_id}")
+        # Savdo jami summasini yangilash (ham yangi, ham tahrirlash uchun)
+        current_sale.total_amount = Decimal(str(total_revenue))
+        current_sale.total_cost = Decimal(str(total_cost))
+        current_sale.total_profit = Decimal(str(total_profit))
 
         # Ma'lumotlar bazasiga saqlash
         db.session.commit()
 
+        action_text = 'tahrirlandi' if is_edit_mode else 'yaratildi'
+        print(f"✅ Savdo {action_text}: ID={current_sale.id}, Items={len(items)}, Total=${total_revenue}")
+
         return jsonify({
             'success': True,
-            'message': f'{len(items)} ta mahsulot bilan savdo yaratildi',
+            'message': f'Savdo {action_text} - {len(items)} ta mahsulot',
             'data': {
-                'sale_id': new_sale.id,
+                'sale_id': current_sale.id,
                 'items_count': len(items),
                 'total_revenue': total_revenue,
                 'total_profit': total_profit,
