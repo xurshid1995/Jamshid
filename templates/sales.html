@@ -1881,13 +1881,20 @@
         document.getElementById('paymentModalTotalUZS').textContent = `${Math.round(totalUZS).toLocaleString('uz-UZ')} so'm`;
         document.getElementById('paymentCashUSD').value = totalUSD.toFixed(2);
         document.getElementById('paymentCashUZS').value = Math.round(totalUZS);
-        document.getElementById('paymentClickUSD').value = '0.00';
-        document.getElementById('paymentClickUZS').value = '0';
-        document.getElementById('paymentTerminalUSD').value = '0.00';
-        document.getElementById('paymentTerminalUZS').value = '0';
-        document.getElementById('paymentDebtUSD').value = '0.00';
-        document.getElementById('paymentDebtUZS').value = '0';
+        document.getElementById('paymentClickUSD').value = '';
+        document.getElementById('paymentClickUZS').value = '';
+        document.getElementById('paymentTerminalUSD').value = '';
+        document.getElementById('paymentTerminalUZS').value = '';
+        document.getElementById('paymentDebtUSD').value = '';
+        document.getElementById('paymentDebtUZS').value = '';
         document.getElementById('paymentModal').style.display = 'flex';
+        
+        // Fokusni Naxt so'm maydoniga berish
+        setTimeout(() => {
+            document.getElementById('paymentCashUZS').focus();
+            document.getElementById('paymentCashUZS').select();
+        }, 100);
+        
         console.log('💳 To\'lov modali ochildi');
     }
     
