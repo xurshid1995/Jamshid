@@ -615,9 +615,9 @@
         
         const usdPrice = parseFloat(usdInput.value) || 0;
         const uzsPrice = usdPrice * exchangeRate;
-        uzsInput.value = uzsPrice.toFixed(2);
+        uzsInput.value = Math.round(uzsPrice);
         
-        console.log('💱 Konversiya (USD→UZS):', usdPrice, 'USD ×', exchangeRate, '=', uzsPrice.toFixed(2), 'UZS');
+        console.log('💱 Konversiya (USD→UZS):', usdPrice, 'USD ×', exchangeRate, '=', Math.round(uzsPrice), 'UZS');
     }
     
     // UZS dan USD ga avtomatik konversiya
