@@ -1597,6 +1597,8 @@
             items: cart.map(item => ({
                 product_id: item.id,
                 quantity: item.quantity,
+                unit_price: item.priceUSD,  // Backend unit_price kutadi
+                price: item.priceUSD,       // Zapas variant
                 price_usd: item.priceUSD,
                 price_uzs: item.priceUZS
             })),
