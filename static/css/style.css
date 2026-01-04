@@ -1424,8 +1424,8 @@ footer {
     
     /* Main content adjustments */
     .main-content {
-        margin-left: 0;
-        width: 100%;
+        margin-left: 0 !important;
+        width: 100% !important;
         padding: 10px 5px;
         min-height: calc(100vh - 70px);
         background: #f8f9fa;
