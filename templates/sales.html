@@ -1358,9 +1358,13 @@
                 console.log('👤 customerSearch element:', customerSearchInput);
                 console.log('👤 selectedCustomerId element:', selectedCustomerIdInput);
                 
-                customerSearchInput.value = sale.customer_name || '';
-                selectedCustomerIdInput.value = sale.customer_id || '';
-                console.log(`👤 Mijoz o'rnatildi: ${customerSearchInput.value}, ID: ${selectedCustomerIdInput.value}`);
+                // selectCustomer funksiyasini chaqirish - to'liq tanlash
+                if (sale.customer_id && sale.customer_name) {
+                    selectCustomer(sale.customer_id, sale.customer_name, sale.customer_phone || '');
+                    console.log(`👤 Mijoz to'liq tanlandi: ${sale.customer_name} (ID: ${sale.customer_id})`);
+                } else {
+                    console.warn('⚠️ Mijoz ma\'lumotlari to\'liq emas');
+                }
                 
                 // Kichik kutish - mahsulotlar DOM'ga qo'shilishi uchun
                 console.log('⏳ 500ms kutilmoqda...');
@@ -1427,10 +1431,13 @@
                 console.log('📦 Mahsulotlar yuklanmoqda...');
                 await loadProducts();
                 
-                // Mijozni tanlash
-                document.getElementById('customerSearch').value = sale.customer_name || '';
-                document.getElementById('selectedCustomerId').value = sale.customer_id || '';
-                console.log(`👤 Mijoz tanlandi: ${sale.customer_name}`);
+                // Mijozni tanlash - selectCustomer funksiyasini chaqirish
+                if (sale.customer_id && sale.customer_name) {
+                    selectCustomer(sale.customer_id, sale.customer_name, sale.customer_phone || '');
+                    console.log(`👤 Mijoz to'liq tanlandi: ${sale.customer_name} (ID: ${sale.customer_id})`);
+                } else {
+                    console.warn('⚠️ Mijoz ma\'lumotlari to\'liq emas');
+                }
                 
                 // Kichik kutish - mahsulotlar DOM'ga qo'shilishi uchun
                 await new Promise(resolve => setTimeout(resolve, 500));
