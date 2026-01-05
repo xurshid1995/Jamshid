@@ -1737,8 +1737,8 @@ async function loadSalesHistory(page = 1) {
         const dateFrom = dateFromInput?.value || '';
         const dateTo = dateToInput?.value || '';
         
-        // URL parametrlarini yaratish
-        let apiUrl = `/api/sales-history?page=${page}&per_page=${itemsPerPage}`;
+        // URL parametrlarini yaratish - FAQAT QARZ SAVDOLAR (payment_status=partial)
+        let apiUrl = `/api/sales-history?page=${page}&per_page=${itemsPerPage}&payment_status=partial`;
         if (dateFrom) apiUrl += `&start_date=${dateFrom}`;
         if (dateTo) apiUrl += `&end_date=${dateTo}`;
         
