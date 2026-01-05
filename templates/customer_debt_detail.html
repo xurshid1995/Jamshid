@@ -553,38 +553,62 @@
     function setupCurrencyConversion() {
         // Cash USD -> UZS
         document.getElementById('paymentCashUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentCashUZS').value = Math.round(usd * currentRate);
+            const usd = parseFloat(this.value);
+            if (!isNaN(usd) && this.value !== '') {
+                document.getElementById('paymentCashUZS').value = Math.round(usd * currentRate);
+            } else {
+                document.getElementById('paymentCashUZS').value = '';
+            }
         });
         
         // Cash UZS -> USD
         document.getElementById('paymentCashUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentCashUSD').value = (uzs / currentRate).toFixed(2);
+            const uzs = parseFloat(this.value);
+            if (!isNaN(uzs) && this.value !== '') {
+                document.getElementById('paymentCashUSD').value = (uzs / currentRate).toFixed(2);
+            } else {
+                document.getElementById('paymentCashUSD').value = '';
+            }
         });
         
         // Click USD -> UZS
         document.getElementById('paymentClickUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentClickUZS').value = Math.round(usd * currentRate);
+            const usd = parseFloat(this.value);
+            if (!isNaN(usd) && this.value !== '') {
+                document.getElementById('paymentClickUZS').value = Math.round(usd * currentRate);
+            } else {
+                document.getElementById('paymentClickUZS').value = '';
+            }
         });
         
         // Click UZS -> USD
         document.getElementById('paymentClickUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentClickUSD').value = (uzs / currentRate).toFixed(2);
+            const uzs = parseFloat(this.value);
+            if (!isNaN(uzs) && this.value !== '') {
+                document.getElementById('paymentClickUSD').value = (uzs / currentRate).toFixed(2);
+            } else {
+                document.getElementById('paymentClickUSD').value = '';
+            }
         });
         
         // Terminal USD -> UZS
         document.getElementById('paymentTerminalUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentTerminalUZS').value = Math.round(usd * currentRate);
+            const usd = parseFloat(this.value);
+            if (!isNaN(usd) && this.value !== '') {
+                document.getElementById('paymentTerminalUZS').value = Math.round(usd * currentRate);
+            } else {
+                document.getElementById('paymentTerminalUZS').value = '';
+            }
         });
         
         // Terminal UZS -> USD
         document.getElementById('paymentTerminalUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentTerminalUSD').value = (uzs / currentRate).toFixed(2);
+            const uzs = parseFloat(this.value);
+            if (!isNaN(uzs) && this.value !== '') {
+                document.getElementById('paymentTerminalUSD').value = (uzs / currentRate).toFixed(2);
+            } else {
+                document.getElementById('paymentTerminalUSD').value = '';
+            }
         });
     }
 
