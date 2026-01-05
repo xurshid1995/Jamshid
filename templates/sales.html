@@ -2009,7 +2009,8 @@
             total_usd: totalUSD,
             total_uzs: totalUSD * exchangeRate,
             exchange_rate: exchangeRate,
-            payment_status: 'paid',
+            // Payment status ni avtomatik aniqlash
+            payment_status: debtUSD > 0 ? 'partial' : 'paid',
             // Agar tahrirlash rejimida bo'lsa
             original_sale_id: editingSaleId,
             is_edit_mode: editingSaleId !== null
