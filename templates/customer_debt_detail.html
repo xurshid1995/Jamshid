@@ -50,32 +50,28 @@
         margin-bottom: 20px;
     }
 
-    .customer-info-card h2 {
-        margin: 0 0 20px 0;
+    .customer-header {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .customer-header h2 {
+        margin: 0;
         color: #333;
         font-size: 22px;
-        border-bottom: 2px solid #dee2e6;
-        padding-bottom: 15px;
-    }
-
-    .customer-stats-wrapper {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 20px;
-        align-items: stretch;
-    }
-
-    .customer-info-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        border-left: 4px solid #007bff;
     }
 
     .info-grid {
         display: flex;
-        flex-direction: column;
-        gap: 12px;
+        gap: 30px;
+        align-items: center;
+        flex-wrap: wrap;
+        flex: 1;
     }
 
     .info-item {
@@ -88,7 +84,6 @@
         font-size: 14px;
         color: #666;
         font-weight: 500;
-        min-width: 80px;
     }
 
     .info-value {
@@ -98,7 +93,10 @@
     }
 
     .debt-stats {
-        display: contents;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
     }
 
     .stat-card {
@@ -107,9 +105,6 @@
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         border-left: 4px solid;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
     }
 
     .stat-card.total { border-left-color: #dc3545; }
@@ -269,40 +264,40 @@
         </a>
     </div>
 
-    <!-- Mijoz ma'lumotlari va qarz statistikasi -->
+    <!-- Mijoz ma'lumotlari -->
     <div class="customer-info-card">
-        <h2>👤 Mijoz ma'lumotlari va qarz statistikasi</h2>
-        <div class="customer-stats-wrapper">
-            <div class="customer-info-section">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">👤 Ism:</span>
-                        <span class="info-value" id="customerName">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📞 Telefon:</span>
-                        <span class="info-value" id="customerPhone">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📍 Manzil:</span>
-                        <span class="info-value" id="customerAddress">-</span>
-                    </div>
+        <div class="customer-header">
+            <h2>💰 Qarz ma'lumotlari</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">👤</span>
+                    <span class="info-value" id="customerName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📞</span>
+                    <span class="info-value" id="customerPhone">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📍</span>
+                    <span class="info-value" id="customerAddress">-</span>
                 </div>
             </div>
-            <div class="debt-stats">
-                <div class="stat-card total">
-                    <h3>💰 Umumiy qarz</h3>
-                    <div class="value" id="totalDebt">$0.00</div>
-                </div>
-                <div class="stat-card paid">
-                    <h3>✅ To'langan</h3>
-                    <div class="value" id="totalPaid">$0.00</div>
-                </div>
-                <div class="stat-card remaining">
-                    <h3>📊 Qolgan</h3>
-                    <div class="value" id="remainingDebt">$0.00</div>
-                </div>
-            </div>
+        </div>
+    </div>
+
+    <!-- Qarz statistikasi -->
+    <div class="debt-stats">
+        <div class="stat-card total">
+            <h3>💰 Umumiy qarz</h3>
+            <div class="value" id="totalDebt">$0.00</div>
+        </div>
+        <div class="stat-card paid">
+            <h3>✅ To'langan</h3>
+            <div class="value" id="totalPaid">$0.00</div>
+        </div>
+        <div class="stat-card remaining">
+            <h3>📊 Qolgan</h3>
+            <div class="value" id="remainingDebt">$0.00</div>
         </div>
     </div>
 
