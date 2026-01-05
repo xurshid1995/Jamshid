@@ -338,11 +338,6 @@
         </div>
         
         <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Kurs (UZS):</label>
-            <input type="number" id="paymentRate" step="1" placeholder="12000" value="12000" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-        </div>
-        
-        <div style="margin-bottom: 20px;">
             <h3 style="margin-bottom: 12px; color: #333; font-size: 16px;">To'lov turlari</h3>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -364,11 +359,6 @@
         </div>
         
         <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: 500;">To'lov sanasi:</label>
-            <input type="date" id="paymentDate" value="" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-        </div>
-        
-        <div style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">Izoh:</label>
             <textarea id="paymentNote" placeholder="Qo'shimcha ma'lumotlar..." style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; min-height: 80px; resize: vertical;"></textarea>
         </div>
@@ -382,10 +372,18 @@
 <script>
     const customerId = {{ customer_id }};
     let debtData = null;
+    let currentRate = 12000; // Default kurs
 
     // Ma'lumotlarni yuklash
     async function loadDebtData() {
         try {
+            // Currency rate olish
+            const rateResponse = await fetch('/api/currency-rate');
+            if (rateResponse.ok) {
+                const rateData = await rateResponse.json();
+                currentRate = rateData.rate || 12000;
+            }
+            
             const response = await fetch(`/api/debts/${customerId}`);
             if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
             
@@ -443,8 +441,6 @@
 
     // To'lovni tasdiqlash
     async function submitPayment() {
-        const paymentRate = parseFloat(document.getElementById('paymentRate').value) || 12000;
-        const paymentDate = document.getElementById('paymentDate').value;
         const paymentNote = document.getElementById('paymentNote').value.trim();
         
         // Har bir to'lov turini olish
@@ -465,13 +461,16 @@
             }
         }
 
+        // Joriy sanani olish
+        const today = new Date().toISOString().split('T')[0];
+
         const paymentData = {
             customer_id: customerId,
             cash_usd: cashUSD,
             click_usd: clickUSD,
             terminal_usd: terminalUSD,
-            exchange_rate: paymentRate,
-            payment_date: paymentDate || null,
+            exchange_rate: currentRate,
+            payment_date: today,
             note: paymentNote || null
         };
 
@@ -501,35 +500,22 @@
 
     // USD va UZS o'rtasida avtomatik konversiya
     function setupCurrencyConversion() {
-        const rate = () => parseFloat(document.getElementById('paymentRate').value) || 12000;
-        
         // Cash USD -> UZS
         document.getElementById('paymentCashUSD').addEventListener('input', function() {
             const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentCashUZS').value = Math.round(usd * rate());
+            document.getElementById('paymentCashUZS').value = Math.round(usd * currentRate);
         });
         
         // Click USD -> UZS
         document.getElementById('paymentClickUSD').addEventListener('input', function() {
             const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentClickUZS').value = Math.round(usd * rate());
+            document.getElementById('paymentClickUZS').value = Math.round(usd * currentRate);
         });
         
         // Terminal USD -> UZS
         document.getElementById('paymentTerminalUSD').addEventListener('input', function() {
             const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentTerminalUZS').value = Math.round(usd * rate());
-        });
-        
-        // Kurs o'zgarganda barcha UZS qiymatlarni yangilash
-        document.getElementById('paymentRate').addEventListener('input', function() {
-            const cashUSD = parseFloat(document.getElementById('paymentCashUSD').value) || 0;
-            const clickUSD = parseFloat(document.getElementById('paymentClickUSD').value) || 0;
-            const terminalUSD = parseFloat(document.getElementById('paymentTerminalUSD').value) || 0;
-            
-            document.getElementById('paymentCashUZS').value = Math.round(cashUSD * rate());
-            document.getElementById('paymentClickUZS').value = Math.round(clickUSD * rate());
-            document.getElementById('paymentTerminalUZS').value = Math.round(terminalUSD * rate());
+            document.getElementById('paymentTerminalUZS').value = Math.round(usd * currentRate);
         });
     }
 
@@ -537,10 +523,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadDebtData();
         setupCurrencyConversion();
-        
-        // Bugungi sanani default qilish
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('paymentDate').value = today;
     });
 </script>
 {% endblock %}
