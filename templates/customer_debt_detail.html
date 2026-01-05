@@ -421,6 +421,9 @@
             // Qarzlar tarixi
             renderHistory();
             
+            // Currency conversion setup (kurs olingandan keyin)
+            setupCurrencyConversion();
+            
         } catch (error) {
             console.error('Xatolik:', error);
             document.getElementById('historyBody').innerHTML = 
@@ -587,8 +590,7 @@
 
     // Sahifa yuklanganda
     document.addEventListener('DOMContentLoaded', function() {
-        loadDebtData();
-        setupCurrencyConversion();
+        loadDebtData(); // Bu ichida setupCurrencyConversion() ham chaqiriladi
     });
 
     // Savdo tafsilotlarini ko'rish
