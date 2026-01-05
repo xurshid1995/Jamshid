@@ -3033,6 +3033,56 @@ def api_debts():
         }), 500
 
 
+@app.route('/api/debts/paid')
+@role_required('admin', 'kassir')
+def api_paid_debts():
+    """To'langan qarzlar tarixi"""
+    try:
+        query = text("""
+            SELECT 
+                s.id as sale_id,
+                s.created_at as sale_date,
+                c.name as customer_name,
+                COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0) as total_amount,
+                COALESCE(s.cash_usd, 0) as cash_usd,
+                COALESCE(s.click_usd, 0) as click_usd,
+                COALESCE(s.terminal_usd, 0) as terminal_usd
+            FROM sales s
+            JOIN customers c ON s.customer_id = c.id
+            WHERE s.payment_status = 'paid' 
+                AND s.debt_usd = 0
+                AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
+            ORDER BY s.created_at DESC
+            LIMIT 100
+        """)
+
+        result = db.session.execute(query)
+        paid_debts = []
+        
+        for row in result:
+            paid_debts.append({
+                'sale_id': row.sale_id,
+                'sale_date': row.sale_date.strftime('%Y-%m-%d %H:%M'),
+                'customer_name': row.customer_name,
+                'total_amount': float(row.total_amount),
+                'cash_usd': float(row.cash_usd),
+                'click_usd': float(row.click_usd),
+                'terminal_usd': float(row.terminal_usd)
+            })
+
+        return jsonify({
+            'success': True,
+            'paid_debts': paid_debts
+        })
+
+    except Exception as e:
+        app.logger.error(f"To'langan qarzlar API xatosi: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/debts/<int:customer_id>')
 @role_required('admin', 'kassir')
 def api_debt_details(customer_id):

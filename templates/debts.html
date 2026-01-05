@@ -450,6 +450,30 @@
             </tbody>
         </table>
     </div>
+
+    <!-- To'langan qarzlar jadvali -->
+    <div class="debts-table-container" style="margin-top: 30px;">
+        <h2 style="margin-bottom: 15px; color: #28a745; display: flex; align-items: center; gap: 10px;">
+            <span>✅ To'langan qarzlar tarixi</span>
+        </h2>
+        <table class="debts-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>📅 Sana</th>
+                    <th>👤 Mijoz</th>
+                    <th>🛒 Savdo №</th>
+                    <th>💵 Summa</th>
+                    <th>💳 To'lov turlari</th>
+                </tr>
+            </thead>
+            <tbody id="paidDebtsTableBody">
+                <tr>
+                    <td colspan="6" class="no-data">Ma'lumotlar yuklanmoqda...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Batafsil modal -->
@@ -544,11 +568,60 @@
             
             updateStats();
             renderDebtsTable();
+            loadPaidDebts(); // To'langan qarzlarni yuklash
         } catch (error) {
             console.error('Xatolik:', error);
             document.getElementById('debtsTableBody').innerHTML = 
                 '<tr><td colspan="9" class="no-data">❌ Ma\'lumotlarni yuklashda xatolik</td></tr>';
         }
+    }
+    
+    // To'langan qarzlarni yuklash
+    async function loadPaidDebts() {
+        try {
+            const response = await fetch('/api/debts/paid');
+            if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
+            
+            const data = await response.json();
+            renderPaidDebtsTable(data.paid_debts || []);
+        } catch (error) {
+            console.error('Xatolik:', error);
+            document.getElementById('paidDebtsTableBody').innerHTML = 
+                '<tr><td colspan="6" class="no-data">❌ Ma\'lumotlarni yuklashda xatolik</td></tr>';
+        }
+    }
+    
+    // To'langan qarzlar jadvalini render qilish
+    function renderPaidDebtsTable(paidDebts) {
+        const tbody = document.getElementById('paidDebtsTableBody');
+        
+        if (paidDebts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">📭 To\'langan qarzlar yo\'q</td></tr>';
+            return;
+        }
+
+        const html = paidDebts.map((debt, index) => {
+            // To'lov turlarini aniqlash
+            const payments = [];
+            if (debt.cash_usd > 0) payments.push(`💵 Naqd: $${debt.cash_usd.toFixed(2)}`);
+            if (debt.click_usd > 0) payments.push(`📱 Click: $${debt.click_usd.toFixed(2)}`);
+            if (debt.terminal_usd > 0) payments.push(`🏧 Terminal: $${debt.terminal_usd.toFixed(2)}`);
+            
+            const paymentText = payments.length > 0 ? payments.join(', ') : '-';
+            
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${debt.sale_date}</td>
+                    <td>${debt.customer_name}</td>
+                    <td><strong>#${debt.sale_id}</strong></td>
+                    <td><strong style="color: #28a745">$${debt.total_amount.toFixed(2)}</strong></td>
+                    <td style="font-size: 13px;">${paymentText}</td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = html;
     }
 
     // Statistikani yangilash
