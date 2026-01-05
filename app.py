@@ -3128,9 +3128,24 @@ def api_debt_payment():
         # Mijozning oxirgi to'lov ma'lumotlarini yangilash
         customer = Customer.query.get(customer_id)
         if customer:
-            customer.last_debt_payment_usd = payment_usd - remaining_payment
-            customer.last_debt_payment_date = db.func.current_timestamp()
-            customer.last_debt_payment_rate = get_current_currency_rate()
+            # Mijozning qolgan umumiy qarzini tekshirish
+            total_remaining_debt = db.session.query(
+                db.func.sum(Sale.debt_usd)
+            ).filter(
+                Sale.customer_id == customer_id,
+                Sale.debt_usd > 0
+            ).scalar() or 0
+            
+            # Agar barcha qarzlar to'langan bo'lsa, oxirgi to'lov ma'lumotlarini tozalash
+            if total_remaining_debt == 0:
+                customer.last_debt_payment_usd = 0
+                customer.last_debt_payment_date = None
+                customer.last_debt_payment_rate = 0
+            else:
+                # Agar hali qarz qolgan bo'lsa, oxirgi to'lov ma'lumotlarini yangilash
+                customer.last_debt_payment_usd = payment_usd - remaining_payment
+                customer.last_debt_payment_date = db.func.current_timestamp()
+                customer.last_debt_payment_rate = get_current_currency_rate()
 
         db.session.commit()
 
