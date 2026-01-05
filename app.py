@@ -3099,7 +3099,13 @@ def api_debt_payment():
     try:
         data = request.get_json()
         customer_id = data.get('customer_id')
-        payment_usd = Decimal(str(data.get('payment_usd', 0)))
+        
+        # Har bir to'lov turini olish
+        cash_usd = Decimal(str(data.get('cash_usd', 0)))
+        click_usd = Decimal(str(data.get('click_usd', 0)))
+        terminal_usd = Decimal(str(data.get('terminal_usd', 0)))
+        
+        payment_usd = cash_usd + click_usd + terminal_usd
 
         if payment_usd <= 0:
             return jsonify({
