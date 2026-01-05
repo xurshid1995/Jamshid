@@ -79,9 +79,9 @@
 
     .debt-stats {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-bottom: 25px;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 0;
     }
 
     .stat-card {
@@ -288,47 +288,29 @@
         </div>
     </div>
 
-    <!-- Qarz statistikasi -->
-    <div class="debt-stats">
-        <div class="stat-card total">
-            <h3>💰 Umumiy qarz</h3>
-            <div class="value" id="totalDebt">$0.00</div>
+    <!-- Qarz statistikasi va To'lov qilish yonma-yon -->
+    <div style="display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; align-items: flex-start;">
+        <!-- Qarz statistikasi -->
+        <div style="flex: 1; min-width: 300px;">
+            <div class="debt-stats" style="margin-bottom: 0;">
+                <div class="stat-card total">
+                    <h3>💰 Umumiy qarz</h3>
+                    <div class="value" id="totalDebt">$0.00</div>
+                </div>
+                <div class="stat-card paid">
+                    <h3>✅ To'langan</h3>
+                    <div class="value" id="totalPaid">$0.00</div>
+                </div>
+                <div class="stat-card remaining">
+                    <h3>📊 Qolgan</h3>
+                    <div class="value" id="remainingDebt">$0.00</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-card paid">
-            <h3>✅ To'langan</h3>
-            <div class="value" id="totalPaid">$0.00</div>
-        </div>
-        <div class="stat-card remaining">
-            <h3>📊 Qolgan</h3>
-            <div class="value" id="remainingDebt">$0.00</div>
-        </div>
-    </div>
 
-    <!-- Qarzlar tarixi -->
-    <div class="history-table-container">
-        <h2>📜 Qarzlar tarixi</h2>
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>📅 Sana</th>
-                    <th>🛒 Savdo №</th>
-                    <th>💵 Savdo summasi</th>
-                    <th>✅ To'langan</th>
-                    <th>📊 Qarz</th>
-                    <th>🏷️ Status</th>
-                    <th>⚙️ Amallar</th>
-                </tr>
-            </thead>
-            <tbody id="historyBody">
-                <tr>
-                    <td colspan="7" class="no-data">Ma'lumotlar yuklanmoqda...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- To'lov qilish -->
-    <div class="payment-form">
+        <!-- To'lov qilish -->
+        <div style="flex: 1; min-width: 400px;">
+            <div class="payment-form" style="margin-bottom: 0;">
         <h2>💳 Qarzga to'lov qilish</h2>
         
         <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;">
@@ -385,6 +367,31 @@
         <div class="payment-buttons">
             <button class="btn-submit" onclick="submitPayment()">✅ To'lovni tasdiqlash</button>
         </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qarzlar tarixi -->
+    <div class="history-table-container">
+        <h2>📜 Qarzlar tarixi</h2>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>📅 Sana</th>
+                    <th>🛒 Savdo №</th>
+                    <th>💵 Savdo summasi</th>
+                    <th>✅ To'langan</th>
+                    <th>📊 Qarz</th>
+                    <th>🏷️ Status</th>
+                    <th>⚙️ Amallar</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <tr>
+                    <td colspan="7" class="no-data">Ma'lumotlar yuklanmoqda...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
