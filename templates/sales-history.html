@@ -2491,7 +2491,7 @@ function generatePaymentDetailsHTML(sale) {
     // To'lov turlarini ko'rsatish - har biri USD va UZS bilan
     const paymentsHTML = activePayments
         .map(p => `
-            <div style="display: inline-block; background: #f8f9fa; padding: 8px 14px; margin: 4px ${p.isDebt ? '24px' : '8px'} 4px 0; border-radius: 6px; border-left: 4px solid #007bff;">
+            <div style="display: inline-block; background: #f8f9fa; padding: 8px 14px; margin: 4px ${p.isDebt ? '40px' : '8px'} 4px 0; border-radius: 6px; border-left: 4px solid #007bff;">
                 <div style="font-weight: 600; color: #495057; margin-bottom: 2px;">${p.name}</div>
                 <div style="font-size: 15px; font-weight: 700; color: #28a745;">$${p.usd.toFixed(2)}</div>
                 <div style="font-size: 12px; color: #6c757d;">${p.uzs.toLocaleString('uz-UZ')} so'm</div>
@@ -2505,10 +2505,10 @@ function generatePaymentDetailsHTML(sale) {
     
     // Jami to'lov kartasi
     const totalHTML = `
-        <div style="display: inline-block; background: #e8f5e9; padding: 8px 14px; margin: 4px 8px 4px 0; border-radius: 6px; border-left: 4px solid #28a745;">
-            <div style="font-weight: 600; color: #2e7d32; margin-bottom: 2px;">Jami to'lov</div>
-            <div style="font-size: 15px; font-weight: 700; color: #1b5e20;">$${totalUSD.toFixed(2)}</div>
-            <div style="font-size: 12px; color: #388e3c;">${totalUZS.toLocaleString('uz-UZ')} so'm</div>
+        <div style="display: inline-block; background: #007bff; padding: 8px 14px; margin: 4px 8px 4px 0; border-radius: 6px; border-left: 4px solid #0056b3;">
+            <div style="font-weight: 600; color: #ffffff; margin-bottom: 2px;">Jami to'lov</div>
+            <div style="font-size: 15px; font-weight: 700; color: #ffffff;">$${totalUSD.toFixed(2)}</div>
+            <div style="font-size: 12px; color: #ffffff;">${totalUZS.toLocaleString('uz-UZ')} so'm</div>
         </div>
     `;
     
