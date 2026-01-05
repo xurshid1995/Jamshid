@@ -2415,10 +2415,6 @@ function showSaleDetailsModal(sale) {
                     
                     <div class="total-info">
                         ${generatePaymentDetailsHTML(sale)}
-                        <div class="total-row" style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #dee2e6; font-weight: bold;">
-                            <span class="total-label">Jami summa:</span>
-                            <span class="total-value">$${parseFloat(sale.total_amount || 0).toFixed(2)}</span>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2452,18 +2448,31 @@ function getPaymentMethodText(method) {
 
 // To'lov tafsilotlarini HTML ga aylantirish
 function generatePaymentDetailsHTML(sale) {
-    const details = sale.payment_details || {};
+    const rate = sale.currency_rate || 12000;
+    
+    // USD qiymatlarini olish
+    const cashUSD = parseFloat(sale.cash_usd || 0);
+    const clickUSD = parseFloat(sale.click_usd || 0);
+    const terminalUSD = parseFloat(sale.terminal_usd || 0);
+    const debtUSD = parseFloat(sale.debt_usd || 0);
+    
+    // UZS qiymatlarini olish yoki hisoblash
+    const cashUZS = sale.cash_amount || (cashUSD * rate);
+    const clickUZS = sale.click_amount || (clickUSD * rate);
+    const terminalUZS = sale.terminal_amount || (terminalUSD * rate);
+    const debtUZS = sale.debt_amount || (debtUSD * rate);
+    
     const payments = [
-        { name: '💵 Naqd pul', amount: details.cash || 0 },
-        { name: '📱 Click', amount: details.click || 0 },
-        { name: '💳 Terminal', amount: details.terminal || 0 },
-        { name: '📝 Qarz', amount: details.debt || 0 }
+        { name: '💵 Naqd pul', usd: cashUSD, uzs: cashUZS },
+        { name: '📱 Click', usd: clickUSD, uzs: clickUZS },
+        { name: '💳 Terminal', usd: terminalUSD, uzs: terminalUZS },
+        { name: '📝 Qarz', usd: debtUSD, uzs: debtUZS }
     ];
     
     // Faqat 0 dan katta to'lovlarni ko'rsatish
-    const activePayments = payments.filter(p => p.amount > 0);
+    const activePayments = payments.filter(p => p.usd > 0);
     
-    // Agar hech qanday payment_details bo'lmasa, payment_method orqali ko'rsatish
+    // Agar hech qanday to'lov bo'lmasa
     if (activePayments.length === 0) {
         return `
             <div class="total-row">
@@ -2473,15 +2482,32 @@ function generatePaymentDetailsHTML(sale) {
         `;
     }
     
-    // To'lov turlarini bir qatorda ko'rsatish
+    // To'lov turlarini ko'rsatish - har biri USD va UZS bilan
     const paymentsHTML = activePayments
-        .map(p => `<span style="display: inline-block; background: #f8f9fa; padding: 5px 12px; margin-right: 10px; border-radius: 4px; border-left: 3px solid #007bff;">${p.name}: <strong>$${parseFloat(p.amount).toFixed(2)}</strong></span>`)
+        .map(p => `
+            <div style="display: inline-block; background: #f8f9fa; padding: 8px 14px; margin: 4px 8px 4px 0; border-radius: 6px; border-left: 4px solid #007bff;">
+                <div style="font-weight: 600; color: #495057; margin-bottom: 2px;">${p.name}</div>
+                <div style="font-size: 15px; font-weight: 700; color: #28a745;">$${p.usd.toFixed(2)}</div>
+                <div style="font-size: 12px; color: #6c757d;">${p.uzs.toLocaleString('uz-UZ')} so'm</div>
+            </div>
+        `)
         .join('');
     
+    // Jami to'lov
+    const totalUSD = activePayments.reduce((sum, p) => sum + p.usd, 0);
+    const totalUZS = activePayments.reduce((sum, p) => sum + p.uzs, 0);
+    
     return `
-        <div class="total-row">
-            <span class="total-label" style="display: inline-block; margin-right: 15px; vertical-align: middle;">To'lovlar:</span>
-            <span style="display: inline-block; vertical-align: middle;">${paymentsHTML}</span>
+        <div class="total-row" style="margin-bottom: 12px;">
+            <div style="margin-bottom: 8px; font-weight: 500; color: #495057;">To'lovlar:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">${paymentsHTML}</div>
+        </div>
+        <div class="total-row" style="background: #e8f5e9; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745;">
+            <span class="total-label" style="font-weight: 600; color: #2e7d32;">Jami to'lov:</span>
+            <span style="float: right;">
+                <div style="font-size: 18px; font-weight: 700; color: #1b5e20;">$${totalUSD.toFixed(2)}</div>
+                <div style="font-size: 14px; color: #388e3c;">${totalUZS.toLocaleString('uz-UZ')} so'm</div>
+            </span>
         </div>
     `;
 }
