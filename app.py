@@ -3990,17 +3990,6 @@ def delete_store_stock(store_id, product_id):
             'deleted_completely': False,
             'other_locations': total_other_locations
         })
-        else:
-            # Faqat shu joydagi stock ni o'chirish
-            db.session.delete(stock)
-            db.session.commit()
-
-            return jsonify({
-                'success': True,
-                'message': f'{product_name} bu do\'kondan o\'chirildi (boshqa joylarda hali mavjud)',
-                'deleted_completely': False,
-                'other_locations': total_other_locations
-            })
 
     except Exception as e:
         db.session.rollback()
