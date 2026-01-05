@@ -311,12 +311,11 @@
         <!-- To'lov qilish -->
         <div style="flex: 1; min-width: 400px;">
             <div class="payment-form" style="margin-bottom: 0;">
-        <h2>💳 Qarzga to'lov qilish</h2>
-        
-        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 500; color: #495057;">Qarz miqdori:</span>
-                <div style="font-weight: 700; color: #dc3545; font-size: 18px;" id="displayRemainingDebt">$0.00</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">💳 Qarzga to'lov qilish</h2>
+            <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #007bff;">
+                <span style="font-weight: 500; color: #495057; font-size: 14px;">Qarz miqdori: </span>
+                <span style="font-weight: 700; color: #dc3545; font-size: 18px;" id="displayRemainingDebt">$0.00</span>
             </div>
         </div>
         
@@ -357,11 +356,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Izoh:</label>
-            <textarea id="paymentNote" placeholder="Qo'shimcha ma'lumotlar..." style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; min-height: 80px; resize: vertical;"></textarea>
         </div>
         
         <div class="payment-buttons">
@@ -470,8 +464,6 @@
 
     // To'lovni tasdiqlash
     async function submitPayment() {
-        const paymentNote = document.getElementById('paymentNote').value.trim();
-        
         // Har bir to'lov turini olish
         const cashUSD = parseFloat(document.getElementById('paymentCashUSD').value) || 0;
         const clickUSD = parseFloat(document.getElementById('paymentClickUSD').value) || 0;
@@ -499,8 +491,7 @@
             click_usd: clickUSD,
             terminal_usd: terminalUSD,
             exchange_rate: currentRate,
-            payment_date: today,
-            note: paymentNote || null
+            payment_date: today
         };
 
         try {
