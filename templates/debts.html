@@ -259,18 +259,24 @@
         padding: 15px;
         border-radius: 8px;
         margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
     }
 
     .customer-info h3 {
-        margin: 0 0 10px 0;
+        margin: 0;
         font-size: 18px;
         color: #333;
+        flex: 0 0 100%;
     }
 
     .customer-info p {
-        margin: 5px 0;
+        margin: 0;
         font-size: 14px;
         color: #666;
+        white-space: nowrap;
     }
 
     .debt-history-table {
@@ -491,9 +497,11 @@
             <!-- Mijoz ma'lumotlari -->
             <div class="customer-info">
                 <h3 id="modalCustomerName">-</h3>
-                <p><strong>📞 Telefon:</strong> <span id="modalCustomerPhone">-</span></p>
-                <p><strong>📍 Manzil:</strong> <span id="modalCustomerAddress">-</span></p>
-                <p><strong>💰 Umumiy qarz:</strong> <span id="modalTotalDebt">$0.00</span></p>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px; width: 100%;">
+                    <p><strong>📞 Telefon:</strong> <span id="modalCustomerPhone">-</span></p>
+                    <p><strong>📍 Manzil:</strong> <span id="modalCustomerAddress">-</span></p>
+                    <p><strong>💰 Umumiy qarz:</strong> <span id="modalTotalDebt">$0.00</span></p>
+                </div>
             </div>
 
             <!-- Qarzlar tarixi -->
