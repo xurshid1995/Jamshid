@@ -297,13 +297,9 @@
                     <h3>💰 Umumiy qarz</h3>
                     <div class="value" id="totalDebt">$0.00</div>
                 </div>
-                <div class="stat-card paid">
-                    <h3>✅ To'langan</h3>
-                    <div class="value" id="totalPaid">$0.00</div>
-                </div>
                 <div class="stat-card remaining">
-                    <h3>📊 Qolgan</h3>
-                    <div class="value" id="remainingDebt">$0.00</div>
+                    <h3>🛒 Savdolar soni</h3>
+                    <div class="value" id="salesCount">0</div>
                 </div>
             </div>
         </div>
@@ -416,8 +412,7 @@
             
             // Statistika
             document.getElementById('totalDebt').textContent = `$${debtData.total_debt.toFixed(2)}`;
-            document.getElementById('totalPaid').textContent = `$${debtData.total_paid.toFixed(2)}`;
-            document.getElementById('remainingDebt').textContent = `$${debtData.remaining_debt.toFixed(2)}`;
+            document.getElementById('salesCount').textContent = debtData.history ? debtData.history.length : 0;
             document.getElementById('displayRemainingDebt').textContent = `$${debtData.remaining_debt.toFixed(2)}`;
             
             // Qarzlar tarixi
