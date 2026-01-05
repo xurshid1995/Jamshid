@@ -843,6 +843,7 @@ class Sale(db.Model):
         default=12500.0000)
     created_by = db.Column(db.String(100), default='System')
     created_at = db.Column(db.DateTime, default=lambda: get_tashkent_time())
+    updated_at = db.Column(db.DateTime, default=lambda: get_tashkent_time(), onupdate=lambda: get_tashkent_time())
 
     # Relationships
     customer = db.relationship('Customer', backref='sales')
@@ -3084,8 +3085,8 @@ def api_paid_debts():
                 AND s.debt_usd = 0
                 AND s.total_amount > 0
                 AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
-                AND s.created_at != s.sale_date  -- Savdo vaqti va yaratilish vaqti farq qiladi (keyinroq to'langan)
-            ORDER BY s.created_at DESC
+                AND s.updated_at > s.created_at + INTERVAL '1 second'  -- Yangilangan (qarz to'lash orqali to'langan)
+            ORDER BY s.updated_at DESC
             LIMIT 100
         """)
 
@@ -3276,6 +3277,9 @@ def api_debt_payment():
             # Agar qarz to'liq yopilgan bo'lsa, statusni o'zgartirish
             if sale.debt_usd == 0:
                 sale.payment_status = 'paid'
+            
+            # updated_at ni yangilash (qarz to'lash belgisi)
+            sale.updated_at = get_tashkent_time()
 
             remaining_payment -= total_paid
             updated_sales.append(sale.id)
