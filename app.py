@@ -5656,11 +5656,27 @@ def create_sale():
                 'error': 'Foydalanuvchi topilmadi'
             }), 401
 
-        # Payment status ni frontend dan olish (default: 'paid')
+        # Payment status ni frontend dan olish yoki avtomatik aniqlash
         final_payment_status = data.get('payment_status', 'paid')
         
         # Payment ma'lumotlarini olish
         payment_info = data.get('payment', {})
+        
+        # Har bir to'lov turining summasini olish (USD)
+        cash_usd = float(payment_info.get('cash_usd', 0))
+        click_usd = float(payment_info.get('click_usd', 0))
+        terminal_usd = float(payment_info.get('terminal_usd', 0))
+        debt_usd = float(payment_info.get('debt_usd', 0))
+        
+        # Payment status ni qarz bo'yicha avtomatik aniqlash
+        if debt_usd > 0:
+            # Agar qarz bo'lsa - partial (qisman to'langan)
+            final_payment_status = 'partial'
+            logger.info(f"💳 Qarz aniqlandi: {debt_usd} USD, payment_status = 'partial'")
+        elif final_payment_status != 'pending':
+            # Agar qarz yo'q bo'lsa va pending bo'lmasa - paid
+            final_payment_status = 'paid'
+            logger.info(f"✅ To'liq to'langan, payment_status = 'paid'")
         
         # Payment method ni aniqlash (birinchi to'lov turini olish)
         payment_method = 'cash'  # default
@@ -5670,12 +5686,6 @@ def create_sale():
             payment_method = 'terminal'
         elif payment_info.get('debt_usd', 0) > 0:
             payment_method = 'debt'
-        
-        # Har bir to'lov turining summasini olish (USD)
-        cash_usd = float(payment_info.get('cash_usd', 0))
-        click_usd = float(payment_info.get('click_usd', 0))
-        terminal_usd = float(payment_info.get('terminal_usd', 0))
-        debt_usd = float(payment_info.get('debt_usd', 0))
         
         # UZS ga konvertatsiya qilish
         cash_amount = cash_usd * current_rate
