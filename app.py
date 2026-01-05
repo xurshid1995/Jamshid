@@ -5668,6 +5668,14 @@ def create_sale():
         terminal_usd = float(payment_info.get('terminal_usd', 0))
         debt_usd = float(payment_info.get('debt_usd', 0))
         
+        # Debug: To'lov ma'lumotlarini ko'rsatish
+        print(f"💰 To'lov ma'lumotlari:")
+        print(f"   Cash USD: {cash_usd}")
+        print(f"   Click USD: {click_usd}")
+        print(f"   Terminal USD: {terminal_usd}")
+        print(f"   Debt USD: {debt_usd}")
+        print(f"   Jami: {cash_usd + click_usd + terminal_usd + debt_usd} USD")
+        
         # Payment status ni qarz bo'yicha avtomatik aniqlash
         if debt_usd > 0:
             # Agar qarz bo'lsa - partial (qisman to'langan)
@@ -5680,18 +5688,28 @@ def create_sale():
         
         # Payment method ni aniqlash (birinchi to'lov turini olish)
         payment_method = 'cash'  # default
-        if payment_info.get('click_usd', 0) > 0:
+        if click_usd > 0:
             payment_method = 'click'
-        elif payment_info.get('terminal_usd', 0) > 0:
+        elif terminal_usd > 0:
             payment_method = 'terminal'
-        elif payment_info.get('debt_usd', 0) > 0:
+        elif debt_usd > 0:
             payment_method = 'debt'
+        elif cash_usd > 0:
+            payment_method = 'cash'
+        
+        print(f"💳 Payment method aniqlandi: {payment_method}")
         
         # UZS ga konvertatsiya qilish
         cash_amount = cash_usd * current_rate
         click_amount = click_usd * current_rate
         terminal_amount = terminal_usd * current_rate
         debt_amount = debt_usd * current_rate
+        
+        print(f"💵 UZS summalar:")
+        print(f"   Cash: {cash_amount:,.0f} UZS")
+        print(f"   Click: {click_amount:,.0f} UZS")
+        print(f"   Terminal: {terminal_amount:,.0f} UZS")
+        print(f"   Debt: {debt_amount:,.0f} UZS")
 
         # Savdo uchun asosiy joylashuvni aniqlash
         # Multi-location bo'lsa - eng ko'p ishlatiladigan
