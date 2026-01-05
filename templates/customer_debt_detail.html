@@ -397,10 +397,17 @@
     async function loadDebtData() {
         try {
             // Currency rate olish
+            console.log('🔄 Valyuta kursini yuklayapman...');
             const rateResponse = await fetch('/api/currency-rate');
+            console.log('📡 Rate response status:', rateResponse.ok);
             if (rateResponse.ok) {
                 const rateData = await rateResponse.json();
+                console.log('📦 Rate data:', rateData);
                 currentRate = rateData.rate || 12000;
+                console.log('✅ Current rate o\'rnatildi:', currentRate);
+            } else {
+                console.log('❌ Rate response not OK');
+                currentRate = 12000;
             }
             
             const response = await fetch(`/api/debts/${customerId}`);
