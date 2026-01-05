@@ -44,39 +44,39 @@
 
     .customer-info-card {
         background: white;
-        padding: 8px 20px;
+        padding: 15px 25px;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 15px;
-        min-height: auto;
+        margin-bottom: 20px;
     }
 
     .info-grid {
-        display: flex;
-        gap: 25px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
         align-items: center;
-        flex-wrap: wrap;
-        margin: 0;
-        padding: 0;
     }
 
     .info-item {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin: 0;
+        gap: 8px;
     }
 
     .info-label {
-        font-size: 13px;
+        font-size: 14px;
         color: #666;
         font-weight: 500;
+        min-width: 20px;
     }
 
     .info-value {
-        font-size: 15px;
+        font-size: 14px;
         color: #333;
         font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .debt-stats {
