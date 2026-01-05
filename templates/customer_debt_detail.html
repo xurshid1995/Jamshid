@@ -188,6 +188,13 @@
         margin-bottom: 20px;
     }
 
+    .payment-inputs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
     .payment-input-group label {
         display: block;
         margin-bottom: 8px;
@@ -196,18 +203,32 @@
         color: #495057;
     }
 
-    .payment-input-group input {
+    .payment-input-group input,
+    .payment-input-group select,
+    .payment-input-group textarea {
         width: 100%;
-        padding: 15px;
+        padding: 12px;
         border: 2px solid #ced4da;
         border-radius: 6px;
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 14px;
+        font-weight: 500;
     }
 
-    .payment-input-group input:focus {
+    .payment-input-group input:focus,
+    .payment-input-group select:focus,
+    .payment-input-group textarea:focus {
         outline: none;
         border-color: #28a745;
+    }
+
+    .payment-input-group textarea {
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
     }
 
     .payment-buttons {
@@ -308,10 +329,40 @@
     <!-- To'lov qilish -->
     <div class="payment-form">
         <h2>💳 Qarzga to'lov qilish</h2>
-        <div class="payment-input-group">
-            <label for="paymentAmount">To'lov summasi ($)</label>
-            <input type="number" id="paymentAmount" step="0.01" placeholder="Summasini kiriting..." value="0.00">
+        
+        <div class="payment-inputs-grid">
+            <div class="payment-input-group">
+                <label for="paymentAmount">To'lov summasi ($) *</label>
+                <input type="number" id="paymentAmount" step="0.01" placeholder="0.00" value="0.00" required>
+            </div>
+            
+            <div class="payment-input-group">
+                <label for="paymentType">To'lov turi *</label>
+                <select id="paymentType" required>
+                    <option value="naqd">💵 Naqd</option>
+                    <option value="plastik">💳 Plastik karta</option>
+                    <option value="pul_otkazma">🏦 Pul o'tkazma</option>
+                    <option value="payme">📱 Payme</option>
+                    <option value="click">📱 Click</option>
+                </select>
+            </div>
+            
+            <div class="payment-input-group">
+                <label for="paymentRate">Kurs (UZS)</label>
+                <input type="number" id="paymentRate" step="1" placeholder="12000" value="12000">
+            </div>
+            
+            <div class="payment-input-group">
+                <label for="paymentDate">To'lov sanasi</label>
+                <input type="date" id="paymentDate" value="">
+            </div>
+            
+            <div class="payment-input-group full-width">
+                <label for="paymentNote">Izoh</label>
+                <textarea id="paymentNote" placeholder="Qo'shimcha ma'lumotlar..."></textarea>
+            </div>
         </div>
+        
         <div class="payment-buttons">
             <button class="btn-submit" onclick="submitPayment()">✅ To'lovni tasdiqlash</button>
         </div>
@@ -382,9 +433,18 @@
     // To'lovni tasdiqlash
     async function submitPayment() {
         const paymentSum = parseFloat(document.getElementById('paymentAmount').value) || 0;
+        const paymentType = document.getElementById('paymentType').value;
+        const paymentRate = parseFloat(document.getElementById('paymentRate').value) || 12000;
+        const paymentDate = document.getElementById('paymentDate').value;
+        const paymentNote = document.getElementById('paymentNote').value.trim();
         
         if (paymentSum <= 0) {
             alert('❌ To\'lov summasini kiriting');
+            return;
+        }
+
+        if (!paymentType) {
+            alert('❌ To\'lov turini tanlang');
             return;
         }
 
@@ -396,7 +456,11 @@
 
         const paymentData = {
             customer_id: customerId,
-            payment_usd: paymentSum
+            payment_usd: paymentSum,
+            payment_type: paymentType,
+            exchange_rate: paymentRate,
+            payment_date: paymentDate || null,
+            note: paymentNote || null
         };
 
         try {
@@ -426,6 +490,10 @@
     // Sahifa yuklanganda
     document.addEventListener('DOMContentLoaded', function() {
         loadDebtData();
+        
+        // Bugungi sanani default qilish
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('paymentDate').value = today;
     });
 </script>
 {% endblock %}
