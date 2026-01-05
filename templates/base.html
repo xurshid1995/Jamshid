@@ -57,6 +57,12 @@
                 </a>
             </li>
             <li>
+                <a href="/debt-sales" {% if request.endpoint == 'debt_sales' %}class="active"{% endif %}>
+                    <span class="icon">💳</span>
+                    <span>Qarz savdolar</span>
+                </a>
+            </li>
+            <li>
                 <a href="/products" {% if request.endpoint == 'products_list' %}class="active"{% endif %}>
                     <span class="icon">📦</span>
                     <span>Mahsulotlar</span>
