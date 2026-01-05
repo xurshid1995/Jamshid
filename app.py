@@ -3066,14 +3066,15 @@ def api_debts():
 @app.route('/api/debts/paid')
 @role_required('admin', 'kassir')
 def api_paid_debts():
-    """To'langan qarzlar tarixi"""
+    """To'langan qarzlar tarixi - faqat qarz to'lash orqali to'langan savdolar"""
     try:
         query = text("""
             SELECT 
                 s.id as sale_id,
                 s.created_at as sale_date,
+                s.sale_date as original_sale_date,
                 c.name as customer_name,
-                COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0) as total_amount,
+                s.total_amount as total_amount,
                 COALESCE(s.cash_usd, 0) as cash_usd,
                 COALESCE(s.click_usd, 0) as click_usd,
                 COALESCE(s.terminal_usd, 0) as terminal_usd
@@ -3081,7 +3082,9 @@ def api_paid_debts():
             JOIN customers c ON s.customer_id = c.id
             WHERE s.payment_status = 'paid' 
                 AND s.debt_usd = 0
+                AND s.total_amount > 0
                 AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
+                AND s.created_at != s.sale_date  -- Savdo vaqti va yaratilish vaqti farq qiladi (keyinroq to'langan)
             ORDER BY s.created_at DESC
             LIMIT 100
         """)
