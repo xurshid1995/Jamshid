@@ -44,39 +44,37 @@
 
     .customer-info-card {
         background: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         margin-bottom: 20px;
+        border-left: 3px solid #007bff;
     }
 
     .info-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+        display: flex;
+        gap: 30px;
         align-items: center;
     }
 
     .info-item {
         display: flex;
-        align-items: center;
-        gap: 8px;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .info-label {
-        font-size: 14px;
-        color: #666;
+        font-size: 11px;
+        color: #6c757d;
         font-weight: 500;
-        min-width: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .info-value {
         font-size: 14px;
-        color: #333;
+        color: #212529;
         font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .debt-stats {
@@ -255,15 +253,15 @@
     <div class="customer-info-card">
         <div class="info-grid">
             <div class="info-item">
-                <span class="info-label">👤</span>
+                <span class="info-label">Mijoz ismi</span>
                 <span class="info-value" id="customerName">-</span>
             </div>
             <div class="info-item">
-                <span class="info-label">📞</span>
+                <span class="info-label">Telefon</span>
                 <span class="info-value" id="customerPhone">-</span>
             </div>
             <div class="info-item">
-                <span class="info-label">📍</span>
+                <span class="info-label">Manzil</span>
                 <span class="info-value" id="customerAddress">-</span>
             </div>
         </div>
