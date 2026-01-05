@@ -488,6 +488,24 @@
                 </tbody>
             </table>
 
+            <!-- To'langan qarzlar tarixi -->
+            <h3 style="margin-top: 25px;">✅ To'langan qarzlar tarixi</h3>
+            <table class="debt-history-table">
+                <thead>
+                    <tr>
+                        <th>📅 Sana</th>
+                        <th>🛒 Savdo №</th>
+                        <th>💵 Summa</th>
+                        <th>💳 To'lov turlari</th>
+                    </tr>
+                </thead>
+                <tbody id="paidDebtsBody">
+                    <tr>
+                        <td colspan="4" class="no-data">Ma'lumot yo'q</td>
+                    </tr>
+                </tbody>
+            </table>
+
             <!-- To'lov qilish bo'limi -->
             <div class="payment-section">
                 <h3>💳 Qarzga to'lov qilish</h3>
@@ -689,6 +707,38 @@
                 historyBody.innerHTML = historyHtml;
             } else {
                 historyBody.innerHTML = '<tr><td colspan="6" class="no-data">📭 Qarzlar tarixi yo\'q</td></tr>';
+            }
+            
+            // To'langan qarzlar tarixi
+            const paidDebtsBody = document.getElementById('paidDebtsBody');
+            if (data.history && data.history.length > 0) {
+                const paidDebts = data.history.filter(h => (h.debt_amount - h.paid_amount) === 0);
+                
+                if (paidDebts.length > 0) {
+                    const paidHtml = paidDebts.map(h => {
+                        // To'lov turlarini aniqlash
+                        const payments = [];
+                        if (h.cash_usd > 0) payments.push(`💵 Naqd: $${h.cash_usd.toFixed(2)}`);
+                        if (h.click_usd > 0) payments.push(`📱 Click: $${h.click_usd.toFixed(2)}`);
+                        if (h.terminal_usd > 0) payments.push(`🏧 Terminal: $${h.terminal_usd.toFixed(2)}`);
+                        
+                        const paymentText = payments.length > 0 ? payments.join(', ') : '-';
+                        
+                        return `
+                            <tr>
+                                <td>${h.sale_date}</td>
+                                <td>#${h.sale_id}</td>
+                                <td><strong style="color: #28a745">$${h.paid_amount.toFixed(2)}</strong></td>
+                                <td style="font-size: 13px;">${paymentText}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    paidDebtsBody.innerHTML = paidHtml;
+                } else {
+                    paidDebtsBody.innerHTML = '<tr><td colspan="4" class="no-data">📭 To\'langan qarzlar yo\'q</td></tr>';
+                }
+            } else {
+                paidDebtsBody.innerHTML = '<tr><td colspan="4" class="no-data">📭 To\'langan qarzlar yo\'q</td></tr>';
             }
             
             // To'lov maydonini tozalash

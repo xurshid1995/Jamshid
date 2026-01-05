@@ -3041,16 +3041,19 @@ def api_debt_details(customer_id):
         # Mijoz ma'lumotlari
         customer = Customer.query.get_or_404(customer_id)
         
-        # Qarzlar tarixi
+        # Qarzlar tarixi (ham qarzli, ham to'langan)
         query = text("""
             SELECT 
                 s.id as sale_id,
                 s.created_at as sale_date,
-                s.debt_usd,
-                0 as paid_amount,
-                s.debt_usd as remaining
+                COALESCE(s.debt_usd, 0) + COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0) as original_debt,
+                COALESCE(s.cash_usd, 0) as cash_usd,
+                COALESCE(s.click_usd, 0) as click_usd,
+                COALESCE(s.terminal_usd, 0) as terminal_usd,
+                COALESCE(s.debt_usd, 0) as debt_usd
             FROM sales s
-            WHERE s.customer_id = :customer_id AND s.debt_usd > 0
+            WHERE s.customer_id = :customer_id 
+                AND (s.debt_usd > 0 OR s.payment_status = 'paid')
             ORDER BY s.created_at DESC
         """)
 
@@ -3059,14 +3062,22 @@ def api_debt_details(customer_id):
         total_debt = 0
         
         for row in result:
+            paid_amount = float(row.cash_usd) + float(row.click_usd) + float(row.terminal_usd)
+            debt_amount = float(row.original_debt)
+            
             history.append({
                 'sale_id': row.sale_id,
                 'sale_date': row.sale_date.strftime('%Y-%m-%d %H:%M'),
-                'debt_amount': float(row.debt_usd),
-                'paid_amount': 0,
-                'remaining': float(row.debt_usd)
+                'debt_amount': debt_amount,
+                'paid_amount': paid_amount,
+                'remaining': float(row.debt_usd),
+                'cash_usd': float(row.cash_usd),
+                'click_usd': float(row.click_usd),
+                'terminal_usd': float(row.terminal_usd)
             })
-            total_debt += float(row.debt_usd)
+            
+            if float(row.debt_usd) > 0:
+                total_debt += float(row.debt_usd)
 
         remaining_debt = total_debt
 
