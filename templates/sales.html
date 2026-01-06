@@ -1233,9 +1233,19 @@
             document.getElementById('modalAvailable').value = 0;
         }
         
-        document.getElementById('modalQuantity').value = 1; // Yangi miqdor 1 dan boshlash
+        // Korzinada qancha bo'lsa o'sha miqdorni ko'rsatish
+        document.getElementById('modalQuantity').value = item.quantity;
         document.getElementById('modalPriceUSD').value = item.priceUSD.toFixed(2);
         document.getElementById('modalPriceUZS').value = item.priceUZS;
+        
+        // Miqdor maydonini avtomatik select qilish
+        setTimeout(() => {
+            const quantityInput = document.getElementById('modalQuantity');
+            if (quantityInput) {
+                quantityInput.focus();
+                quantityInput.select(); // Ctrl+A effekti
+            }
+        }, 100);
         
         // currentProduct ni o'rnatish
         currentProduct = { 
