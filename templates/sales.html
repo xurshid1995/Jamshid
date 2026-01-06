@@ -2103,6 +2103,14 @@
         
         const paymentWarning = document.getElementById('paymentWarning');
         
+        // Mijoz tanlanganligini tekshirish (agar qarz bo'lsa)
+        const customerId = document.getElementById('selectedCustomerId').value;
+        if (debtUSD > 0 && !customerId) {
+            paymentWarning.textContent = '⚠️ Qarzga sotish uchun mijoz tanlanishi shart!';
+            paymentWarning.style.display = 'block';
+            return;
+        }
+        
         // To'lov tekshiruvi
         if (Math.abs(totalPayment - totalUSD) > 0.01) {
             paymentWarning.textContent = `⚠️ Jami to'lov ($${totalPayment.toFixed(2)}) savdo summasiga ($${totalUSD.toFixed(2)}) teng emas!`;
