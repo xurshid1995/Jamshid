@@ -2029,6 +2029,12 @@
     // To'lov modal oynasini yopish
     function closePaymentModal() {
         document.getElementById('paymentModal').style.display = 'none';
+        // Ogohlantirishni yashirish
+        const paymentWarning = document.getElementById('paymentWarning');
+        if (paymentWarning) {
+            paymentWarning.style.display = 'none';
+            paymentWarning.textContent = '';
+        }
     }
     
     // Qolgan summani maydonga qo'shish
@@ -2082,6 +2088,11 @@
     
     // To'lovni tasdiqlash
     async function confirmPayment() {
+        // Ogohlantirishni yashirish
+        const paymentWarning = document.getElementById('paymentWarning');
+        paymentWarning.style.display = 'none';
+        paymentWarning.textContent = '';
+        
         const cashUSD = parseFloat(document.getElementById('paymentCashUSD').value) || 0;
         const clickUSD = parseFloat(document.getElementById('paymentClickUSD').value) || 0;
         const terminalUSD = parseFloat(document.getElementById('paymentTerminalUSD').value) || 0;
