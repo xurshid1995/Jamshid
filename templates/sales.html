@@ -837,6 +837,12 @@
             });
         }
         
+        // currentProduct ma'lumotlarini saqlab qo'yish (closeModal() uni null qiladi)
+        const addedProduct = {
+            name: currentProduct?.name || `Mahsulot #${currentProduct?.id}`,
+            id: currentProduct?.id
+        };
+        
         updateCart();
         closeModal();
         
@@ -852,7 +858,7 @@
             }
         }, 200);
         
-        console.log('✅ Savatga qo\'shildi:', currentProduct?.name || `Mahsulot #${currentProduct?.id || 'Unknown'}`, quantity, 'dona, $' + priceUSD);
+        console.log('✅ Savatga qo\'shildi:', addedProduct.name, quantity, 'dona, $' + priceUSD);
     }
     
     // Savatni yangilash
