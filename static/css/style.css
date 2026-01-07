@@ -221,29 +221,13 @@ body {
     left: 0;
     right: 0;
     height: 70px;
-    background-image: url('/static/images/login-bg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background: linear-gradient(135deg, #87CEFA, #6495ED);
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 2rem;
     z-index: 999;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.top-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(135, 206, 250, 0.5), rgba(100, 149, 237, 0.45));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: -1;
 }
 
 .header-left h1 {
