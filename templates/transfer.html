@@ -344,11 +344,25 @@
         <div class="transfer-layout">
             <div class="layout-header">🔄 Transfer ro'yxati</div>
 
-            <div class="transfer-list" id="transferList">
-                <div class="empty-state">
-                    <div>📋</div>
-                    <div>Transfer qilish uchun mahsulot qo'shing</div>
-                </div>
+            <div class="products-table-container">
+                <table class="products-table transfer-product-table" id="transferListTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 365px;">Mahsulot</th>
+                            <th style="width: 100px; text-align: center;">Narx</th>
+                            <th style="width: 85px; text-align: center;">Miqdor</th>
+                            <th style="width: 75px; text-align: center;">Amal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transferList">
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div>📋</div>
+                                <div>Transfer qilish uchun mahsulot qo'shing</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="action-buttons">
@@ -518,7 +532,7 @@
                     <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 0px; font-weight: 500;">${quantity}</span>
                 </td>
                 <td style="text-align: center;">
-                    <button onclick="openModal(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${quantity})" 
+                    <button onclick="openModal(${product.id}, '${product.name.replace(/'/g, "\\'")}, ${quantity}, ${sellingPrice})" 
                             style="background: none; border: none; cursor: ${quantity <= 0 ? 'not-allowed' : 'pointer'}; font-size: 20px; padding: 4px 8px; opacity: ${quantity <= 0 ? '0.3' : '1'};"
                             ${quantity <= 0 ? 'disabled' : ''}>
                         ➡️
@@ -539,8 +553,8 @@
     }
 
     // Modal ochish
-    function openModal(productId, productName, available) {
-        currentProduct = { id: productId, name: productName, available: available };
+    function openModal(productId, productName, available, price) {
+        currentProduct = { id: productId, name: productName, available: available, price: price || 0 };
         
         document.getElementById('modalProductName').textContent = productName;
         document.getElementById('modalAvailable').value = available;
@@ -584,7 +598,8 @@
             transferList.push({
                 id: currentProduct.id,
                 name: currentProduct.name,
-                quantity: quantity
+                quantity: quantity,
+                price: currentProduct.price || 0
             });
         }
         
@@ -596,28 +611,34 @@
 
     // Transfer ro'yxatini ko'rsatish
     function updateTransferListDisplay() {
-        const container = document.getElementById('transferList');
+        const tbody = document.getElementById('transferList');
         
         if (transferList.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div>📋</div><div>Transfer qilish uchun mahsulot qo\'shing</div></div>';
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><div>📋</div><div>Transfer qilish uchun mahsulot qo\'shing</div></td></tr>';
             return;
         }
         
-        container.innerHTML = '';
+        tbody.innerHTML = '';
         transferList.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'transfer-item';
-            div.innerHTML = `
-                <div class="transfer-item-info">
-                    <div class="transfer-item-name">${item.name}</div>
-                    <div class="transfer-item-quantity">Miqdor: ${item.quantity} dona</div>
-                </div>
-                <div class="transfer-item-actions">
-                    <button class="btn-icon" onclick="editTransferItem(${index})" title="Tahrirlash">✏️</button>
-                    <button class="btn-icon" onclick="removeTransferItem(${index})" title="O'chirish">🗑️</button>
-                </div>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="color: #333; font-weight: 500;">${item.name}</td>
+                <td style="text-align: center; color: #333; font-weight: 500;">
+                    $${(item.price || 0).toFixed(2)}
+                </td>
+                <td style="text-align: center;">
+                    <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 0px; font-weight: 500;">${item.quantity}</span>
+                </td>
+                <td style="text-align: center;">
+                    <button onclick="editTransferItem(${index})" 
+                            style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 4px;" 
+                            title="Tahrirlash">✏️</button>
+                    <button onclick="removeTransferItem(${index})" 
+                            style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 4px; color: #dc3545;" 
+                            title="O'chirish">🗑️</button>
+                </td>
             `;
-            container.appendChild(div);
+            tbody.appendChild(row);
         });
     }
 
