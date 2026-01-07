@@ -2342,10 +2342,11 @@
         try {
             let response, result;
             
-            // Agar tahrirlash rejimida bo'lsa, PUT so'rovi yuborish
-            if (editingSaleId) {
-                console.log('📝 Tahrirlash rejimi: savdoni pending holatga o\'zgartirish, ID:', editingSaleId);
-                response = await fetch(`/api/sales/${editingSaleId}`, {
+            // Agar tahrirlash rejimida bo'lsa yoki avtomatik yaratilgan pending savdo bo'lsa, yangilash
+            if (editingSaleId || currentPendingSaleId) {
+                const saleIdToUpdate = editingSaleId || currentPendingSaleId;
+                console.log('📝 Mavjud savdoni pending holatga o\'zgartirish, ID:', saleIdToUpdate);
+                response = await fetch(`/api/sales/${saleIdToUpdate}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2371,15 +2372,16 @@
             console.log('API javob:', result);
             
             if (result.success) {
-                if (editingSaleId) {
+                if (editingSaleId || currentPendingSaleId) {
                     alert('✅ Savdo pending holatga o\'tkazildi! Endi Tasdiqlanmagan savdolar ro\'yxatida ko\'rinadi.');
                 } else {
                     alert('✅ Savdo keyinroq tasdiqlash uchun saqlandi!');
                 }
-                console.log('⏸️ Savdo pending holatga o\'tkazildi, ID:', result.sale_id || editingSaleId);
+                console.log('⏸️ Savdo pending holatga o\'tkazildi, ID:', result.sale_id || editingSaleId || currentPendingSaleId);
                 
                 // Tahrirlash rejimidan chiqish
                 editingSaleId = null;
+                currentPendingSaleId = null;  // Pending savdo ID ni ham tozalash
                 
                 // Savatni tozalash
                 cart = [];
