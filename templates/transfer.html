@@ -675,6 +675,8 @@
 
     // Transfer ro'yxatiga qo'shish
     function addToTransferList() {
+        console.log('🔵 addToTransferList called, currentProduct:', currentProduct);
+        
         if (!currentProduct) {
             alert('Mahsulot tanlanmagan!');
             closeModal();
@@ -698,6 +700,7 @@
         
         if (existingIndex >= 0) {
             transferList[existingIndex].quantity = quantity;
+            console.log('✅ Miqdor yangilandi:', currentProduct.name, 'x', quantity);
         } else {
             transferList.push({
                 id: currentProduct.id,
@@ -705,12 +708,11 @@
                 quantity: quantity,
                 price: currentProduct.price || 0
             });
+            console.log('✅ Transfer ro\'yxatiga qo\'shildi:', currentProduct.name, 'x', quantity);
         }
         
         updateTransferListDisplay();
         closeModal();
-        
-        console.log('✅ Transfer ro\'yxatiga qo\'shildi:', currentProduct.name, 'x', quantity);
     }
 
     // Transfer ro'yxatini ko'rsatish
