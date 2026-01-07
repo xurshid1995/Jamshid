@@ -1752,13 +1752,36 @@
             }
         }, 100);
         
-        // currentProduct ni o'rnatish
+        // currentProduct ni o'rnatish (costPrice ham qo'shish)
+        // Tan narxni mahsulot ma'lumotlaridan olish
+        let costPrice = 0;
+        try {
+            const locationValue = document.getElementById('locationSelect').value;
+            const response = await fetch(`/api/products?location=${locationValue}`);
+            const data = await response.json();
+            const products = Array.isArray(data) ? data : (data.products || []);
+            const product = products.find(p => p.id === item.id);
+            if (product && product.cost_price) {
+                costPrice = product.cost_price;
+            }
+        } catch (error) {
+            console.error('Tan narxni olishda xatolik:', error);
+        }
+        
         currentProduct = { 
             id: item.id, 
             name: item.name, 
             available: parseInt(document.getElementById('modalAvailable').value),
-            price: item.priceUSD
+            price: item.priceUSD,
+            costPrice: costPrice
         };
+        
+        // Validatsiyalarni o'rnatish
+        setupValidation();
+        
+        // Dastlabki validatsiyalar
+        validatePrice();
+        validateQuantity();
         
         // Eski confirm funksiyasini yangilash uchun indexni saqlash
         window.editingCartIndex = index;
