@@ -849,20 +849,20 @@
         }
         
         try {
-            console.log('📤 Transfer yuborilmoqda:', {
+            // Server uchun to'g'ri formatga o'zgartirish
+            const transfers = transferList.map(item => ({
+                product_id: item.id,
                 from_location: fromLocation,
                 to_location: toLocation,
-                products: transferList
-            });
+                quantity: item.quantity
+            }));
+            
+            console.log('📤 Transfer yuborilmoqda:', { transfers });
             
             const response = await fetch('/api/transfer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    from_location: fromLocation,
-                    to_location: toLocation,
-                    products: transferList
-                })
+                body: JSON.stringify({ transfers })
             });
             
             const result = await response.json();
