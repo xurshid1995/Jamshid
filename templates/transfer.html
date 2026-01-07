@@ -299,21 +299,40 @@
         <div class="transfer-layout">
             <div class="layout-header">📦 Mahsulot tanlash</div>
             
-            <div class="form-group">
-                <label for="fromLocation">Qayerdan:</label>
-                <select id="fromLocation" onchange="loadProducts()">
-                    <option value="">Tanlang...</option>
-                    <optgroup label="Omborlar">
-                        {% for warehouse in warehouses %}
-                        <option value="warehouse_{{ warehouse.id }}">{{ warehouse.name }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    <optgroup label="Do'konlar">
-                        {% for store in stores %}
-                        <option value="store_{{ store.id }}">{{ store.name }}</option>
-                        {% endfor %}
-                    </optgroup>
-                </select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="fromLocation">Qayerdan:</label>
+                    <select id="fromLocation" onchange="loadProducts()">
+                        <option value="">Tanlang...</option>
+                        <optgroup label="Omborlar">
+                            {% for warehouse in warehouses %}
+                            <option value="warehouse_{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Do'konlar">
+                            {% for store in stores %}
+                            <option value="store_{{ store.id }}">{{ store.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="toLocation">Qayerga:</label>
+                    <select id="toLocation">
+                        <option value="">Tanlang...</option>
+                        <optgroup label="Omborlar">
+                            {% for warehouse in warehouses %}
+                            <option value="warehouse_{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Do'konlar">
+                            {% for store in stores %}
+                            <option value="store_{{ store.id }}">{{ store.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -602,9 +621,20 @@
     // Transferni yakunlash
     async function completeTransfer() {
         const fromLocation = document.getElementById('fromLocation').value;
+        const toLocation = document.getElementById('toLocation').value;
         
         if (!fromLocation) {
             alert('Qayerdan joylashuvni tanlang!');
+            return;
+        }
+        
+        if (!toLocation) {
+            alert('Qayerga joylashuvni tanlang!');
+            return;
+        }
+        
+        if (fromLocation === toLocation) {
+            alert('Bir xil joylashuv orasida transfer qilib bo\'lmaydi!');
             return;
         }
         
@@ -623,6 +653,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     from_location: fromLocation,
+                    to_location: toLocation,
                     products: transferList
                 })
             });
