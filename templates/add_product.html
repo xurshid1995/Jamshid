@@ -960,14 +960,14 @@
                     const locationId = selectedLocationOption.getAttribute('data-location-id') || selectedLocationOption.value;
                     const locationName = selectedLocationOption.textContent || 'Noma\'lum joylashuv';
                     
-                    // Data-type ni o'zbekchaga tarjima qilish
+                    // Data-type ni API uchun inglizchaga o'zgartirish (warehouse yoki store)
                     let locationType = '';
                     if (dataType === 'ombor' || dataType === 'warehouse') {
-                        locationType = 'Ombor';
+                        locationType = 'warehouse'; // API uchun inglizcha
                     } else if (dataType === 'dokon' || dataType === 'store') {
-                        locationType = 'Do\'kon';
+                        locationType = 'store'; // API uchun inglizcha
                     } else {
-                        locationType = dataType || 'Noma\'lum';
+                        locationType = dataType || 'store'; // default: store
                     }
                     
                     console.log(`📍 Joylashuv ma'lumotlari: ${locationName} (${locationType}) - ID: ${locationId}`);
@@ -2041,7 +2041,7 @@
             
             const requestBody = {
                 products: tempProducts.map(product => {
-                    // Location formatini parsing qilish - warehouse_1 yoki store_2 format
+                    // Location formatini parsing qilish
                     let locationType, locationId;
                     
                     console.log('🔍 Product location ma\'lumotlari:', {
@@ -2050,15 +2050,28 @@
                         location_type: product.location_type
                     });
                     
-                    // product.location "warehouse_1" yoki "store_2" formatida
-                    if (product.location && product.location.includes('_')) {
+                    // Excel import qilganda location_id va location_type to'g'ridan-to'g'ri kiritilgan
+                    if (product.location_id && product.location_type) {
+                        locationId = product.location_id;
+                        // location_type "Ombor" yoki "Do'kon" formatida bo'lishi mumkin
+                        if (product.location_type === 'Ombor' || product.location_type === 'warehouse') {
+                            locationType = 'warehouse';
+                        } else if (product.location_type === 'Do\'kon' || product.location_type === 'store') {
+                            locationType = 'store';
+                        } else {
+                            locationType = product.location_type; // to'g'ridan-to'g'ri
+                        }
+                        console.log('✅ Excel location parsed:', {locationType, locationId});
+                    }
+                    // Qo'lda qo'shish: product.location "warehouse_1" yoki "store_2" formatida
+                    else if (product.location && product.location.includes('_')) {
                         const locationParts = product.location.split('_');
                         locationType = locationParts[0]; // "warehouse" yoki "store"
                         locationId = parseInt(locationParts[1]); // ID raqami
                         
-                        console.log('✅ Location parsed:', {locationType, locationId});
+                        console.log('✅ Manual location parsed:', {locationType, locationId});
                     } else {
-                        console.error('❌ Location format noto\'g\'ri:', product.location);
+                        console.error('❌ Location format noto\'g\'ri:', product);
                         // Fallback
                         locationType = 'store';
                         locationId = parseInt(product.location) || 0;
