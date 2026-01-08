@@ -473,23 +473,23 @@
                         <span style="font-size: 1.5rem;">📦</span>
                         <h2>Mahsulot Ma'lumotlari</h2>
                     </div>
-                    <div class="header-right">
-                        <button type="button" class="btn btn-success excel-import-btn" onclick="openExcelImport()">
-                            📊 Excel orqali Import
-                        </button>
-                    </div>
                 </div>
                 
-                <!-- Excel fayl tanlash input (yashirin) -->
-                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;" onchange="handleExcelFile(event)">
-
                 <form id="productForm">
-                    <!-- 1-qator: Joylashuv -->
-                    <div class="form-group">
-                        <label for="location">📍 Joylashuv:</label>
-                        <select id="location" name="location" class="form-control" onchange="onLocationChange()">
-                            <option value="">Joylashuvni tanlang...</option>
-                        </select>
+                    <!-- 1-qator: Joylashuv va Excel Import -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="location">📍 Joylashuv:</label>
+                            <select id="location" name="location" class="form-control" onchange="onLocationChange()">
+                                <option value="">Joylashuvni tanlang...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="excelFileInput" style="display: block; margin-bottom: 0.3rem; font-weight: 600; color: #495057;">📊 Excel Import:</label>
+                            <input type="file" id="excelFileInput" accept=".xlsx,.xls" class="form-control" 
+                                   style="padding: 0.6rem; cursor: pointer; border: 2px solid #28a745;" 
+                                   onchange="handleExcelFile(event)">
+                        </div>
                     </div>
 
                     <!-- 2-qator: Mahsulot nomi va Barcode -->
