@@ -986,6 +986,12 @@
     
     // Modal ochish
     function addToCart(productId, productName, quantity, price, costPrice) {
+        // Miqdori 0 bo'lsa xabar chiqarish
+        if (quantity <= 0) {
+            alert('Bu mahsulot miqdori 0, shuning uchun uni sotib bo\'lmaydi');
+            return;
+        }
+        
         currentProduct = { id: productId, name: productName, available: quantity, price: price, costPrice: costPrice };
         
         document.getElementById('modalProductName').textContent = productName;
