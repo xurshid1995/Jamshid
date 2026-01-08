@@ -746,6 +746,8 @@
             // Server-side pagination data
             if (data.products) {
                 allProducts = data.products;
+                // Mahsulotlarni nom bo'yicha alifbo tartibida saralash
+                allProducts.sort((a, b) => a.name.localeCompare(b.name, 'uz-UZ'));
                 filteredProducts = [...allProducts];
                 currentPage = data.pagination.page;
                 totalProducts = data.pagination.total;
@@ -759,6 +761,8 @@
             } else {
                 // Fallback for old API format
                 allProducts = data;
+                // Mahsulotlarni nom bo'yicha alifbo tartibida saralash
+                allProducts.sort((a, b) => a.name.localeCompare(b.name, 'uz-UZ'));
                 filteredProducts = [...allProducts];
                 totalProducts = allProducts.length;
                 totalPages = Math.ceil(totalProducts / itemsPerPage);
