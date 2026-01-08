@@ -1153,7 +1153,7 @@
                     
                     warehouses.forEach(warehouse => {
                         const option = document.createElement('option');
-                        option.value = warehouse.id;
+                        option.value = `warehouse_${warehouse.id}`;  // warehouse_ prefixi bilan
                         option.textContent = warehouse.name;
                         option.setAttribute('data-type', 'ombor');
                         option.setAttribute('data-location-id', warehouse.id);
@@ -1170,7 +1170,7 @@
                     
                     stores.forEach(store => {
                         const option = document.createElement('option');
-                        option.value = store.id;
+                        option.value = `store_${store.id}`;  // store_ prefixi bilan
                         option.textContent = store.name;
                         option.setAttribute('data-type', 'dokon');
                         option.setAttribute('data-location-id', store.id);
@@ -1325,8 +1325,25 @@
             // Qidiruv yangilanganda selectedProductIndex ni qayta o'rnatish
             selectedProductIndex = -1;
             
+            console.log('=== QIDIRUV BOSHLANDI ===');
+            console.log('📝 Mahsulot nomi:', productName);
+            console.log('📍 Joylashuv select value:', selectedLocation);
+            console.log('📍 Joylashuv select options:', locationSelect.options.length);
+            
             if (productName.length < 2) {
+                console.log('⚠️ Mahsulot nomi 2 ta belgidan kam');
                 resultDiv.style.display = 'none';
+                return;
+            }
+            
+            if (!selectedLocation) {
+                console.log('⚠️ Joylashuv tanlanmagan!');
+                resultDiv.innerHTML = `
+                    <div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 1rem;">
+                        <strong>⚠️ Diqqat!</strong> Iltimos, avval joylashuvni tanlang
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
                 return;
             }
             
@@ -1334,8 +1351,12 @@
             console.log(`📍 Tanlangan joylashuv: "${selectedLocation}"`);
             
             fetch('/api/search-product/' + encodeURIComponent(productName))
-                .then(response => response.json())
+                .then(response => {
+                    console.log('📡 API response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('📦 API javob:', data);
                     if (data.exists && data.products) {
                         console.log(`📦 ${data.products.length} ta mahsulot topildi`);
                         
@@ -1352,22 +1373,23 @@
                             let quantityBgColor = '#6c757d';
                             
                             if (selectedLocation && productData.locations) {
-                                // Tanlangan location option ma'lumotlarini olish
-                                const selectedOption = locationSelect.options[locationSelect.selectedIndex];
-                                const dataType = selectedOption.getAttribute('data-type');
-                                const locationId = selectedLocation;
+                                // location value'dan type va ID ni ajratish
+                                let locationType, locationId;
                                 
-                                // data-type ni API type ga o'zgartirish
-                                let apiType = dataType;
-                                if (dataType === 'ombor') apiType = 'warehouse';
-                                if (dataType === 'dokon') apiType = 'store';
+                                if (selectedLocation.startsWith('warehouse_')) {
+                                    locationType = 'warehouse';
+                                    locationId = parseInt(selectedLocation.replace('warehouse_', ''));
+                                } else if (selectedLocation.startsWith('store_')) {
+                                    locationType = 'store';
+                                    locationId = parseInt(selectedLocation.replace('store_', ''));
+                                }
                                 
-                                console.log(`🔍 Qidiruv: type="${apiType}", id="${locationId}"`);
+                                console.log(`🔍 Qidiruv: type="${locationType}", id="${locationId}"`);
                                 console.log(`📍 Joylashuvlar:`, productData.locations);
                                 
                                 const locationData = productData.locations.find(loc => {
                                     console.log(`🆚 Taqqoslash: loc.type="${loc.type}", loc.id="${loc.id}"`);
-                                    return loc.id == locationId && loc.type === apiType;
+                                    return loc.id == locationId && loc.type === locationType;
                                 });
                                 
                                 if (locationData) {
