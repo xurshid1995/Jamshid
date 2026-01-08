@@ -3005,6 +3005,7 @@ def api_delete_warehouse(warehouse_id):
         warehouse_stocks = WarehouseStock.query.filter_by(warehouse_id=warehouse_id).all()
         deleted_stocks_count = len(warehouse_stocks)
         deleted_products_count = 0
+        deleted_transfers_count = 0
 
         # Har bir stockni tekshirish va agar mahsulot boshqa joyda bo'lmasa o'chirish
         for stock in warehouse_stocks:
@@ -3028,6 +3029,25 @@ def api_delete_warehouse(warehouse_id):
             if other_warehouse_stocks == 0 and store_stocks == 0:
                 product = Product.query.get(product_id)
                 if product:
+                    # Mahsulot bilan bog'liq transferlarni o'chirish
+                    product_transfers = Transfer.query.filter(
+                        db.or_(
+                            Transfer.product_id == product_id,
+                            db.and_(
+                                Transfer.from_location_type == 'warehouse',
+                                Transfer.from_location_id == warehouse_id
+                            ),
+                            db.and_(
+                                Transfer.to_location_type == 'warehouse',
+                                Transfer.to_location_id == warehouse_id
+                            )
+                        )
+                    ).all()
+                    
+                    for transfer in product_transfers:
+                        db.session.delete(transfer)
+                        deleted_transfers_count += 1
+                    
                     db.session.delete(product)
                     deleted_products_count += 1
                     logger.info(f" Mahsulot butunlay o'chirildi: {product.name} (faqat shu omborda edi)")
@@ -3044,14 +3064,17 @@ def api_delete_warehouse(warehouse_id):
             message += f' ({deleted_stocks_count} ta stock ma\'lumoti o\'chirildi)'
         if deleted_products_count > 0:
             message += f'\n{deleted_products_count} ta mahsulot butunlay o\'chirildi (faqat shu omborda edi)'
+        if deleted_transfers_count > 0:
+            message += f'\n{deleted_transfers_count} ta transfer yozuvi o\'chirildi'
 
         logger.info(f" Warehouse muvaffaqiyatli o'chirildi: {warehouse_name}")
-        logger.info(f" O'chirilgan stocklar: {deleted_stocks_count} ta, mahsulotlar: {deleted_products_count} ta")
+        logger.info(f" O'chirilgan stocklar: {deleted_stocks_count} ta, mahsulotlar: {deleted_products_count} ta, transferlar: {deleted_transfers_count} ta")
         return jsonify({
             'success': True,
             'message': message,
             'deleted_stocks': deleted_stocks_count,
-            'deleted_products': deleted_products_count
+            'deleted_products': deleted_products_count,
+            'deleted_transfers': deleted_transfers_count
         }), 200
 
     except Exception as e:
