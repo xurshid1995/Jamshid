@@ -740,7 +740,21 @@
     
     // Mahsulotlar orasida navigatsiya
     function navigateProductTable(direction) {
-        if (visibleProductRows.length === 0) return;
+        // Agar visibleProductRows bo'sh bo'lsa, uni to'ldirish
+        if (visibleProductRows.length === 0) {
+            const tbody = document.getElementById('productsTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            for (let row of rows) {
+                const cells = row.cells;
+                if (cells.length >= 4 && row.style.display !== 'none' && !row.querySelector('.empty-state')) {
+                    visibleProductRows.push(row);
+                }
+            }
+            
+            // Hali ham bo'sh bo'lsa, chiqish
+            if (visibleProductRows.length === 0) return;
+        }
         
         // Oldingi tanlovni olib tashlash
         if (currentSelectedRowIndex >= 0 && visibleProductRows[currentSelectedRowIndex]) {
