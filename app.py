@@ -2298,6 +2298,42 @@ def api_check_stock_active_sessions():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+@app.route('/api/check_stock/completed_sessions')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_completed_sessions():
+    """Tugatilgan tekshiruv sessiyalarini olish"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Tugatilgan sessiyalarni olish (oxirgi 50 ta)
+        sessions = StockCheckSession.query.filter_by(status='completed').order_by(StockCheckSession.updated_at.desc()).limit(50).all()
+        
+        sessions_data = []
+        for session in sessions:
+            # Tekshirilgan mahsulotlar sonini olish
+            items_count = StockCheckItem.query.filter_by(session_id=session.id).count()
+            
+            sessions_data.append({
+                'id': session.id,
+                'location_name': session.location_name,
+                'location_type': session.location_type,
+                'user_name': session.user.username if session.user else 'N/A',
+                'started_at': session.started_at.strftime('%d.%m.%Y %H:%M') if session.started_at else '',
+                'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else '',
+                'items_count': items_count
+            })
+        
+        return jsonify({
+            'success': True,
+            'sessions': sessions_data
+        })
+    except Exception as e:
+        logger.error(f"Error loading completed sessions: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route('/api/check_stock/start', methods=['POST'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_start_check_stock():
