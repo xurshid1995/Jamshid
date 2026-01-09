@@ -29,8 +29,11 @@
     <div style="display: grid; grid-template-columns: 665px 715px; gap: 20px; justify-content: center; padding: 20px; align-items: start;">
         <!-- Chap jadval - Mahsulotlar ro'yxati -->
         <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 665px; box-sizing: border-box;">
-            <div style="background: linear-gradient(135deg, #5B9BD5, #4A90D9); padding: 15px; border-radius: 8px; margin-bottom: 10px; height: 54px; display: flex; align-items: center;">
+            <div style="background: linear-gradient(135deg, #5B9BD5, #4A90D9); padding: 15px; border-radius: 8px; margin-bottom: 10px; height: 54px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="color: white; font-weight: 600; font-size: 16px;">📦 Mahsulotlar ro'yxati</div>
+                <div style="color: white; font-size: 16px;">
+                    <span id="productsCount" style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-weight: 600;">0</span> ta
+                </div>
             </div>
 
             <div style="margin-bottom: 10px;">
@@ -275,6 +278,9 @@ async function searchProducts(query) {
 // Mahsulotlarni ko'rsatish (Virtual Scrolling bilan)
 function displayProducts(products) {
     const tbody = document.getElementById('productsTableBody');
+    
+    // Mahsulotlar sonini yangilash
+    document.getElementById('productsCount').textContent = products.length;
     
     if (products.length === 0) {
         tbody.innerHTML = `
