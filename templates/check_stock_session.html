@@ -302,7 +302,13 @@ function displayProducts(products) {
             const product = products[i];
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
-            row.onclick = () => addToChecked(product);
+            
+            // Row onclick hodisasi
+            row.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'BUTTON') {
+                    addToChecked(product);
+                }
+            });
             
             row.innerHTML = `
                 <td style="padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px;">
@@ -317,12 +323,18 @@ function displayProducts(products) {
                     </span>
                 </td>
                 <td style="padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px; text-align: center;">
-                    <button onclick="event.stopPropagation(); addToChecked(product)" 
-                            style="background: transparent; color: #28a745; border: none; padding: 4px 8px; cursor: pointer; font-size: 24px;">
+                    <button style="background: transparent; color: #28a745; border: none; padding: 4px 8px; cursor: pointer; font-size: 24px;">
                         ➡️
                     </button>
                 </td>
             `;
+            
+            // Button uchun alohida click handler
+            const btn = row.querySelector('button');
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                addToChecked(product);
+            });
             
             fragment.appendChild(row);
         }
