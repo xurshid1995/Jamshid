@@ -2231,6 +2231,38 @@ def api_check_stock_locations():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/check_stock/active_sessions')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_active_sessions():
+    """Joriy (active) tekshiruv sessiyalarini olish"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Faol sessiyalarni olish
+        sessions = StockCheckSession.query.filter_by(status='active').order_by(StockCheckSession.started_at.desc()).all()
+        
+        sessions_data = []
+        for session in sessions:
+            sessions_data.append({
+                'id': session.id,
+                'location_name': session.location_name,
+                'location_type': session.location_type,
+                'user_name': session.user.username if session.user else 'N/A',
+                'started_at': session.started_at.strftime('%d.%m.%Y %H:%M') if session.started_at else '',
+                'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else ''
+            })
+        
+        return jsonify({
+            'success': True,
+            'sessions': sessions_data
+        })
+    except Exception as e:
+        logger.error(f"Error loading active sessions: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route('/api/check_stock/start', methods=['POST'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_start_check_stock():
@@ -2247,27 +2279,39 @@ def api_start_check_stock():
         if not location_type or not location_id:
             return jsonify({'success': False, 'message': 'Joylashuv ma\'lumotlari to\'liq emas'}), 400
 
-        # Sessiya yaratish (stockSessions jadvalida)
-        from datetime import datetime
-        
-        # Session ID yaratish
-        session_id = f"{location_type}_{location_id}_{current_user.id}_{int(datetime.now().timestamp())}"
+        # Joylashuv nomini olish
+        location_name = ''
+        if location_type == 'store':
+            store = Store.query.get(location_id)
+            location_name = store.name if store else f'Do\'kon #{location_id}'
+        else:
+            warehouse = Warehouse.query.get(location_id)
+            location_name = warehouse.name if warehouse else f'Ombor #{location_id}'
 
-        # Session ma'lumotlarini saqlash (keyinchalik database'ga qo'shish kerak)
-        # Hozircha faqat session_id qaytaramiz
+        # Sessiyani database'ga saqlash
+        session = StockCheckSession(
+            user_id=current_user.id,
+            location_id=location_id,
+            location_type=location_type,
+            location_name=location_name,
+            status='active'
+        )
+        db.session.add(session)
+        db.session.commit()
         
         return jsonify({
             'success': True,
-            'session_id': session_id,
+            'session_id': session.id,
             'location_type': location_type,
             'location_id': location_id
         })
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error starting check stock: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
-@app.route('/check_stock/session/<session_id>')
+@app.route('/check_stock/session/<int:session_id>')
 @role_required('admin', 'kassir', 'sotuvchi')
 def check_stock_session(session_id):
     """Tekshiruv sessiyasi sahifasi"""
@@ -2275,19 +2319,16 @@ def check_stock_session(session_id):
     if not current_user:
         return redirect(url_for('login'))
 
-    # Session ID'dan ma'lumotlarni ajratish
+    # Database'dan sessiyani olish
     try:
-        parts = session_id.split('_')
-        location_type = parts[0]
-        location_id = int(parts[1])
+        session = StockCheckSession.query.get(session_id)
+        if not session:
+            flash('Tekshiruv sessiyasi topilmadi', 'error')
+            return redirect(url_for('check_stock'))
         
-        # Joylashuv nomini olish
-        if location_type == 'store':
-            location = Store.query.get(location_id)
-            location_name = location.name if location else 'Noma\'lum do\'kon'
-        else:
-            location = Warehouse.query.get(location_id)
-            location_name = location.name if location else 'Noma\'lum ombor'
+        location_type = session.location_type
+        location_id = session.location_id
+        location_name = session.location_name
         
         return render_template('check_stock_session.html',
                              session_id=session_id,
