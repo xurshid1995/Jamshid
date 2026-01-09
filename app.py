@@ -2204,6 +2204,190 @@ def check_stock():
     return render_template('check_stock.html')
 
 
+@app.route('/api/locations')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_locations():
+    """Barcha do'konlar va omborlarni qaytarish"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Do'konlarni olish
+        stores = Store.query.filter_by(is_deleted=False).all()
+        stores_data = [{'id': s.id, 'name': s.name} for s in stores]
+
+        # Omborlarni olish
+        warehouses = Warehouse.query.filter_by(is_deleted=False).all()
+        warehouses_data = [{'id': w.id, 'name': w.name} for w in warehouses]
+
+        return jsonify({
+            'success': True,
+            'stores': stores_data,
+            'warehouses': warehouses_data
+        })
+    except Exception as e:
+        logger.error(f"Error loading locations: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/check_stock/start', methods=['POST'])
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_start_check_stock():
+    """Yangi tekshiruv sessiyasini boshlash"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        data = request.get_json()
+        location_type = data.get('location_type')  # 'store' yoki 'warehouse'
+        location_id = data.get('location_id')
+
+        if not location_type or not location_id:
+            return jsonify({'success': False, 'message': 'Joylashuv ma\'lumotlari to\'liq emas'}), 400
+
+        # Sessiya yaratish (stockSessions jadvalida)
+        from datetime import datetime
+        
+        # Session ID yaratish
+        session_id = f"{location_type}_{location_id}_{current_user.id}_{int(datetime.now().timestamp())}"
+
+        # Session ma'lumotlarini saqlash (keyinchalik database'ga qo'shish kerak)
+        # Hozircha faqat session_id qaytaramiz
+        
+        return jsonify({
+            'success': True,
+            'session_id': session_id,
+            'location_type': location_type,
+            'location_id': location_id
+        })
+    except Exception as e:
+        logger.error(f"Error starting check stock: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/check_stock/session/<session_id>')
+@role_required('admin', 'kassir', 'sotuvchi')
+def check_stock_session(session_id):
+    """Tekshiruv sessiyasi sahifasi"""
+    current_user = get_current_user()
+    if not current_user:
+        return redirect(url_for('login'))
+
+    # Session ID'dan ma'lumotlarni ajratish
+    try:
+        parts = session_id.split('_')
+        location_type = parts[0]
+        location_id = int(parts[1])
+        
+        # Joylashuv nomini olish
+        if location_type == 'store':
+            location = Store.query.get(location_id)
+            location_name = location.name if location else 'Noma\'lum do\'kon'
+        else:
+            location = Warehouse.query.get(location_id)
+            location_name = location.name if location else 'Noma\'lum ombor'
+        
+        return render_template('check_stock_session.html',
+                             session_id=session_id,
+                             location_type=location_type,
+                             location_id=location_id,
+                             location_name=location_name)
+    except Exception as e:
+        logger.error(f"Error loading check stock session: {e}")
+        abort(404)
+
+
+@app.route('/api/check_stock/search')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_search():
+    """Mahsulotlarni qidirish (nom yoki barkod bo'yicha)"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        query = request.args.get('query', '').strip()
+        location_type = request.args.get('location_type')
+        location_id = int(request.args.get('location_id'))
+
+        if not query or not location_type or not location_id:
+            return jsonify({'success': False, 'message': 'Qidiruv parametrlari to\'liq emas'}), 400
+
+        # Mahsulotlarni qidirish (nom yoki barkod bo'yicha)
+        products = Product.query.filter(
+            db.or_(
+                Product.name.ilike(f'%{query}%'),
+                Product.barcode.ilike(f'%{query}%')
+            ),
+            Product.is_deleted == False
+        ).limit(50).all()
+
+        products_data = []
+        for product in products:
+            # Joylashuvdagi qoldiqni olish
+            if location_type == 'store':
+                stock = Stock.query.filter_by(
+                    product_id=product.id,
+                    store_id=location_id
+                ).first()
+            else:
+                stock = Stock.query.filter_by(
+                    product_id=product.id,
+                    warehouse_id=location_id
+                ).first()
+
+            system_quantity = stock.quantity if stock else 0
+
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'barcode': product.barcode,
+                'system_quantity': float(system_quantity)
+            })
+
+        return jsonify({
+            'success': True,
+            'products': products_data
+        })
+    except Exception as e:
+        logger.error(f"Error searching products: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/check_stock/finish', methods=['POST'])
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_finish():
+    """Tekshiruvni yakunlash"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        data = request.get_json()
+        session_id = data.get('session_id')
+        location_type = data.get('location_type')
+        location_id = data.get('location_id')
+        products = data.get('products', [])
+
+        if not session_id or not location_type or not location_id:
+            return jsonify({'success': False, 'message': 'Session ma\'lumotlari to\'liq emas'}), 400
+
+        # Tekshiruv natijalarini saqlash (keyinchalik database'ga qo'shish kerak)
+        # Hozircha faqat muvaffaqiyatli yakunlanganini qaytaramiz
+        
+        logger.info(f"Check stock finished: session={session_id}, location={location_type}_{location_id}, products={len(products)}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tekshiruv muvaffaqiyatli yakunlandi'
+        })
+    except Exception as e:
+        logger.error(f"Error finishing check stock: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route('/history_details')
 def history_details():
     """Tekshiruv tarixi tafsilotlari sahifasi"""

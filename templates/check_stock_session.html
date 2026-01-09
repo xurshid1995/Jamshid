@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}{{ location_name }} - Qoldiqni tekshirish{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Sahifa sarlavhasi -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0;"><i class="fas fa-clipboard-check"></i> {{ location_name }}</h2>
+                        <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Qoldiqni tekshirish</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button type="button" class="btn btn-light btn-lg" onclick="finishCheck()">
+                            <i class="fas fa-check me-2"></i>Tekshiruvni yakunlash
+                        </button>
+                        <a href="/check_stock" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Orqaga
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qidiruv va filtrlar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Mahsulot nomini yoki barkodini kiriting...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-info btn-lg" onclick="scanBarcode()">
+                    <i class="fas fa-barcode me-2"></i>Barkod skanerlash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mahsulotlar ro'yxati -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Mahsulotlar ro'yxati</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">№</th>
+                                    <th>Mahsulot nomi</th>
+                                    <th style="width: 150px;">Barkod</th>
+                                    <th style="width: 120px;">Tizimda</th>
+                                    <th style="width: 150px;">Haqiqiy miqdor</th>
+                                    <th style="width: 100px;">Farq</th>
+                                    <th style="width: 100px;">Holati</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-5">
+                                        <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                                        Mahsulotlarni yuklash uchun qidiruv yoki barkod skanerlashdan foydalaning
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    background: #5dade2;
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.page-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.quantity-input {
+    width: 100px;
+    text-align: center;
+}
+
+.diff-positive {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.diff-negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.diff-zero {
+    color: #6c757d;
+}
+</style>
+
+<script>
+const sessionId = '{{ session_id }}';
+const locationType = '{{ location_type }}';
+const locationId = {{ location_id }};
+let checkedProducts = [];
+
+// Mahsulotni qidirish
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+        searchProducts(query);
+    }
+});
+
+// Enter tugmasi bosilganda qidirish
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const query = e.target.value.trim();
+        if (query) {
+            searchProducts(query);
+        }
+    }
+});
+
+// Mahsulotlarni qidirish
+async function searchProducts(query) {
+    try {
+        const response = await fetch(`/api/check_stock/search?query=${encodeURIComponent(query)}&location_type=${locationType}&location_id=${locationId}`);
+        const data = await response.json();
+        
+        if (data.success && data.products.length > 0) {
+            displayProducts(data.products);
+        } else {
+            alert('Mahsulot topilmadi');
+        }
+    } catch (error) {
+        console.error('Qidiruv xatosi:', error);
+        alert('Qidiruvda xatolik yuz berdi');
+    }
+}
+
+// Mahsulotlarni ko'rsatish
+function displayProducts(products) {
+    const tbody = document.getElementById('productsTable');
+    tbody.innerHTML = '';
+    
+    products.forEach((product, index) => {
+        const row = document.createElement('tr');
+        const productKey = `${product.id}`;
+        const existingCheck = checkedProducts.find(p => p.id === product.id);
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${product.name}</strong></td>
+            <td><code>${product.barcode || '-'}</code></td>
+            <td><span class="badge bg-info">${product.system_quantity}</span></td>
+            <td>
+                <input type="number" 
+                       class="form-control quantity-input" 
+                       id="qty_${product.id}"
+                       value="${existingCheck ? existingCheck.actual_quantity : product.system_quantity}"
+                       min="0"
+                       step="0.01"
+                       onchange="updateDifference(${product.id}, ${product.system_quantity})">
+            </td>
+            <td id="diff_${product.id}" class="diff-zero">0</td>
+            <td>
+                <span class="badge bg-secondary" id="status_${product.id}">Tekshirilmagan</span>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Farqni yangilash
+function updateDifference(productId, systemQty) {
+    const actualQty = parseFloat(document.getElementById(`qty_${productId}`).value) || 0;
+    const diff = actualQty - systemQty;
+    const diffCell = document.getElementById(`diff_${productId}`);
+    const statusCell = document.getElementById(`status_${productId}`);
+    
+    diffCell.textContent = diff > 0 ? `+${diff}` : diff;
+    
+    if (diff > 0) {
+        diffCell.className = 'diff-positive';
+        statusCell.innerHTML = '<span class="badge bg-success">Ortiqcha</span>';
+    } else if (diff < 0) {
+        diffCell.className = 'diff-negative';
+        statusCell.innerHTML = '<span class="badge bg-danger">Kamomad</span>';
+    } else {
+        diffCell.className = 'diff-zero';
+        statusCell.innerHTML = '<span class="badge bg-success">To\'g\'ri</span>';
+    }
+    
+    // Tekshirilgan mahsulotlar ro'yxatiga qo'shish
+    const existingIndex = checkedProducts.findIndex(p => p.id === productId);
+    const checkData = {
+        id: productId,
+        system_quantity: systemQty,
+        actual_quantity: actualQty,
+        difference: diff
+    };
+    
+    if (existingIndex >= 0) {
+        checkedProducts[existingIndex] = checkData;
+    } else {
+        checkedProducts.push(checkData);
+    }
+}
+
+// Barkod skanerlash
+function scanBarcode() {
+    const barcode = prompt('Barkodni kiriting:');
+    if (barcode) {
+        searchProducts(barcode);
+    }
+}
+
+// Tekshiruvni yakunlash
+async function finishCheck() {
+    if (checkedProducts.length === 0) {
+        alert('Hech qanday mahsulot tekshirilmagan!');
+        return;
+    }
+    
+    if (!confirm(`${checkedProducts.length} ta mahsulot tekshirildi. Tekshiruvni yakunlaysizmi?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/check_stock/finish', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                session_id: sessionId,
+                location_type: locationType,
+                location_id: locationId,
+                products: checkedProducts
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Tekshiruv muvaffaqiyatli yakunlandi!');
+            window.location.href = '/check_stock';
+        } else {
+            alert('Xatolik: ' + (data.message || 'Tekshiruvni yakunlab bo\'lmadi'));
+        }
+    } catch (error) {
+        console.error('Tekshiruvni yakunlashda xatolik:', error);
+        alert('Tekshiruvni yakunlashda xatolik yuz berdi');
+    }
+}
+</script>
+
+{% endblock %}

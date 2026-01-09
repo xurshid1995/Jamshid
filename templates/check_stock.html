@@ -79,6 +79,91 @@
 // Jarayondagi tekshiruvlar ro'yxati
 let checkSessions = [];
 
+// Sahifa yuklanganda joylashuvlarni yuklash
+document.addEventListener('DOMContentLoaded', function() {
+    loadLocations();
+});
+
+// Joylashuvlarni yuklash
+async function loadLocations() {
+    try {
+        const response = await fetch('/api/locations');
+        const data = await response.json();
+        
+        const select = document.getElementById('locationSelect');
+        select.innerHTML = '<option value="">Joylashuvni tanlang...</option>';
+        
+        // Do'konlarni qo'shish
+        if (data.stores && data.stores.length > 0) {
+            const storeGroup = document.createElement('optgroup');
+            storeGroup.label = 'Do\'konlar';
+            data.stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = 'store_' + store.id;
+                option.textContent = store.name;
+                storeGroup.appendChild(option);
+            });
+            select.appendChild(storeGroup);
+        }
+        
+        // Omborlarni qo'shish
+        if (data.warehouses && data.warehouses.length > 0) {
+            const warehouseGroup = document.createElement('optgroup');
+            warehouseGroup.label = 'Omborlar';
+            data.warehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = 'warehouse_' + warehouse.id;
+                option.textContent = warehouse.name;
+                warehouseGroup.appendChild(option);
+            });
+            select.appendChild(warehouseGroup);
+        }
+    } catch (error) {
+        console.error('Joylashuvlarni yuklashda xatolik:', error);
+        alert('Joylashuvlarni yuklashda xatolik yuz berdi');
+    }
+}
+
+// Tekshiruvni boshlash
+async function startCheck() {
+    const select = document.getElementById('locationSelect');
+    const selectedValue = select.value;
+    
+    if (!selectedValue) {
+        alert('Iltimos, joylashuvni tanlang!');
+        return;
+    }
+    
+    // Joylashuv turini va ID sini ajratish (store_1 yoki warehouse_2)
+    const [locationType, locationId] = selectedValue.split('_');
+    
+    try {
+        // Serverga tekshiruv sessiyasini yaratish so'rovi
+        const response = await fetch('/api/check_stock/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                location_type: locationType,
+                location_id: locationId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Tekshiruv sahifasiga o'tish
+            window.location.href = `/check_stock/session/${data.session_id}`;
+        } else {
+            alert('Xatolik: ' + (data.message || 'Tekshiruvni boshlab bo\'lmadi'));
+        }
+    } catch (error) {
+        console.error('Tekshiruvni boshlashda xatolik:', error);
+        alert('Tekshiruvni boshlashda xatolik yuz berdi');
+    }
+}
+
 // Yangi tekshiruv qo'shish
 function addCheckSession(location, user, status = 'in_progress') {
     checkSessions.push({
