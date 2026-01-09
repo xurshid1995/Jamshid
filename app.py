@@ -2214,11 +2214,11 @@ def api_check_stock_locations():
             return jsonify({'error': 'Unauthorized'}), 401
 
         # Do'konlarni olish
-        stores = Store.query.filter_by(is_deleted=False).all()
+        stores = Store.query.all()
         stores_data = [{'id': s.id, 'name': s.name} for s in stores]
 
         # Omborlarni olish
-        warehouses = Warehouse.query.filter_by(is_deleted=False).all()
+        warehouses = Warehouse.query.all()
         warehouses_data = [{'id': w.id, 'name': w.name} for w in warehouses]
 
         return jsonify({
