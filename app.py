@@ -702,6 +702,7 @@ class StockCheckSession(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    completed_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Tekshiruvni tugatgan foydalanuvchi
     location_id = db.Column(db.Integer, nullable=False)
     location_type = db.Column(db.String(20), nullable=False)  # 'store' or 'warehouse'
     location_name = db.Column(db.String(200))
@@ -713,7 +714,8 @@ class StockCheckSession(db.Model):
     status = db.Column(db.String(20), default='active')  # 'active', 'completed', 'cancelled'
 
     # Relationships
-    user = db.relationship('User', backref='stock_check_sessions')
+    user = db.relationship('User', foreign_keys=[user_id], backref='stock_check_sessions_started')
+    completed_by = db.relationship('User', foreign_keys=[completed_by_user_id], backref='stock_check_sessions_completed')
 
     def __repr__(self):
         return f'<StockCheckSession {self.location_type}-{self.location_id} - User: {self.user_id}>'
@@ -2353,7 +2355,7 @@ def api_check_stock_completed_sessions():
                 'location_name': session.location_name,
                 'location_type': session.location_type,
                 'started_user_name': f"{session.user.first_name} {session.user.last_name}" if session.user else 'N/A',
-                'completed_user_name': f"{session.user.first_name} {session.user.last_name}" if session.user else 'N/A',  # Hozircha bir xil
+                'completed_user_name': f"{session.completed_by.first_name} {session.completed_by.last_name}" if session.completed_by else (f"{session.user.first_name} {session.user.last_name}" if session.user else 'N/A'),
                 'started_at': session.started_at.strftime('%d.%m.%Y %H:%M') if session.started_at else '',
                 'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else '',
                 'items_count': items_count
@@ -2685,9 +2687,10 @@ def api_check_stock_finish():
         session = StockCheckSession.query.get(session_id)
         if session:
             session.status = 'completed'
+            session.completed_by_user_id = current_user.id  # Tugatgan foydalanuvchini saqlash
             db.session.commit()
         
-        logger.info(f"Check stock finished: session_id={session_id}, user={current_user.username}")
+        logger.info(f"Check stock finished: session_id={session_id}, user={current_user.username}, completed_by={current_user.id}")
         
         return jsonify({
             'success': True,
