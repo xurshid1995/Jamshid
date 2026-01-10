@@ -125,26 +125,25 @@
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
-            <h5 style="margin-bottom: 1rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Tugatilgan tekshiruvlar</h5>
             <div class="card">
-                <div class="card-body">
+                <div class="card-body" style="padding-top: 20px;">
+                    <h5 style="margin: 0 0 15px 0; font-weight: 600; font-size: 18px;">Tugatilgan tekshiruvlar</h5>
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
                                 <tr>
-                                    <th>#</th>
-                                    <th>Joylashuv</th>
-                                    <th>Foydalanuvchi</th>
-                                    <th>Boshlangan</th>
-                                    <th>Tugatilgan</th>
-                                    <th>Mahsulotlar</th>
-                                    <th>Holat</th>
-                                    <th>Ko'rish</th>
+                                    <th style="text-align: center;">№</th>
+                                    <th style="text-align: center;">Joylashuv</th>
+                                    <th style="text-align: center;">Boshlagan foydalanuvchi</th>
+                                    <th style="text-align: center;">Tugatgan foydalanuvchi</th>
+                                    <th style="text-align: center;">Boshlangan vaqti</th>
+                                    <th style="text-align: center;">Tugatilgan vaqti</th>
+                                    <th style="text-align: center;">Amallar</th>
                                 </tr>
                             </thead>
                             <tbody id="completedSessionsTable">
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="7" class="text-center text-muted py-4">
                                         <div style="font-size: 48px; opacity: 0.3; margin-bottom: 10px;">✅</div>
                                         <div>Tugatilgan tekshiruvlar yo'q</div>
                                     </td>
@@ -332,7 +331,7 @@ async function loadCompletedSessions() {
         if (!data.success || data.sessions.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         <div style="font-size: 48px; opacity: 0.3; margin-bottom: 10px;">✅</div>
                         <div>Tugatilgan tekshiruvlar yo'q</div>
                     </td>
@@ -348,24 +347,25 @@ async function loadCompletedSessions() {
             const locationIcon = session.location_type === 'store' ? '🏪' : '📦';
             
             row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${locationIcon} <strong>${session.location_name}</strong></td>
-                <td><i class="fas fa-user"></i> ${session.user_name}</td>
-                <td>${session.started_at}</td>
-                <td>${session.updated_at}</td>
-                <td>
-                    <span class="badge bg-info">
-                        <i class="fas fa-box"></i> ${session.items_count} ta
-                    </span>
+                <td style="text-align: center;">${index + 1}</td>
+                <td style="text-align: center;">${locationIcon} <strong>${session.location_name}</strong></td>
+                <td style="text-align: center;">${session.started_user_name}</td>
+                <td style="text-align: center;">${session.completed_user_name}</td>
+                <td style="text-align: center;">
+                    <div style="line-height: 1.2;">
+                        <div style="font-weight: 500;">${session.started_at.split(' ')[0]}</div>
+                        <div style="font-size: 12px; color: #666;">${session.started_at.split(' ')[1]}</div>
+                    </div>
                 </td>
-                <td>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check"></i> Tugatilgan
-                    </span>
+                <td style="text-align: center;">
+                    <div style="line-height: 1.2;">
+                        <div style="font-weight: 500;">${session.updated_at.split(' ')[0]}</div>
+                        <div style="font-size: 12px; color: #666;">${session.updated_at.split(' ')[1]}</div>
+                    </div>
                 </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="viewSession(${session.id})">
-                        <i class="fas fa-eye"></i>
+                <td style="text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="viewSession(${session.id})">
+                        <i class="fas fa-eye"></i> Ko'rish
                     </button>
                 </td>
             `;

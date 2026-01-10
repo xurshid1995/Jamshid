@@ -2352,7 +2352,8 @@ def api_check_stock_completed_sessions():
                 'id': session.id,
                 'location_name': session.location_name,
                 'location_type': session.location_type,
-                'user_name': session.user.username if session.user else 'N/A',
+                'started_user_name': f"{session.user.first_name} {session.user.last_name}" if session.user else 'N/A',
+                'completed_user_name': f"{session.user.first_name} {session.user.last_name}" if session.user else 'N/A',  # Hozircha bir xil
                 'started_at': session.started_at.strftime('%d.%m.%Y %H:%M') if session.started_at else '',
                 'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else '',
                 'items_count': items_count
