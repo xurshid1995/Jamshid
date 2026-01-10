@@ -2,6 +2,58 @@
 
 {% block title %}{{ location_name }} - Qoldiqni tekshirish{% endblock %}
 
+{% block extra_css %}
+<style>
+    .check-stock-grid {
+        display: grid;
+        grid-template-columns: 550px 830px;
+        gap: 20px;
+        justify-content: center;
+        padding: 20px;
+        align-items: start;
+    }
+    
+    .check-stock-box {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+        max-width: 100%;
+    }
+    
+    .table-wrapper-check {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow-x: auto;
+    }
+    
+    @media (max-width: 1400px) {
+        .check-stock-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 830px;
+            margin: 0 auto;
+        }
+        
+        .check-stock-box {
+            width: 100% !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .check-stock-grid {
+            padding: 10px !important;
+            gap: 15px !important;
+        }
+        
+        .check-stock-box {
+            padding: 15px !important;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- Sahifa sarlavhasi -->
@@ -26,9 +78,9 @@
     </div>
 
     <!-- Ikkita jadval - Transfer kabi -->
-    <div style="display: grid; grid-template-columns: 550px 830px; gap: 20px; justify-content: center; padding: 20px; align-items: start;">
+    <div class="check-stock-grid">
         <!-- Chap jadval - Mahsulotlar ro'yxati -->
-        <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 550px; box-sizing: border-box;">
+        <div class="check-stock-box">
             <div style="background: #3498db; padding: 15px; border-radius: 8px; margin-bottom: 10px; height: 54px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="color: white; font-weight: 600; font-size: 16px;">📦 Mahsulotlar ro'yxati</div>
                 <div style="color: white; font-size: 16px;">
@@ -44,8 +96,8 @@
                        autofocus>
             </div>
 
-            <div style="border: 1px solid #dee2e6; border-radius: 4px; margin-top: 10px; overflow-x: hidden;">
-                <table style="width: 510px !important; min-width: 510px !important; border-collapse: collapse;">
+            <div class="table-wrapper-check">
+                <table style="width: 510px; min-width: 510px; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
                             <th style="width: 280px; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; font-size: 13px;">Mahsulot</th>
@@ -67,7 +119,7 @@
         </div>
 
         <!-- O'ng jadval - Tekshirilgan mahsulotlar -->
-        <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 830px; box-sizing: border-box;">
+        <div class="check-stock-box">
             <div style="background: #3498db; padding: 15px; border-radius: 8px; margin-bottom: 10px; height: 54px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="color: white; font-weight: 600; font-size: 16px;">✅ Tekshirilgan mahsulotlar</div>
                 <div style="color: white; font-size: 16px;">
@@ -96,8 +148,8 @@
                 </div>
             </div>
 
-            <div style="border: 1px solid #dee2e6; border-radius: 4px; margin-top: 10px; overflow-x: hidden;">
-                <table style="width: 790px !important; min-width: 790px !important; border-collapse: collapse;">
+            <div class="table-wrapper-check">
+                <table style="width: 790px; min-width: 790px; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
                             <th style="width: 350px; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; font-size: 13px;">Mahsulot nomi</th>
