@@ -237,7 +237,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('filterAll').style.opacity = '1';
     document.getElementById('filterError').style.opacity = '0.6';
     document.getElementById('filterCorrect').style.opacity = '0.6';
+    
+    // Har 5 sekundda avtomatik yangilanish
+    setInterval(async () => {
+        await syncCheckedProducts();
+    }, 5000);
 });
+
+// Tekshirilgan mahsulotlarni sinxronlashtirish (real-time yangilanish)
+async function syncCheckedProducts() {
+    try {
+        const response = await fetch(`/api/check_stock/items/${sessionId}`);
+        const data = await response.json();
+        
+        if (data.success && data.items) {
+            const serverCheckedIds = data.items.map(item => item.id);
+            
+            // Server bilan sinxronlashtirish
+            checkedProducts = data.items;
+            
+            // Chap jadvaldan tekshirilganlarni olib tashlash
+            allProducts = allProducts.filter(p => !serverCheckedIds.includes(p.id));
+            
+            // Mahsulotlar ro'yxatidagi qidiruv maydonini saqlab qolish
+            const currentSearch = document.getElementById('productSearch').value;
+            displayProducts(allProducts);
+            document.getElementById('productSearch').value = currentSearch;
+            
+            // O'ng jadvalni yangilash
+            updateCheckedTable();
+            updateCheckedCount();
+        }
+    } catch (error) {
+        console.error('Sinxronlashtirish xatosi:', error);
+    }
+}
 
 // Tekshirilgan mahsulotlarni database'dan yuklash
 async function loadCheckedProducts() {
@@ -532,8 +566,18 @@ async function saveQuantity() {
         const data = await response.json();
         
         if (data.success) {
-            // Tekshirilganlarga qo'shish
-            checkedProducts.push(checkedItem);
+            // Agar mahsulot allaqachon tekshirilgan bo'lsa
+            if (data.updated) {
+                alert('⚠️ Diqqat: Bu mahsulot allaqachon boshqa odam tomonidan tekshirilgan edi!\n\nMa\'lumotlar yangilandi.');
+            }
+            
+            // Tekshirilganlarga qo'shish yoki yangilash
+            const existingIndex = checkedProducts.findIndex(p => p.id === currentProduct.id);
+            if (existingIndex >= 0) {
+                checkedProducts[existingIndex] = checkedItem;
+            } else {
+                checkedProducts.push(checkedItem);
+            }
             
             // Chap jadvaldan o'chirish
             allProducts = allProducts.filter(p => p.id !== currentProduct.id);

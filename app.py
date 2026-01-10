@@ -2555,7 +2555,7 @@ def api_check_stock_add_item():
             existing.difference = difference
             existing.status = status
             db.session.commit()
-            return jsonify({'success': True, 'item': existing.to_dict()})
+            return jsonify({'success': True, 'item': existing.to_dict(), 'message': 'Mahsulot ma\'lumoti yangilandi', 'updated': True})
 
         # Yangi mahsulot qo'shish
         item = StockCheckItem(
