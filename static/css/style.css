@@ -1360,14 +1360,14 @@ footer {
     /* Mobile sidebar - Compact va user-friendly */
     .sidebar {
         position: fixed;
-        left: -280px;
+        left: -100%;
         top: 70px;
         height: calc(100vh - 70px);
         width: 280px;
-        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
         z-index: 1160;
         background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+        box-shadow: none;
         border-top-right-radius: 10px;
         border-bottom-right-radius: 10px;
         overflow-y: auto;
