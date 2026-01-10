@@ -28,8 +28,32 @@
         font-size: 24px;
     }
     
+    /* Layout boxes */
+    .sales-layout-box {
+        width: 665px;
+        max-width: 100%;
+    }
+    
+    .table-wrapper {
+        width: 100%;
+        max-width: 100%;
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
+        .sales-layout-box {
+            width: 100% !important;
+        }
+        
+        .table-wrapper {
+            width: 100% !important;
+        }
+        
+        .sales-product-table,
+        .cart-table {
+            width: 100% !important;
+            min-width: 100% !important;
+        }
         .sales-container {
             padding: 10px;
         }
@@ -71,7 +95,7 @@
     <!-- Ikkita 665px kenglikda layout -->
     <div class="sales-grid" style="display: grid; grid-template-columns: 665px 665px; gap: 20px; justify-content: center; padding: 20px; align-items: start; max-width: 100%; box-sizing: border-box;">
         <!-- Birinchi layout -->
-        <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 665px; box-sizing: border-box;">
+        <div class="sales-layout-box" style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box;">
             <!-- Joylashuv va Mijoz tanlash -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                 <div>
@@ -109,8 +133,8 @@
             </div>
             
             <!-- Mahsulotlar jadvali -->
-            <div style="width: 625px; overflow-x: auto;">
-                <table class="sales-product-table" style="width: 620px !important; min-width: 620px !important; max-width: 620px !important; border-collapse: collapse; table-layout: fixed !important;">
+            <div class="table-wrapper" style="overflow-x: auto;">
+                <table class="sales-product-table" style="width: 620px; min-width: 620px; border-collapse: collapse; table-layout: fixed;">
                     <thead>
                         <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                             <th style="padding: 10px 8px; text-align: left; font-size: 15px; font-weight: 600; color: #495057; width: 320px; box-sizing: border-box;">Mahsulot</th>
@@ -131,7 +155,7 @@
         </div>
 
         <!-- Ikkinchi layout -->
-        <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 665px; box-sizing: border-box;">
+        <div class="sales-layout-box" style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div id="cartCustomerInfo">
                     <h3 style="margin: 0; color: #333;">🛒 Savdo Korzinasi</h3>
@@ -139,8 +163,8 @@
                 <div id="cartTotalHeader" style="text-align: right;"></div>
             </div>
             <div id="cartContainer">
-                <div style="width: 620px; overflow-x: auto;">
-                    <table class="cart-table" style="width: 620px !important; max-width: 620px !important; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed !important;">
+                <div class="table-wrapper" style="overflow-x: auto;">
+                    <table class="cart-table" style="width: 620px; min-width: 620px; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed;">
                         <thead>
                             <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                                 <th style="padding: 8px 5px; text-align: left; font-size: 15px; font-weight: 600; color: #495057; width: 312px;">Mahsulot</th>
