@@ -2295,14 +2295,14 @@ def api_check_stock_active_sessions():
             
             # Jami mahsulotlar sonini olish (location_type va location_id ga qarab)
             if session.location_type == 'warehouse':
-                total_products = Stock.query.filter(
-                    Stock.warehouse_id == session.location_id,
-                    Stock.quantity > 0
+                total_products = WarehouseStock.query.filter(
+                    WarehouseStock.warehouse_id == session.location_id,
+                    WarehouseStock.quantity > 0
                 ).count()
             else:  # store
-                total_products = Stock.query.filter(
-                    Stock.store_id == session.location_id,
-                    Stock.quantity > 0
+                total_products = StoreStock.query.filter(
+                    StoreStock.store_id == session.location_id,
+                    StoreStock.quantity > 0
                 ).count()
             
             # Progress foizini hisoblash
