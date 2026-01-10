@@ -134,6 +134,14 @@
             </div>
         </div>
         <div style="flex: 1; min-width: 150px;">
+            <div class="stats-card" style="background: #17a2b8; color: white;">
+                <div class="stats-icon">✔️</div>
+                <div class="stats-value" id="correctProducts">0</div>
+                <div class="stats-label">To'g'ri</div>
+                <div class="stats-sublabel">xatoliksiz</div>
+            </div>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
             <div class="stats-card" style="background: #6c757d; color: white;">
                 <div class="stats-icon">❓</div>
                 <div class="stats-value" id="uncheckedProducts">0</div>
@@ -282,10 +290,12 @@ function calculateStatistics() {
     const checkedCount = allProducts.filter(p => p.status !== 'unchecked').length;
     const uncheckedCount = totalProducts - checkedCount;
     const errorCount = allProducts.filter(p => p.difference !== 0 && p.difference !== null).length;
+    const correctCount = allProducts.filter(p => p.difference === 0 && p.status !== 'unchecked').length;
     const accuracy = totalProducts > 0 ? Math.round(((checkedCount - errorCount) / totalProducts) * 100) : 0;
     
     document.getElementById('totalProducts').textContent = totalProducts;
     document.getElementById('checkedProducts').textContent = checkedCount;
+    document.getElementById('correctProducts').textContent = correctCount;
     document.getElementById('uncheckedProducts').textContent = uncheckedCount;
     document.getElementById('errorProducts').textContent = errorCount;
     document.getElementById('accuracyPercent').textContent = accuracy + '%';
