@@ -536,8 +536,17 @@ async function saveQuantity() {
             allProducts = allProducts.filter(p => p.id !== currentProduct.id);
             displayProducts(allProducts);
             
-            updateCheckedTable();
-            updateCheckedCount();
+            // Qidiruv maydonini tozalash
+            document.getElementById('checkedSearch').value = '';
+            
+            // Filtrni 'all' ga o'rnatish (yangi qo'shilgan mahsulot ko'rinsin)
+            if (currentFilter !== 'all') {
+                filterChecked('all');
+            } else {
+                updateCheckedTable();
+                updateCheckedCount();
+            }
+            
             closeModal();
         } else {
             alert('Saqlashda xatolik: ' + data.message);
