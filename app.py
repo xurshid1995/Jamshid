@@ -2290,13 +2290,36 @@ def api_check_stock_active_sessions():
         
         sessions_data = []
         for session in sessions:
+            # Tekshirilgan mahsulotlar sonini olish
+            checked_items_count = StockCheckItem.query.filter_by(session_id=session.id).count()
+            
+            # Jami mahsulotlar sonini olish (location_type va location_id ga qarab)
+            if session.location_type == 'warehouse':
+                total_products = Stock.query.filter(
+                    Stock.warehouse_id == session.location_id,
+                    Stock.quantity > 0
+                ).count()
+            else:  # store
+                total_products = Stock.query.filter(
+                    Stock.store_id == session.location_id,
+                    Stock.quantity > 0
+                ).count()
+            
+            # Progress foizini hisoblash
+            progress_percent = 0
+            if total_products > 0:
+                progress_percent = round((checked_items_count / total_products) * 100, 1)
+            
             sessions_data.append({
                 'id': session.id,
                 'location_name': session.location_name,
                 'location_type': session.location_type,
                 'user_name': session.user.username if session.user else 'N/A',
                 'started_at': session.started_at.strftime('%d.%m.%Y %H:%M') if session.started_at else '',
-                'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else ''
+                'updated_at': session.updated_at.strftime('%d.%m.%Y %H:%M') if session.updated_at else '',
+                'checked_items': checked_items_count,
+                'total_products': total_products,
+                'progress_percent': progress_percent
             })
         
         return jsonify({
