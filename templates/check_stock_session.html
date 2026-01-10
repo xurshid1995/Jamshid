@@ -6,11 +6,19 @@
 <style>
     .check-stock-grid {
         display: grid;
-        grid-template-columns: 550px 830px;
+        grid-template-columns: 520px 580px;
         gap: 20px;
         justify-content: center;
         padding: 20px;
         align-items: start;
+    }
+    
+    .check-stock-grid > div:first-child {
+        width: 520px;
+    }
+    
+    .check-stock-grid > div:nth-child(2) {
+        width: 580px;
     }
     
     .check-stock-box {
@@ -29,14 +37,16 @@
         overflow-x: auto;
     }
     
-    @media (max-width: 1400px) {
+    @media (max-width: 1200px) {
         .check-stock-grid {
             grid-template-columns: 1fr !important;
-            max-width: 830px;
+            max-width: 580px;
             margin: 0 auto;
         }
         
-        .check-stock-box {
+        .check-stock-box,
+        .check-stock-grid > div:first-child,
+        .check-stock-grid > div:nth-child(2) {
             width: 100% !important;
         }
     }
@@ -97,7 +107,7 @@
             </div>
 
             <div class="table-wrapper-check">
-                <table style="width: 510px; min-width: 510px; border-collapse: collapse;">
+                <table style="width: 500px; min-width: 500px; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
                             <th style="width: 280px; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; font-size: 13px;">Mahsulot</th>
@@ -149,7 +159,7 @@
             </div>
 
             <div class="table-wrapper-check">
-                <table style="width: 790px; min-width: 790px; border-collapse: collapse;">
+                <table style="width: 560px; min-width: 560px; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
                             <th style="width: 350px; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; font-size: 13px;">Mahsulot nomi</th>

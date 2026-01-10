@@ -25,10 +25,10 @@
         font-size: 24px;
     }
 
-    /* Ikkita layout uchun grid */
+    /* Ikkita layout uchun grid - optimized 1120px */
     .transfer-layouts {
         display: grid;
-        grid-template-columns: 665px 665px;
+        grid-template-columns: 520px 580px;
         gap: 20px;
         justify-content: center;
         padding: 20px;
@@ -40,8 +40,15 @@
         border-radius: 8px;
         padding: 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        width: 665px;
         box-sizing: border-box;
+    }
+    
+    .transfer-layouts > div:first-child {
+        width: 520px;
+    }
+    
+    .transfer-layouts > div:nth-child(2) {
+        width: 580px;
     }
 
     .layout-header {
@@ -92,8 +99,8 @@
     }
 
     .transfer-product-table {
-        width: 625px !important; /* 365 + 100 + 85 + 75 = 625px */
-        min-width: 625px !important;
+        width: 500px; /* Optimized */
+        min-width: 500px;
         border-collapse: collapse;
     }
 
@@ -257,11 +264,17 @@
     }
 
     /* Responsive */
-    @media (max-width: 1400px) {
+    @media (max-width: 1200px) {
         .transfer-layouts {
             grid-template-columns: 1fr;
-            max-width: 665px;
+            max-width: 580px;
             margin: 0 auto;
+        }
+        
+        .transfer-layout,
+        .transfer-layouts > div:first-child,
+        .transfer-layouts > div:nth-child(2) {
+            width: 100% !important;
         }
     }
 

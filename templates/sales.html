@@ -28,10 +28,10 @@
         font-size: 24px;
     }
     
-    /* Sales grid layout */
+    /* Sales grid layout - optimized 1120px */
     .sales-grid {
         display: grid;
-        grid-template-columns: 665px 665px;
+        grid-template-columns: 520px 580px;
         gap: 20px;
         justify-content: center;
         padding: 20px;
@@ -42,8 +42,15 @@
     
     /* Layout boxes */
     .sales-layout-box {
-        width: 665px;
         max-width: 100%;
+    }
+    
+    .sales-grid > div:first-child {
+        width: 520px;
+    }
+    
+    .sales-grid > div:nth-child(2) {
+        width: 580px;
     }
     
     .table-wrapper {
@@ -52,14 +59,16 @@
     }
     
     /* Responsive - kichik ekranlar uchun vertikal layout */
-    @media (max-width: 1400px) {
+    @media (max-width: 1200px) {
         .sales-grid {
             grid-template-columns: 1fr !important;
-            max-width: 665px;
+            max-width: 580px;
             margin: 0 auto;
         }
         
-        .sales-layout-box {
+        .sales-layout-box,
+        .sales-grid > div:first-child,
+        .sales-grid > div:nth-child(2) {
             width: 100% !important;
         }
     }
@@ -159,7 +168,7 @@
             
             <!-- Mahsulotlar jadvali -->
             <div class="table-wrapper" style="overflow-x: auto;">
-                <table class="sales-product-table" style="width: 620px; min-width: 620px; border-collapse: collapse; table-layout: fixed;">
+                <table class="sales-product-table" style="width: 500px; min-width: 500px; border-collapse: collapse; table-layout: fixed;">
                     <thead>
                         <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                             <th style="padding: 10px 8px; text-align: left; font-size: 15px; font-weight: 600; color: #495057; width: 320px; box-sizing: border-box;">Mahsulot</th>
@@ -189,7 +198,7 @@
             </div>
             <div id="cartContainer">
                 <div class="table-wrapper" style="overflow-x: auto;">
-                    <table class="cart-table" style="width: 620px; min-width: 620px; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed;">
+                    <table class="cart-table" style="width: 560px; min-width: 560px; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed;">
                         <thead>
                             <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                                 <th style="padding: 8px 5px; text-align: left; font-size: 15px; font-weight: 600; color: #495057; width: 312px;">Mahsulot</th>
