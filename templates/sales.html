@@ -724,8 +724,26 @@
         const modal = document.getElementById('barcodeScannerModal');
         const statusDiv = document.getElementById('scannerStatus');
         
+        // HTTPS tekshiruvi
+        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            statusDiv.textContent = '⚠️ Kamera faqat HTTPS orqali ishlaydi. HTTP da ishlamaydi.';
+            statusDiv.style.color = '#dc3545';
+            alert('⚠️ Kamera skaner faqat HTTPS protokolida ishlaydi!\n\nSaytga HTTPS orqali kiring yoki barcodeni qo\'lda kiriting.');
+            return;
+        }
+        
+        // getUserMedia tekshiruvi
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            statusDiv.textContent = '⚠️ Brauzer kamerani qo\'llab-quvvatlamaydi';
+            statusDiv.style.color = '#dc3545';
+            alert('⚠️ Sizning brauzeringiz kamerani qo\'llab-quvvatlamaydi!\n\nBarcodeni qo\'lda kiriting.');
+            return;
+        }
+        
         modal.style.display = 'flex';
         scannerActive = true;
+        statusDiv.textContent = '🔄 Kamera ishga tushirilmoqda...';
+        statusDiv.style.color = '#0c5460';
         
         Quagga.init({
             inputStream: {
@@ -754,8 +772,23 @@
         }, function(err) {
             if (err) {
                 console.error('❌ Scanner xatosi:', err);
-                statusDiv.textContent = '❌ Kamerani ishga tushirishda xatolik: ' + err.message;
+                let errorMsg = '❌ Kamera xatosi: ';
+                
+                if (err.name === 'NotAllowedError' || err.message.includes('Permission denied')) {
+                    errorMsg += 'Kamera ruxsati berilmadi. Brauzer sozlamalaridan ruxsat bering.';
+                } else if (err.message.includes('getUserMedia')) {
+                    errorMsg += 'Kamera APIsi mavjud emas. HTTPS ishlatilayotganligini tekshiring.';
+                } else if (err.message.includes('NotFoundError')) {
+                    errorMsg += 'Kamera topilmadi. Qurilmangizda kamera mavjudligini tekshiring.';
+                } else {
+                    errorMsg += err.message || 'Noma\'lum xato';
+                }
+                
+                statusDiv.textContent = errorMsg;
                 statusDiv.style.color = '#dc3545';
+                
+                alert(errorMsg);
+                stopBarcodeScanner();
                 return;
             }
             console.log('✅ Scanner ishga tushdi');
