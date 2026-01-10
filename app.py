@@ -2461,6 +2461,26 @@ def check_stock_session(session_id):
         abort(404)
 
 
+@app.route('/check_stock/view/<int:session_id>')
+@role_required('admin', 'kassir', 'sotuvchi')
+def check_stock_view(session_id):
+    """Tugatilgan tekshiruv tafsilotlarini ko'rish"""
+    current_user = get_current_user()
+    if not current_user:
+        return redirect(url_for('login'))
+
+    try:
+        session = StockCheckSession.query.get(session_id)
+        if not session:
+            flash('Tekshiruv sessiyasi topilmadi', 'error')
+            return redirect(url_for('check_stock'))
+        
+        return render_template('check_stock_view.html', session=session)
+    except Exception as e:
+        logger.error(f"Error loading check stock view: {e}")
+        abort(404)
+
+
 @app.route('/api/check_stock/search')
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_check_stock_search():
@@ -2738,6 +2758,109 @@ def api_check_stock_delete_session():
 
         # Sessiya bilan bog'liq itemlarni o'chirish
         StockCheckItem.query.filter_by(session_id=session_id).delete()
+        
+        # Sessiyani o'chirish
+        db.session.delete(session)
+        db.session.commit()
+        
+        logger.info(f"Check stock session deleted: session_id={session_id}, deleted_by={current_user.username}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tekshiruv muvaffaqiyatli o\'chirildi'
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting check stock session: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/check_stock/session_items/<int:session_id>')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_session_items(session_id):
+    """Sessiya bo'yicha tekshirilgan mahsulotlarni olish"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        items = StockCheckItem.query.filter_by(session_id=session_id).all()
+        
+        items_data = []
+        for item in items:
+            items_data.append({
+                'id': item.id,
+                'product_id': item.product_id,
+                'product_name': item.product_name,
+                'system_quantity': float(item.system_quantity),
+                'actual_quantity': float(item.actual_quantity) if item.actual_quantity is not None else None,
+                'difference': float(item.difference) if item.difference is not None else None,
+                'status': item.status,
+                'price': float(item.product.price_usd) if item.product and item.product.price_usd else 0
+            })
+        
+        return jsonify({
+            'success': True,
+            'items': items_data
+        })
+    except Exception as e:
+        logger.error(f"Error getting session items: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/check_stock/all_location_products')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_check_stock_all_location_products():
+    """Joylashuvdagi barcha mahsulotlarni olish (tekshirilgan va tekshirilmagan)"""
+    try:
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        location_type = request.args.get('location_type')
+        location_id = int(request.args.get('location_id'))
+
+        if not location_type or not location_id:
+            return jsonify({'success': False, 'message': 'Joylashuv parametrlari to\'liq emas'}), 400
+
+        products_data = []
+        
+        if location_type == 'store':
+            stocks = db.session.query(StoreStock, Product)\
+                .join(Product, StoreStock.product_id == Product.id)\
+                .filter(StoreStock.store_id == location_id)\
+                .all()
+            
+            for stock, product in stocks:
+                products_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'barcode': product.barcode,
+                    'price': float(product.price_usd) if product.price_usd else 0,
+                    'system_quantity': float(stock.quantity)
+                })
+        else:
+            stocks = db.session.query(WarehouseStock, Product)\
+                .join(Product, WarehouseStock.product_id == Product.id)\
+                .filter(WarehouseStock.warehouse_id == location_id)\
+                .all()
+            
+            for stock, product in stocks:
+                products_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'barcode': product.barcode,
+                    'price': float(product.price_usd) if product.price_usd else 0,
+                    'system_quantity': float(stock.quantity)
+                })
+
+        return jsonify({
+            'success': True,
+            'products': products_data
+        })
+    except Exception as e:
+        logger.error(f"Error getting all location products: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
         
         # Sessiyani o'chirish
         db.session.delete(session)

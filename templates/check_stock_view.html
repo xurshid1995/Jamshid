@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Tekshiruv tafsilotlari{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header-view {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .page-header-view h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+    }
+
+    .stats-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .stats-icon {
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+
+    .stats-value {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .stats-label {
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    .stats-sublabel {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 2px;
+    }
+
+    .view-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .table-wrapper-view {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow-x: auto;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border-radius: 25px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: opacity 0.3s;
+    }
+
+    .filter-btn:hover {
+        opacity: 0.8 !important;
+    }
+
+    .badge-count {
+        background: rgba(255,255,255,0.3);
+        padding: 2px 8px;
+        border-radius: 50px;
+        margin-left: 4px;
+        min-width: 25px;
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Sahifa sarlavhasi -->
+    <div class="page-header-view">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2><i class="fas fa-clipboard-check"></i> Tekshiruv tafsilotlari</h2>
+                <div style="margin-top: 10px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px;">
+                    <div><strong>Sana va vaqt:</strong> {{ session.started_at.strftime('%d.%m.%Y - %H:%M') }}</div>
+                    <div><strong>Boshlagan:</strong> {{ session.started_user.first_name }} {{ session.started_user.last_name }}</div>
+                    {% if session.completed_user %}
+                    <div><strong>Tugatgan:</strong> {{ session.completed_user.first_name }} {{ session.completed_user.last_name }}</div>
+                    {% endif %}
+                    <div><strong>Joylashuv:</strong> {{ '🏪' if session.location_type == 'store' else '📦' }} {{ session.location_name }}</div>
+                </div>
+            </div>
+            <div>
+                <a href="/check_stock" class="btn btn-light btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Orqaga qaytish
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistika -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-2">
+            <div class="stats-card" style="background: #007bff; color: white;">
+                <div class="stats-icon">📦</div>
+                <div class="stats-value" id="totalProducts">0</div>
+                <div class="stats-label">Jami mahsulotlar</div>
+                <div class="stats-sublabel">dona</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card" style="background: #28a745; color: white;">
+                <div class="stats-icon">✅</div>
+                <div class="stats-value" id="checkedProducts">0</div>
+                <div class="stats-label">Tekshirildi</div>
+                <div class="stats-sublabel">dona</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card" style="background: #6c757d; color: white;">
+                <div class="stats-icon">❓</div>
+                <div class="stats-value" id="uncheckedProducts">0</div>
+                <div class="stats-label">Tekshirilmagan</div>
+                <div class="stats-sublabel">dona</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card" style="background: #dc3545; color: white;">
+                <div class="stats-icon">⚠️</div>
+                <div class="stats-value" id="errorProducts">0</div>
+                <div class="stats-label">Xatoliklar</div>
+                <div class="stats-sublabel">ta xatolik</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card" style="background: #ffc107; color: white;">
+                <div class="stats-icon">⚡</div>
+                <div class="stats-value" id="accuracyPercent">0%</div>
+                <div class="stats-label">Aniqlik</div>
+                <div class="stats-sublabel">foiz</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mahsulotlar jadvali -->
+    <div class="view-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #333;"><i class="fas fa-list"></i> Barcha mahsulotlar</h4>
+            <div style="color: #666;">
+                <span id="tableCount" style="font-weight: 600; font-size: 18px; color: #007bff;">0</span> ta mahsulot
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            <input type="text" 
+                   id="searchInput" 
+                   placeholder="🔍 Mahsulot qidirish..." 
+                   style="flex: 1; min-width: 250px; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 25px; font-size: 14px;">
+            
+            <button onclick="filterProducts('all')" id="filterAll" class="filter-btn" style="background: #007bff; color: white;">
+                📊 Barchasi <span id="allCount" class="badge-count">0</span>
+            </button>
+            <button onclick="filterProducts('checked')" id="filterChecked" class="filter-btn" style="background: #28a745; color: white;">
+                ✅ Tekshirilgan <span id="checkedCount" class="badge-count">0</span>
+            </button>
+            <button onclick="filterProducts('unchecked')" id="filterUnchecked" class="filter-btn" style="background: #6c757d; color: white;">
+                ❓ Tekshirilmagan <span id="uncheckedCount" class="badge-count">0</span>
+            </button>
+            <button onclick="filterProducts('error')" id="filterError" class="filter-btn" style="background: #dc3545; color: white;">
+                ⚠️ Xatoliklar <span id="errorCount" class="badge-count">0</span>
+            </button>
+        </div>
+
+        <div class="table-wrapper-view">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                    <tr>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600;">№</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600;">Mahsulot nomi</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600;">Narx</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600;">Tizimda</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600;">Haqiqiy</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600;">Farq</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600;">Holat</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px 20px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">📋</div>
+                            <div>Ma'lumotlar yuklanmoqda...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const sessionId = {{ session.id }};
+const locationType = '{{ session.location_type }}';
+const locationId = {{ session.location_id }};
+
+let allProducts = [];
+let checkedProducts = [];
+let currentFilter = 'all';
+
+// Sahifa yuklanganda
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadData();
+    
+    // Qidiruv input
+    document.getElementById('searchInput').addEventListener('input', function() {
+        filterAndDisplay();
+    });
+    
+    // Boshlang'ich filtr
+    document.getElementById('filterAll').style.opacity = '1';
+    document.getElementById('filterChecked').style.opacity = '0.6';
+    document.getElementById('filterUnchecked').style.opacity = '0.6';
+    document.getElementById('filterError').style.opacity = '0.6';
+});
+
+// Ma'lumotlarni yuklash
+async function loadData() {
+    try {
+        // Tekshirilgan mahsulotlarni olish
+        const checkedResponse = await fetch(`/api/check_stock/session_items/${sessionId}`);
+        const checkedData = await checkedResponse.json();
+        
+        if (checkedData.success) {
+            checkedProducts = checkedData.items || [];
+        }
+        
+        // Barcha mahsulotlarni olish
+        const allResponse = await fetch(`/api/check_stock/all_location_products?location_type=${locationType}&location_id=${locationId}`);
+        const allData = await allResponse.json();
+        
+        if (allData.success) {
+            allProducts = allData.products || [];
+            
+            // Tekshirilgan mahsulotlarni allProducts bilan birlashtirish
+            allProducts = allProducts.map(product => {
+                const checked = checkedProducts.find(c => c.product_id === product.id);
+                return {
+                    ...product,
+                    actual_quantity: checked ? checked.actual_quantity : null,
+                    difference: checked ? checked.difference : null,
+                    status: checked ? checked.status : 'unchecked'
+                };
+            });
+        }
+        
+        calculateStatistics();
+        filterAndDisplay();
+    } catch (error) {
+        console.error('Ma\'lumotlarni yuklashda xatolik:', error);
+    }
+}
+
+// Statistikani hisoblash
+function calculateStatistics() {
+    const totalProducts = allProducts.length;
+    const checkedCount = allProducts.filter(p => p.status !== 'unchecked').length;
+    const uncheckedCount = totalProducts - checkedCount;
+    const errorCount = allProducts.filter(p => p.difference !== 0 && p.difference !== null).length;
+    const accuracy = totalProducts > 0 ? Math.round(((checkedCount - errorCount) / totalProducts) * 100) : 0;
+    
+    document.getElementById('totalProducts').textContent = totalProducts;
+    document.getElementById('checkedProducts').textContent = checkedCount;
+    document.getElementById('uncheckedProducts').textContent = uncheckedCount;
+    document.getElementById('errorProducts').textContent = errorCount;
+    document.getElementById('accuracyPercent').textContent = accuracy + '%';
+}
+
+// Filtr
+function filterProducts(type) {
+    currentFilter = type;
+    
+    // Reset opacity
+    document.getElementById('filterAll').style.opacity = '0.6';
+    document.getElementById('filterChecked').style.opacity = '0.6';
+    document.getElementById('filterUnchecked').style.opacity = '0.6';
+    document.getElementById('filterError').style.opacity = '0.6';
+    
+    // Set active
+    document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}`).style.opacity = '1';
+    
+    filterAndDisplay();
+}
+
+// Filtr va qidiruv
+function filterAndDisplay() {
+    const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+    
+    let filtered = [...allProducts];
+    
+    // Filtr
+    if (currentFilter === 'checked') {
+        filtered = filtered.filter(p => p.status !== 'unchecked');
+    } else if (currentFilter === 'unchecked') {
+        filtered = filtered.filter(p => p.status === 'unchecked');
+    } else if (currentFilter === 'error') {
+        filtered = filtered.filter(p => p.difference !== 0 && p.difference !== null);
+    }
+    
+    // Qidiruv
+    if (searchQuery) {
+        filtered = filtered.filter(p => 
+            p.name.toLowerCase().includes(searchQuery) ||
+            (p.barcode && p.barcode.toLowerCase().includes(searchQuery))
+        );
+    }
+    
+    // Filter counts
+    const allCount = allProducts.length;
+    const checkedCount = allProducts.filter(p => p.status !== 'unchecked').length;
+    const uncheckedCount = allProducts.filter(p => p.status === 'unchecked').length;
+    const errorCount = allProducts.filter(p => p.difference !== 0 && p.difference !== null).length;
+    
+    document.getElementById('allCount').textContent = allCount;
+    document.getElementById('checkedCount').textContent = checkedCount;
+    document.getElementById('uncheckedCount').textContent = uncheckedCount;
+    document.getElementById('errorCount').textContent = errorCount;
+    document.getElementById('tableCount').textContent = filtered.length;
+    
+    displayTable(filtered);
+}
+
+// Jadvalni ko'rsatish
+function displayTable(products) {
+    const tbody = document.getElementById('productsTableBody');
+    
+    if (products.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px 20px; color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">🔍</div>
+                    <div>Mahsulot topilmadi</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    products.forEach((product, index) => {
+        const row = document.createElement('tr');
+        
+        // Rang
+        let diffColor = '#6c757d';
+        if (product.difference > 0) diffColor = '#28a745';
+        if (product.difference < 0) diffColor = '#dc3545';
+        
+        // Badge
+        let statusBadge = '<span style="background: #6c757d; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Tekshirilmagan</span>';
+        if (product.status !== 'unchecked') {
+            if (product.difference > 0) {
+                statusBadge = '<span style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Ortiqcha</span>';
+            } else if (product.difference < 0) {
+                statusBadge = '<span style="background: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Kamomad</span>';
+            } else {
+                statusBadge = '<span style="background: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Normal</span>';
+            }
+        }
+        
+        row.innerHTML = `
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0;">${index + 1}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0;">${product.name}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                ${product.price ? product.price.toLocaleString() + ' $' : '-'}
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                ${product.system_quantity || 0}
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                ${product.actual_quantity !== null ? product.actual_quantity : '-'}
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; color: ${diffColor}; font-weight: 600;">
+                ${product.difference !== null ? (product.difference > 0 ? '+' : '') + product.difference : '-'}
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                ${statusBadge}
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+</script>
+{% endblock %}
