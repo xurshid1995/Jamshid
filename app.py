@@ -2796,7 +2796,7 @@ def api_check_stock_session_items(session_id):
                 'actual_quantity': float(item.actual_quantity) if item.actual_quantity is not None else None,
                 'difference': float(item.difference) if item.difference is not None else None,
                 'status': item.status,
-                'price': float(item.product.price_usd) if item.product and item.product.price_usd else 0
+                'price': float(item.product.sell_price) if item.product and item.product.sell_price else 0
             })
         
         return jsonify({
@@ -2836,7 +2836,7 @@ def api_check_stock_all_location_products():
                     'id': product.id,
                     'name': product.name,
                     'barcode': product.barcode,
-                    'price': float(product.price_usd) if product.price_usd else 0,
+                    'price': float(product.sell_price) if product.sell_price else 0,
                     'system_quantity': float(stock.quantity)
                 })
         else:
@@ -2850,7 +2850,7 @@ def api_check_stock_all_location_products():
                     'id': product.id,
                     'name': product.name,
                     'barcode': product.barcode,
-                    'price': float(product.price_usd) if product.price_usd else 0,
+                    'price': float(product.sell_price) if product.sell_price else 0,
                     'system_quantity': float(stock.quantity)
                 })
 
