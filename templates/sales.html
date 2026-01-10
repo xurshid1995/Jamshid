@@ -8,6 +8,11 @@
         padding: 20px;
         background: #f8f9fa;
         min-height: 100vh;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .page-header {
@@ -24,6 +29,38 @@
         color: #333;
         font-size: 24px;
     }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .sales-container {
+            padding: 10px;
+        }
+        
+        .sales-grid {
+            grid-template-columns: 1fr !important;
+            padding: 10px !important;
+            gap: 15px !important;
+        }
+        
+        .sales-grid > div {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .page-header h1 {
+            font-size: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .sales-container {
+            padding: 5px;
+        }
+        
+        .page-header h1 {
+            font-size: 18px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -34,7 +71,7 @@
     </div>
 
     <!-- Ikkita 665px kenglikda layout -->
-    <div style="display: grid; grid-template-columns: 665px 665px; gap: 20px; justify-content: center; padding: 20px; align-items: start;">
+    <div class="sales-grid" style="display: grid; grid-template-columns: 665px 665px; gap: 20px; justify-content: center; padding: 20px; align-items: start; position: relative; z-index: 1; max-width: 100%; box-sizing: border-box;">
         <!-- Birinchi layout -->
         <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 665px; box-sizing: border-box;">
             <!-- Joylashuv va Mijoz tanlash -->
