@@ -51,6 +51,19 @@
         max-width: 100%;
     }
     
+    /* Responsive - kichik ekranlar uchun vertikal layout */
+    @media (max-width: 1400px) {
+        .sales-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 665px;
+            margin: 0 auto;
+        }
+        
+        .sales-layout-box {
+            width: 100% !important;
+        }
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
         .sales-layout-box {
