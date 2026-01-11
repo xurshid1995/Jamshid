@@ -3227,6 +3227,17 @@
             
             console.log('✅ Savdo muvaffaqiyatli saqlandi:', result);
             
+            // Tahrirlash rejimida eski sahifaga qaytish
+            if (editingSaleId) {
+                // Tahrirlash rejimida pending savdoni o'chirmaslik kerak!
+                // Chunki savdo allaqachon paid/partial statusga o'zgartirilgan
+                alert('✅ Savdo muvaffaqiyatli tahrirlandi!');
+                console.log('🔄 Sales history sahifasiga qaytish...');
+                window.location.href = '/sales-history';
+                return; // Qolgan koddan chiqish
+            }
+            
+            // Faqat YANGI savdo yaratilganda pending savdoni o'chirish
             // Pending savdoni o'chirish (chunki yakunlandi) - STOK QAYTARMASDAN
             // Sabab: Frontend'da mahsulotlar korzinaga qo'shilganda stok allaqachon rezerv qilingan
             // Backend'da create_sale() ishlaganda stok yana ayirilmaydi (allaqachon rezerv qilingan)
@@ -3243,13 +3254,7 @@
                 }
             }
             
-            // Tahrirlash rejimida eski sahifaga qaytish
-            if (editingSaleId) {
-                alert('✅ Savdo muvaffaqiyatli tahrirlandi!');
-                console.log('🔄 Sales history sahifasiga qaytish...');
-                window.location.href = '/sales-history';
-            } else {
-                alert('✅ Savdo muvaffaqiyatli yakunlandi!');
+            alert('✅ Savdo muvaffaqiyatli yakunlandi!');
                 
                 // Savatni tozalash va modal yopish
                 cart = [];
