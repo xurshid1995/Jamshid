@@ -3960,8 +3960,7 @@ def api_paid_debts():
                 s.total_amount as total_amount,
                 COALESCE(s.cash_usd, 0) as cash_usd,
                 COALESCE(s.click_usd, 0) as click_usd,
-                COALESCE(s.terminal_usd, 0) as terminal_usd,
-                s.updated_by as received_by
+                COALESCE(s.terminal_usd, 0) as terminal_usd
             FROM sales s
             JOIN customers c ON s.customer_id = c.id
             WHERE s.payment_status = 'paid' 
@@ -3986,7 +3985,7 @@ def api_paid_debts():
                 'cash_usd': float(row.cash_usd),
                 'click_usd': float(row.click_usd),
                 'terminal_usd': float(row.terminal_usd),
-                'received_by': row.received_by or 'Unknown'
+                'received_by': 'System'  # Hozircha default qiymat
             })
 
         return jsonify({
