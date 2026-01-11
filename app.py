@@ -6805,8 +6805,8 @@ def create_sale():
             # Agar qarz bo'lsa - partial (qisman to'langan)
             final_payment_status = 'partial'
             logger.info(f"💳 Qarz aniqlandi: {debt_usd} USD, payment_status = 'partial'")
-        elif final_payment_status != 'pending':
-            # Agar qarz yo'q bo'lsa va pending bo'lmasa - paid
+        else:
+            # Agar qarz yo'q bo'lsa - to'liq to'langan (pending bo'lsa ham)
             final_payment_status = 'paid'
             logger.info(f"✅ To'liq to'langan, payment_status = 'paid'")
         
