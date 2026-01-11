@@ -397,14 +397,18 @@
     // Joylashuvlarni yuklash
     async function loadLocations() {
         try {
+            console.log('🔄 Joylashuvlarni yuklash boshlandi...');
             const response = await fetch('/api/locations');
             const locations = await response.json();
+            
+            console.log(`📍 API'dan ${locations.length} ta joylashuv olinadi:`, locations);
             
             const locationSelect = document.getElementById('locationSelect');
             locationSelect.innerHTML = '<option value="">Tanlang...</option>';
             
             // Foydalanuvchining default store_id'sini olish
             const userStoreId = {{ session.store_id if session.store_id else 'null' }};
+            console.log('👤 Foydalanuvchining default store ID:', userStoreId);
             
             locations.forEach(location => {
                 const option = document.createElement('option');
@@ -423,14 +427,15 @@
                 locationSelect.appendChild(option);
             });
             
-            console.log(`✅ ${locations.length} ta joylashuv yuklandi`);
+            console.log(`✅ ${locations.length} ta joylashuv yuklandi va select'ga qo'shildi`);
             
             // Agar joylashuv avtomatik tanlangan bo'lsa, mahsulotlarni yuklash
             if (userStoreId) {
+                console.log('📦 Mahsulotlar yuklanmoqda...');
                 await loadProducts();
             }
         } catch (error) {
-            console.error('Joylashuvlarni yuklashda xatolik:', error);
+            console.error('❌ Joylashuvlarni yuklashda xatolik:', error);
         }
     }
     
