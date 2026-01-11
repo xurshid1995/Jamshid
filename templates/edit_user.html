@@ -608,19 +608,49 @@
             // Savdo joylashuvlarini belgilash (currentUser.allowed_locations dan)
             if (currentUser.allowed_locations && Array.isArray(currentUser.allowed_locations)) {
                 console.log('🔄 Setting sales locations from allowed_locations:', currentUser.allowed_locations);
-                currentUser.allowed_locations.forEach(locationId => {
-                    // Store yoki warehouse ekanligini aniqlash
-                    const storeCheckbox = document.querySelector(`#salesLocationsList input[value="${locationId}"][data-type="store"]`);
-                    const warehouseCheckbox = document.querySelector(`#salesLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                currentUser.allowed_locations.forEach(location => {
+                    let locationId, locationType;
                     
-                    if (storeCheckbox) {
-                        storeCheckbox.checked = true;
-                        console.log('✅ Sales store location checked:', locationId);
-                    } else if (warehouseCheckbox) {
-                        warehouseCheckbox.checked = true;
-                        console.log('✅ Sales warehouse location checked:', locationId);
+                    // Eski format (int) yoki yangi format ({id, type}) ni qo'llab-quvvatlash
+                    if (typeof location === 'object' && location.id && location.type) {
+                        // Yangi format: {id: 1, type: 'store'}
+                        locationId = location.id;
+                        locationType = location.type;
+                        console.log('🆕 New format location:', locationId, locationType);
+                    } else if (typeof location === 'number') {
+                        // Eski format: 1, 2, 3...
+                        locationId = location;
+                        // Type'ni har ikkisidan ham izlaymiz
+                        console.log('🔢 Old format location ID:', locationId);
                     } else {
-                        console.log('❌ Sales location checkbox not found:', locationId);
+                        console.log('⚠️ Unknown location format:', location);
+                        return;
+                    }
+                    
+                    // Checkboxni topish
+                    if (locationType) {
+                        // Type ma'lum bo'lsa, to'g'ridan-to'g'ri topish
+                        const checkbox = document.querySelector(`#salesLocationsList input[value="${locationId}"][data-type="${locationType}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log(`✅ Sales ${locationType} location checked:`, locationId);
+                        } else {
+                            console.log('❌ Sales location checkbox not found:', locationId, locationType);
+                        }
+                    } else {
+                        // Type noma'lum bo'lsa, har ikkisidan ham izlash
+                        const storeCheckbox = document.querySelector(`#salesLocationsList input[value="${locationId}"][data-type="store"]`);
+                        const warehouseCheckbox = document.querySelector(`#salesLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                        
+                        if (storeCheckbox) {
+                            storeCheckbox.checked = true;
+                            console.log('✅ Sales store location checked:', locationId);
+                        } else if (warehouseCheckbox) {
+                            warehouseCheckbox.checked = true;
+                            console.log('✅ Sales warehouse location checked:', locationId);
+                        } else {
+                            console.log('❌ Sales location checkbox not found:', locationId);
+                        }
                     }
                 });
             }
@@ -635,34 +665,69 @@
             // Transfer joylashuvlarini belgilash
             if (currentUser.transfer_locations && Array.isArray(currentUser.transfer_locations)) {
                 console.log('🔄 Setting transfer locations:', currentUser.transfer_locations);
-                currentUser.transfer_locations.forEach(locationId => {
-                    // Store yoki warehouse ekanligini aniqlash
-                    const storeCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="store"]`);
-                    const warehouseCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                currentUser.transfer_locations.forEach(location => {
+                    let locationId, locationType;
                     
-                    if (storeCheckbox) {
-                        storeCheckbox.checked = true;
-                        console.log('✅ Transfer store location checked:', locationId);
-                    } else if (warehouseCheckbox) {
-                        warehouseCheckbox.checked = true;
-                        console.log('✅ Transfer warehouse location checked:', locationId);
+                    // Eski format (int) yoki yangi format ({id, type}) ni qo'llab-quvvatlash
+                    if (typeof location === 'object' && location.id && location.type) {
+                        locationId = location.id;
+                        locationType = location.type;
+                        console.log('🆕 Transfer new format location:', locationId, locationType);
+                    } else if (typeof location === 'number') {
+                        locationId = location;
+                        console.log('🔢 Transfer old format location ID:', locationId);
                     } else {
-                        console.log('❌ Transfer location checkbox not found:', locationId);
+                        console.log('⚠️ Unknown transfer location format:', location);
+                        return;
+                    }
+                    
+                    // Checkboxni topish
+                    if (locationType) {
+                        const checkbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="${locationType}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log(`✅ Transfer ${locationType} location checked:`, locationId);
+                        } else {
+                            console.log('❌ Transfer location checkbox not found:', locationId, locationType);
+                        }
+                    } else {
+                        const storeCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="store"]`);
+                        const warehouseCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                        
+                        if (storeCheckbox) {
+                            storeCheckbox.checked = true;
+                            console.log('✅ Transfer store location checked:', locationId);
+                        } else if (warehouseCheckbox) {
+                            warehouseCheckbox.checked = true;
+                            console.log('✅ Transfer warehouse location checked:', locationId);
+                        } else {
+                            console.log('❌ Transfer location checkbox not found:', locationId);
+                        }
                     }
                 });
             } else if (currentUser.allowed_locations && Array.isArray(currentUser.allowed_locations)) {
                 // Agar transfer_locations yo'q bo'lsa, allowed_locations'ni ishlatish
                 console.log('🔄 Using allowed_locations for transfer:', currentUser.allowed_locations);
-                currentUser.allowed_locations.forEach(locationId => {
-                    const storeCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="store"]`);
-                    const warehouseCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                currentUser.allowed_locations.forEach(location => {
+                    let locationId, locationType;
                     
-                    if (storeCheckbox) {
-                        storeCheckbox.checked = true;
-                        console.log('✅ Transfer store location checked (from allowed):', locationId);
-                    } else if (warehouseCheckbox) {
-                        warehouseCheckbox.checked = true;
-                        console.log('✅ Transfer warehouse location checked (from allowed):', locationId);
+                    if (typeof location === 'object' && location.id && location.type) {
+                        locationId = location.id;
+                        locationType = location.type;
+                    } else if (typeof location === 'number') {
+                        locationId = location;
+                    } else {
+                        return;
+                    }
+                    
+                    if (locationType) {
+                        const checkbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="${locationType}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    } else {
+                        const storeCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="store"]`);
+                        const warehouseCheckbox = document.querySelector(`#transferLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                        if (storeCheckbox) storeCheckbox.checked = true;
+                        else if (warehouseCheckbox) warehouseCheckbox.checked = true;
                     }
                 });
             }
@@ -677,18 +742,44 @@
             // Stock check joylashuvlarini belgilash - allowed_locations dan olamiz
             if (currentUser.allowed_locations && Array.isArray(currentUser.allowed_locations)) {
                 console.log('🔄 Setting stock check locations from allowed_locations:', currentUser.allowed_locations);
-                currentUser.allowed_locations.forEach(locationId => {
-                    const storeCheckbox = document.querySelector(`#stockCheckLocationsList input[value="${locationId}"][data-type="store"]`);
-                    const warehouseCheckbox = document.querySelector(`#stockCheckLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                currentUser.allowed_locations.forEach(location => {
+                    let locationId, locationType;
                     
-                    if (storeCheckbox) {
-                        storeCheckbox.checked = true;
-                        console.log('✅ Stock check store location checked:', locationId);
-                    } else if (warehouseCheckbox) {
-                        warehouseCheckbox.checked = true;
-                        console.log('✅ Stock check warehouse location checked:', locationId);
+                    // Eski format (int) yoki yangi format ({id, type}) ni qo'llab-quvvatlash
+                    if (typeof location === 'object' && location.id && location.type) {
+                        locationId = location.id;
+                        locationType = location.type;
+                        console.log('🆕 Stock check new format location:', locationId, locationType);
+                    } else if (typeof location === 'number') {
+                        locationId = location;
+                        console.log('🔢 Stock check old format location ID:', locationId);
                     } else {
-                        console.log('❌ Stock check location checkbox not found:', locationId);
+                        console.log('⚠️ Unknown stock check location format:', location);
+                        return;
+                    }
+                    
+                    // Checkboxni topish
+                    if (locationType) {
+                        const checkbox = document.querySelector(`#stockCheckLocationsList input[value="${locationId}"][data-type="${locationType}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log(`✅ Stock check ${locationType} location checked:`, locationId);
+                        } else {
+                            console.log('❌ Stock check location checkbox not found:', locationId, locationType);
+                        }
+                    } else {
+                        const storeCheckbox = document.querySelector(`#stockCheckLocationsList input[value="${locationId}"][data-type="store"]`);
+                        const warehouseCheckbox = document.querySelector(`#stockCheckLocationsList input[value="${locationId}"][data-type="warehouse"]`);
+                        
+                        if (storeCheckbox) {
+                            storeCheckbox.checked = true;
+                            console.log('✅ Stock check store location checked:', locationId);
+                        } else if (warehouseCheckbox) {
+                            warehouseCheckbox.checked = true;
+                            console.log('✅ Stock check warehouse location checked:', locationId);
+                        } else {
+                            console.log('❌ Stock check location checkbox not found:', locationId);
+                        }
                     }
                 });
             }
