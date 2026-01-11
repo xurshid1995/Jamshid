@@ -227,6 +227,12 @@ const sessionId = {{ session.id }};
 const locationType = '{{ session.location_type }}';
 const locationId = {{ session.location_id }};
 
+// Session debugging - development mode
+console.log('🔍 Check Stock View Debug Info:');
+console.log('Session ID:', sessionId);
+console.log('Location Type:', locationType);
+console.log('Location ID:', locationId);
+
 let allProducts = [];
 let checkedProducts = [];
 let currentFilter = 'all';
