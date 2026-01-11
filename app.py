@@ -881,6 +881,7 @@ class Sale(db.Model):
     created_by = db.Column(db.String(100), default='System')
     created_at = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     updated_at = db.Column(db.DateTime, default=lambda: get_tashkent_time(), onupdate=lambda: get_tashkent_time())
+    updated_by = db.Column(db.String(100))  # Qarz to'lovini qabul qilgan foydalanuvchi
 
     # Relationships
     customer = db.relationship('Customer', backref='sales')
@@ -2107,6 +2108,16 @@ def debts():
         icon='💰')
 
 
+@app.route('/paid-debts-history')
+@role_required('admin', 'kassir', 'sotuvchi')
+def paid_debts_history():
+    """Mijozlarni qarz to'lash tarixi sahifasi"""
+    return render_template(
+        'paid_debts_history.html',
+        page_title='Qarz to\'lash tarixi',
+        icon='📜')
+
+
 @app.route('/debts/customer/<int:customer_id>')
 @role_required('admin', 'kassir', 'sotuvchi')
 def customer_debt_detail(customer_id):
@@ -2116,6 +2127,16 @@ def customer_debt_detail(customer_id):
         customer_id=customer_id,
         page_title='Qarz ma\'lumotlari',
         icon='💰')
+
+
+@app.route('/debts/payment-history')
+@role_required('admin', 'kassir', 'sotuvchi')
+def debt_payment_history():
+    """Qarz to'lash tarixi sahifasi"""
+    return render_template(
+        'debt_payment_history.html',
+        page_title='Qarz to\'lash tarixi',
+        icon='📜')
 
 
 @app.route('/customer/<int:customer_id>')
@@ -3933,13 +3954,14 @@ def api_paid_debts():
         query = text("""
             SELECT 
                 s.id as sale_id,
+                s.updated_at as payment_date,
                 s.created_at as sale_date,
-                s.sale_date as original_sale_date,
                 c.name as customer_name,
                 s.total_amount as total_amount,
                 COALESCE(s.cash_usd, 0) as cash_usd,
                 COALESCE(s.click_usd, 0) as click_usd,
-                COALESCE(s.terminal_usd, 0) as terminal_usd
+                COALESCE(s.terminal_usd, 0) as terminal_usd,
+                s.updated_by as received_by
             FROM sales s
             JOIN customers c ON s.customer_id = c.id
             WHERE s.payment_status = 'paid' 
@@ -3948,7 +3970,7 @@ def api_paid_debts():
                 AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
                 AND s.updated_at > s.created_at + INTERVAL '1 second'  -- Yangilangan (qarz to'lash orqali to'langan)
             ORDER BY s.updated_at DESC
-            LIMIT 100
+            LIMIT 200
         """)
 
         result = db.session.execute(query)
@@ -3957,12 +3979,14 @@ def api_paid_debts():
         for row in result:
             paid_debts.append({
                 'sale_id': row.sale_id,
+                'payment_date': row.payment_date.strftime('%Y-%m-%d %H:%M'),
                 'sale_date': row.sale_date.strftime('%Y-%m-%d %H:%M'),
                 'customer_name': row.customer_name,
                 'total_amount': float(row.total_amount),
                 'cash_usd': float(row.cash_usd),
                 'click_usd': float(row.click_usd),
-                'terminal_usd': float(row.terminal_usd)
+                'terminal_usd': float(row.terminal_usd),
+                'received_by': row.received_by or 'Unknown'
             })
 
         return jsonify({
@@ -4139,8 +4163,9 @@ def api_debt_payment():
             if sale.debt_usd == 0:
                 sale.payment_status = 'paid'
             
-            # updated_at ni yangilash (qarz to'lash belgisi)
+            # updated_at va updated_by ni yangilash (qarz to'lash belgisi)
             sale.updated_at = get_tashkent_time()
+            sale.updated_by = session.get('user_name', 'Unknown')
 
             remaining_payment -= total_paid
             updated_sales.append(sale.id)

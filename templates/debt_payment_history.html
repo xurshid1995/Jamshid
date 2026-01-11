@@ -1,0 +1,210 @@
+{% extends "base_with_sidebar.html" %}
+
+{% block title %}Qarz to'lash tarixi - Dokon Boshqaruv Tizimi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        padding: 20px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #333;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .back-btn {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .back-btn:hover {
+        background: #5a6268;
+    }
+
+    .history-table-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .history-table thead {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .history-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .history-table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.2s;
+    }
+
+    .history-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .history-table td {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-size: 16px;
+    }
+
+    .amount {
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    .payment-type {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .payment-cash { background: #d4edda; color: #155724; }
+    .payment-click { background: #cce5ff; color: #004085; }
+    .payment-terminal { background: #fff3cd; color: #856404; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="page-header">
+        <h1>📜 Mijozlarni qarz to'lash tarixi</h1>
+        <a href="/debts" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Orqaga
+        </a>
+    </div>
+
+    <div class="history-table-container">
+        <h2 style="margin-bottom: 15px; color: #28a745; display: flex; align-items: center; gap: 10px;">
+            <span>✅ To'langan qarzlar ro'yxati</span>
+            <span id="totalCount" style="font-size: 16px; font-weight: normal; color: #6c757d;"></span>
+        </h2>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>📅 Sana</th>
+                    <th>👤 Mijoz</th>
+                    <th>💵 Umumiy summa (USD)</th>
+                    <th>💵 Umumiy summa (UZS)</th>
+                    <th>💰 Naqd (USD)</th>
+                    <th>💳 Click (USD)</th>
+                    <th>🏦 Terminal (USD)</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <tr>
+                    <td colspan="8" class="no-data">⏳ Yuklanmoqda...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let exchangeRate = 13000;
+
+    // Sahifa yuklanganda ma'lumotlarni olish
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPaymentHistory();
+    });
+
+    // To'lov tarixini yuklash
+    async function loadPaymentHistory() {
+        try {
+            const response = await fetch('/api/debts/paid');
+            if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
+            
+            const data = await response.json();
+            
+            // Valyuta kursini olish
+            const rateResponse = await fetch('/api/currency-rate');
+            const rateData = await rateResponse.json();
+            exchangeRate = rateData.rate?.rate || 13000;
+            
+            renderHistoryTable(data.paid_debts || []);
+        } catch (error) {
+            console.error('Xatolik:', error);
+            document.getElementById('historyTableBody').innerHTML = 
+                '<tr><td colspan="8" class="no-data">❌ Ma\'lumotlarni yuklashda xatolik</td></tr>';
+        }
+    }
+
+    // Jadvalga ma'lumotlarni chiqarish
+    function renderHistoryTable(payments) {
+        const tbody = document.getElementById('historyTableBody');
+        const totalCount = document.getElementById('totalCount');
+        
+        if (!payments || payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="no-data">📭 To\'langan qarzlar yo\'q</td></tr>';
+            totalCount.textContent = '';
+            return;
+        }
+
+        totalCount.textContent = `(${payments.length} ta)`;
+
+        tbody.innerHTML = payments.map((payment, index) => {
+            const totalUsd = parseFloat(payment.total_amount);
+            const totalUzs = totalUsd * exchangeRate;
+            const cashUsd = parseFloat(payment.cash_usd || 0);
+            const clickUsd = parseFloat(payment.click_usd || 0);
+            const terminalUsd = parseFloat(payment.terminal_usd || 0);
+
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${payment.sale_date}</td>
+                    <td><strong>${payment.customer_name}</strong></td>
+                    <td class="amount">$${totalUsd.toFixed(2)}</td>
+                    <td class="amount">${totalUzs.toLocaleString('uz-UZ')} so'm</td>
+                    <td>${cashUsd > 0 ? `<span class="payment-type payment-cash">$${cashUsd.toFixed(2)}</span>` : '-'}</td>
+                    <td>${clickUsd > 0 ? `<span class="payment-type payment-click">$${clickUsd.toFixed(2)}</span>` : '-'}</td>
+                    <td>${terminalUsd > 0 ? `<span class="payment-type payment-terminal">$${terminalUsd.toFixed(2)}</span>` : '-'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+</script>
+{% endblock %}

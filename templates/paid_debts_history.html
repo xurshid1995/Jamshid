@@ -1,0 +1,257 @@
+{% extends "base_with_sidebar.html" %}
+
+{% block title %}Qarz to'lash tarixi - Dokon Boshqaruv Tizimi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        padding: 20px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #333;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .back-btn {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .back-btn:hover {
+        background: #5a6268;
+        color: white;
+    }
+
+    .stats-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .stats-card h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .stats-card .value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #28a745;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .table-container h2 {
+        margin: 0 0 20px 0;
+        color: #28a745;
+        font-size: 20px;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .history-table thead {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .history-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .history-table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.2s;
+    }
+
+    .history-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .history-table td {
+        padding: 12px;
+    }
+
+    .payment-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 5px;
+    }
+
+    .payment-cash {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .payment-click {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .payment-terminal {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="page-header">
+        <h1>📜 Mijozlarni qarz to'lash tarixi</h1>
+        <a href="/debts" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Orqaga
+        </a>
+    </div>
+
+    <!-- Statistika -->
+    <div class="stats-card">
+        <h3>💰 Jami to'langan qarzlar</h3>
+        <div class="value" id="totalPaid">0 USD</div>
+    </div>
+
+    <!-- To'langan qarzlar jadvali -->
+    <div class="table-container">
+        <h2>✅ To'langan qarzlar ro'yxati</h2>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>📅 To'lov sanasi</th>
+                    <th>👤 Mijoz</th>
+                    <th>💵 Summa (USD)</th>
+                    <th>💳 To'lov turi</th>
+                    <th>👨‍💼 Qabul qilgan</th>
+                    <th>🕐 Asl savdo sanasi</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <tr>
+                    <td colspan="7" class="no-data">⏳ Yuklanmoqda...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let paidDebts = [];
+    let exchangeRate = 13000;
+
+    // Sahifa yuklanganda ma'lumotlarni olish
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPaidDebts();
+    });
+
+    // To'langan qarzlarni yuklash
+    async function loadPaidDebts() {
+        try {
+            const response = await fetch('/api/debts/paid');
+            if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
+            
+            const data = await response.json();
+            paidDebts = data.paid_debts || [];
+            
+            // Jami to'langan summani hisoblash
+            const totalPaid = paidDebts.reduce((sum, debt) => {
+                return sum + (debt.cash_usd || 0) + (debt.click_usd || 0) + (debt.terminal_usd || 0);
+            }, 0);
+            
+            document.getElementById('totalPaid').textContent = totalPaid.toFixed(2) + ' USD';
+            
+            renderTable();
+        } catch (error) {
+            console.error('Xatolik:', error);
+            document.getElementById('historyTableBody').innerHTML = 
+                '<tr><td colspan="7" class="no-data">❌ Ma\'lumotlarni yuklashda xatolik</td></tr>';
+        }
+    }
+
+    // Jadvalni render qilish
+    function renderTable() {
+        const tbody = document.getElementById('historyTableBody');
+        
+        if (paidDebts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">📭 To\'langan qarzlar yo\'q</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        paidDebts.forEach((debt, index) => {
+            const row = document.createElement('tr');
+            
+            // To'lov turlarini ko'rsatish
+            const paymentTypes = [];
+            if (debt.cash_usd > 0) {
+                paymentTypes.push(`<span class="payment-badge payment-cash">💵 Naqd: ${debt.cash_usd.toFixed(2)}</span>`);
+            }
+            if (debt.click_usd > 0) {
+                paymentTypes.push(`<span class="payment-badge payment-click">📱 Click: ${debt.click_usd.toFixed(2)}</span>`);
+            }
+            if (debt.terminal_usd > 0) {
+                paymentTypes.push(`<span class="payment-badge payment-terminal">💳 Terminal: ${debt.terminal_usd.toFixed(2)}</span>`);
+            }
+            
+            const totalAmount = (debt.cash_usd || 0) + (debt.click_usd || 0) + (debt.terminal_usd || 0);
+            
+            row.innerHTML = `
+                <td style="text-align: center;">${index + 1}</td>
+                <td>${debt.payment_date}</td>
+                <td><strong>${debt.customer_name}</strong></td>
+                <td style="text-align: right; font-weight: 600; color: #28a745;">${totalAmount.toFixed(2)} USD</td>
+                <td>${paymentTypes.join(' ')}</td>
+                <td><span style="color: #007bff;">👨‍💼 ${debt.received_by}</span></td>
+                <td style="color: #666;">${debt.sale_date}</td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+</script>
+{% endblock %}
