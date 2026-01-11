@@ -4,13 +4,20 @@
 
 {% block extra_css %}
 <style>
+    /* Main content padding'ni olib tashlash - to'liq kenglikda */
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
     .sales-container {
-        padding: 20px;
+        padding: 15px;
         background: #f8f9fa;
         min-height: 100vh;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        margin: 0;
     }
 
     .page-header {
@@ -33,7 +40,7 @@
         display: grid;
         grid-template-columns: minmax(520px, 1fr) minmax(580px, 1.15fr);
         gap: 20px;
-        padding: 20px;
+        padding: 0;
         align-items: start;
         max-width: 100%;
         box-sizing: border-box;
