@@ -104,17 +104,17 @@
                         <th>Sotuvchi</th>
                         <th>Joylashuv</th>
                         <th>Mahsulot</th>
-                        <th>Miqdor</th>
-                        <th>Narx</th>
-                        <th>Yig'indi</th>
+                        <th class="compact-hide">Miqdor</th>
+                        <th class="compact-hide">Narx</th>
+                        <th class="compact-hide">Yig'indi</th>
                         <th>Jami yig'indi</th>
-                        <th>Jami foyda</th>
+                        {% if session.role != 'sotuvchi' %}<th>Jami foyda</th>{% endif %}
                         <th>Amal</th>
                     </tr>
                 </thead>
                 <tbody id="salesTableBody">
                     <tr>
-                        <td colspan="11" class="loading">Ma'lumotlar yuklanmoqda...</td>
+                        <td colspan="{% if session.role == 'sotuvchi' %}10{% else %}11{% endif %}" class="loading">Ma'lumotlar yuklanmoqda...</td>
                     </tr>
                 </tbody>
             </table>
@@ -317,10 +317,10 @@
 
 /* Compact mode da BARCHA ustunlar uchun aniq kenglik */
 .compact-mode .sales-history-page .sales-table { 
-    width: 1385px !important; 
-    min-width: 1385px !important;
-    max-width: 1385px !important;
-    table-layout: fixed !important;
+    width: 100% !important; 
+    min-width: auto !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
 }
 
 .compact-mode .sales-history-page .sales-table th, 
@@ -328,6 +328,7 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    padding: 8px !important;
 }
 
 /* Compact row styling */
@@ -1993,22 +1994,28 @@ function displaySalesData(data) {
         }
     });
     
-    tbody.innerHTML = html;
+    salesTableBody.innerHTML = html;
     
     // Compact mode holatini tekshirish va qo'llash
     const compactToggle = document.getElementById('compactViewToggle');
     if (compactToggle && compactToggle.checked) {
         console.log('🔄 Ma\'lumotlar yuklangandan keyin compact mode yoqilmoqda');
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+            tableContainer.classList.add('compact-mode');
+        }
         updateTableForCompactView();
     }
     
-    salesTableBody.innerHTML = html;
-    
     // HTML yaratilgandan keyin mahsulot nomlarini highlight qilish
-    highlightProductNames();
+    if (typeof highlightProductNames === 'function') {
+        highlightProductNames();
+    }
     
     // Ombor matnlarini sariq fon bilan ajratish
-    highlightWarehouseLocations();
+    if (typeof highlightWarehouseLocations === 'function') {
+        highlightWarehouseLocations();
+    }
 }
 
 // Mahsulot nomlarini highlight qilish
@@ -3231,6 +3238,22 @@ function highlightWarehouseLocations() {
     });
 }
 
+// Qidiruv natijalarini ajratish funksiyasi
+function highlightSearchResults() {
+    const searchTerm = document.getElementById('customerSearch')?.value.toLowerCase().trim();
+    if (!searchTerm) return;
+    
+    const rows = document.querySelectorAll('#salesTableBody tr[data-sale-id]');
+    rows.forEach(row => {
+        const customerName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+        if (customerName.includes(searchTerm)) {
+            row.style.backgroundColor = '#fff3cd'; // Sariq fon
+        } else {
+            row.style.backgroundColor = '';
+        }
+    });
+}
+
 // Compact view toggle funksiyasi
 function initializeCompactView() {
     console.log('🚀 initializeCompactView ishga tushdi');
@@ -3402,7 +3425,7 @@ function updateTableForCompactView() {
                     </td>
                     <td class="col-seller">${firstItem.seller_name || 'Admin'}</td>
                     <td class="col-location">${firstItem.items && firstItem.items.length > 0 ? firstItem.items[0].location_name : (firstItem.store_name || '🚫 O\'chirilgan do\'kon')}</td>
-                    <td class="col-product compact-hide" style="display: none;">${firstItem.items ? firstItem.items.length : 0} ta mahsulot</td>
+                    <td class="col-product">${firstItem.items ? firstItem.items.length : 0} ta mahsulot</td>
                     <td class="col-quantity compact-hide" style="display: none;"></td>
                     <td class="col-price compact-hide" style="display: none;"></td>
                     <td class="col-subtotal compact-hide" style="display: none;"></td>
@@ -3433,9 +3456,13 @@ function updateTableForCompactView() {
             }
         });
         
-        // Highlight funksiyalarini qayta ishga tushirish
-        highlightSearchResults();
-        highlightWarehouseLocations();
+        // Highlight funksiyalarini qayta ishga tushirish (agar mavjud bo'lsa)
+        if (typeof highlightSearchResults === 'function') {
+            highlightSearchResults();
+        }
+        if (typeof highlightWarehouseLocations === 'function') {
+            highlightWarehouseLocations();
+        }
     } else {
         // Agar ma'lumotlar yo'q bo'lsa
         const tbody = document.getElementById('salesTableBody');

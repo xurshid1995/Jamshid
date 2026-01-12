@@ -1809,9 +1809,17 @@ def api_batch_products():
         for product_data in products:
             # Ma'lumotlarni olish
             location_type = product_data['location_type']
-            location_id = int(product_data['location_id'])
             
-            logger.info(f"🔍 Location: type={location_type}, id={location_id}")
+            # Location ID ni parse qilish (warehouse_3 -> 3, store_5 -> 5)
+            location_id_raw = product_data['location_id']
+            if isinstance(location_id_raw, str):
+                # String bo'lsa, raqamni ajratib olish
+                location_id = int(location_id_raw.split('_')[-1])
+            else:
+                # Integer bo'lsa, o'zini qoldirish
+                location_id = int(location_id_raw)
+            
+            logger.info(f"🔍 Location: type={location_type}, id={location_id} (raw: {location_id_raw})")
             name = product_data['name']
             barcode = product_data.get('barcode', None)  # Barcode olish
             quantity = float(product_data['quantity'])
@@ -2861,7 +2869,7 @@ def api_check_stock_remove_item():
 @app.route('/api/check_stock/finish', methods=['POST'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_check_stock_finish():
-    """Tekshiruvni yakunlash"""
+    """Tekshiruvni yakunlash va tizim miqdorlarini haqiqiy miqdorlar bilan yangilash"""
     try:
         current_user = get_current_user()
         if not current_user:
@@ -2873,22 +2881,66 @@ def api_check_stock_finish():
         if not session_id:
             return jsonify({'success': False, 'message': 'Session ID topilmadi'}), 400
 
-        # Sessiyani yakunlash
+        # Sessiyani topish
         session = StockCheckSession.query.get(session_id)
-        if session:
-            session.status = 'completed'
-            session.completed_by_user_id = current_user.id  # Tugatgan foydalanuvchini saqlash
-            db.session.commit()
+        if not session:
+            return jsonify({'success': False, 'message': 'Sessiya topilmadi'}), 404
+
+        # Tekshirilgan mahsulotlarni olish
+        checked_items = StockCheckItem.query.filter_by(
+            session_id=session_id,
+            status='checked'
+        ).all()
+
+        updated_count = 0
         
-        logger.info(f"Check stock finished: session_id={session_id}, user={current_user.username}, completed_by={current_user.id}")
+        # Har bir tekshirilgan mahsulot uchun tizim miqdorini yangilash
+        for item in checked_items:
+            if item.actual_quantity is not None:
+                if session.location_type == 'store':
+                    # Do'kon stokini yangilash
+                    stock = StoreStock.query.filter_by(
+                        store_id=session.location_id,
+                        product_id=item.product_id
+                    ).first()
+                    
+                    if stock:
+                        old_qty = stock.quantity
+                        stock.quantity = item.actual_quantity
+                        updated_count += 1
+                        logger.info(f"📦 Store stock updated: Product {item.product_id}, "
+                                  f"Old: {old_qty}, New: {item.actual_quantity}")
+                
+                elif session.location_type == 'warehouse':
+                    # Ombor stokini yangilash
+                    stock = WarehouseStock.query.filter_by(
+                        warehouse_id=session.location_id,
+                        product_id=item.product_id
+                    ).first()
+                    
+                    if stock:
+                        old_qty = stock.quantity
+                        stock.quantity = item.actual_quantity
+                        updated_count += 1
+                        logger.info(f"📦 Warehouse stock updated: Product {item.product_id}, "
+                                  f"Old: {old_qty}, New: {item.actual_quantity}")
+
+        # Sessiyani yakunlash
+        session.status = 'completed'
+        session.completed_by_user_id = current_user.id
+        db.session.commit()
+        
+        logger.info(f"✅ Check stock finished: session_id={session_id}, user={current_user.username}, "
+                   f"updated={updated_count} products")
         
         return jsonify({
             'success': True,
-            'message': 'Tekshiruv muvaffaqiyatli yakunlandi'
+            'message': f'Tekshiruv yakunlandi. {updated_count} ta mahsulot yangilandi.',
+            'updated_count': updated_count
         })
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error finishing check stock: {e}")
+        logger.error(f"❌ Error finishing check stock: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
@@ -6473,6 +6525,65 @@ def api_sales_history():
                 }
             }
         }), 500
+
+
+# Pending savdoni yakunlash (faqat status o'zgartirish)
+@app.route('/api/finalize-sale/<int:sale_id>', methods=['POST'])
+@role_required('admin', 'kassir', 'sotuvchi')
+def finalize_sale(sale_id):
+    """Pending savdoni yakunlash - faqat status va to'lov ma'lumotlarini yangilash"""
+    try:
+        data = request.get_json()
+        
+        sale = Sale.query.get(sale_id)
+        if not sale:
+            return jsonify({'success': False, 'error': 'Savdo topilmadi'}), 404
+        
+        if sale.payment_status != 'pending':
+            return jsonify({'success': False, 'error': 'Bu savdo allaqachon yakunlangan'}), 400
+        
+        logger.info(f"🔄 Pending savdoni yakunlash: Sale ID {sale_id}")
+        
+        # To'lov ma'lumotlarini olish
+        payment = data.get('payment', {})
+        payment_status = data.get('payment_status', 'paid')
+        customer_id = data.get('customer_id')
+        exchange_rate = data.get('exchange_rate', get_current_currency_rate())
+        
+        # To'lov ma'lumotlarini yangilash
+        sale.cash_usd = Decimal(str(payment.get('cash_usd', 0)))
+        sale.cash_amount = Decimal(str(payment.get('cash_uzs', 0)))
+        sale.click_usd = Decimal(str(payment.get('click_usd', 0)))
+        sale.click_amount = Decimal(str(payment.get('click_uzs', 0)))
+        sale.terminal_usd = Decimal(str(payment.get('terminal_usd', 0)))
+        sale.terminal_amount = Decimal(str(payment.get('terminal_uzs', 0)))
+        sale.debt_usd = Decimal(str(payment.get('debt_usd', 0)))
+        sale.debt_amount = Decimal(str(payment.get('debt_uzs', 0)))
+        
+        # Status va boshqa ma'lumotlarni yangilash
+        sale.payment_status = payment_status
+        sale.currency_rate = Decimal(str(exchange_rate))
+        sale.sale_date = get_tashkent_time()  # Tasdiqlash vaqti
+        
+        # Mijoz ID ni yangilash (agar kiritilgan bo'lsa)
+        if customer_id:
+            sale.customer_id = int(customer_id)
+        
+        db.session.commit()
+        
+        logger.info(f"✅ Savdo yakunlandi: Sale ID {sale_id}, Status: {payment_status}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Savdo muvaffaqiyatli yakunlandi',
+            'sale_id': sale_id,
+            'payment_status': payment_status
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"❌ Savdoni yakunlashda xatolik: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # Savdoni tasdiqlash API'si
