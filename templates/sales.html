@@ -4332,6 +4332,17 @@
                 if (cartCustomerInfo) cartCustomerInfo.innerHTML = '<h3 style="margin: 0; color: #333;">🛒 Savdo Korzinasi</h3>';
                 if (productsTable) productsTable.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #999;">Joylashuvni tanlang</td></tr>';
                 
+                // Tab sarlavhasini tozalash
+                const activeTab = document.querySelector('.sales-tab.active');
+                if (activeTab) {
+                    const tabTitle = activeTab.querySelector('.tab-title');
+                    if (tabTitle) {
+                        const tabId = activeTab.dataset.tabId;
+                        tabTitle.textContent = `Savdo ${tabId}`;
+                        tabTitle.title = `Savdo ${tabId}`;
+                    }
+                }
+                
                 // Savatni yangilash
                 updateCart();
                 closePaymentModal();
