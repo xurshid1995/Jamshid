@@ -6197,19 +6197,24 @@ def api_sales_history():
         if payment_status and payment_status == 'pending':
             # Faqat tasdiqlanmagan savdolar
             query = Sale.query.filter(Sale.payment_status == 'pending')
+            logger.info(f"📋 Filter: pending savdolar")
         elif payment_status and payment_status == 'completed':
             # Faqat to'langan savdolar
             query = Sale.query.filter(Sale.payment_status == 'completed')
+            logger.info(f"📋 Filter: completed savdolar")
         elif payment_status and payment_status == 'partial':
-            # Faqat qisman to'langan savdolar
+            # Faqat qisman to'langan savdolar (QARZ SAVDOLAR)
             query = Sale.query.filter(Sale.payment_status == 'partial')
+            logger.info(f"💳 Filter: QARZ SAVDOLAR (partial)")
         elif payment_status and payment_status != 'all':
             # Belgilangan status bo'yicha filtrlash
             query = Sale.query.filter(Sale.payment_status == payment_status)
+            logger.info(f"📋 Filter: status={payment_status}")
         else:
             # Default: barcha tasdiqlangan savdolar (pending emas)
             # Bu qarz savdolarni ham o'z ichiga oladi
             query = Sale.query.filter(Sale.payment_status.in_(['completed', 'partial']))
+            logger.info(f"📋 Filter: completed + partial (default)")
 
         # Sotuvchi uchun joylashuv filterlash
         if current_user.role == 'sotuvchi':
@@ -6241,15 +6246,15 @@ def api_sales_history():
                 if location_conditions:
                     # Faqat ruxsat berilgan joylashuvlardagi savdolar
                     query = query.filter(db.or_(*location_conditions))
-                    print(f"🔍 Filtering sales by {len(location_conditions)} allowed locations")
+                    logger.info(f"🔍 Sotuvchi uchun {len(location_conditions)} ta joylashuv bo'yicha filtrlash")
                 else:
                     # Hech qaysi joylashuv ruxsat berilmagan
                     query = query.filter(Sale.id == -1)
-                    logger.debug("⚠️ No locations allowed, returning empty sales history")
+                    logger.warning("⚠️ Sotuvchiga hech qaysi joylashuv ruxsat berilmagan!")
             else:
                 # Ruxsat berilgan joylashuv bo'lmasa, bo'sh natija
                 query = query.filter(Sale.id == -1)
-                logger.debug("⚠️ No allowed locations, returning empty sales history")
+                logger.warning("⚠️ Sotuvchining allowed_locations bo'sh!")
 
         # Apply date filters
         start_date_obj = None
@@ -6371,8 +6376,14 @@ def api_sales_history():
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         sales = pagination.items
 
-        logger.info(f" Ma'lumotlar bazasidan topildi: {len(sales)} ta savdo (sahifa {page}, {per_page} ta per sahifa)")
-        logger.info(f" Jami sahifalar: {pagination.pages}, Jami savdolar: {pagination.total}")
+        logger.info(f"📄 Ma'lumotlar bazasidan topildi: {len(sales)} ta savdo (sahifa {page}, {per_page} ta per sahifa)")
+        logger.info(f"📊 Jami sahifalar: {pagination.pages}, Jami savdolar: {pagination.total}")
+        
+        # Qarz savdolar uchun maxsus log
+        if payment_status == 'partial':
+            logger.info(f"💳 QARZ SAVDOLAR: {pagination.total} ta")
+            if pagination.total == 0:
+                logger.warning(f"⚠️ QARZ SAVDOLAR TOPILMADI! User: {current_user.username}, Role: {current_user.role}")
 
         # Debug: Query parametrlarini ko'rsatish
         logger.debug(" Query details:")
