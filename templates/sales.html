@@ -905,11 +905,19 @@
             
             console.log(`📍 API'dan ${locations.length} ta joylashuv olinadi:`, locations);
             
-            const locationSelect = document.getElementById('locationSelect');
-            if (!locationSelect) {
-                console.warn('⚠️ locationSelect elementi topilmadi (tab sistemada bo\'lishi mumkin)');
+            // Faol tabdagi locationSelect'ni topish
+            const activeTab = document.querySelector('.sales-tab.active');
+            if (!activeTab) {
+                console.warn('⚠️ Faol tab topilmadi');
                 return;
             }
+            const tabId = activeTab.dataset.tabId;
+            const locationSelect = document.getElementById(`locationSelect_tab${tabId}`);
+            if (!locationSelect) {
+                console.warn('⚠️ locationSelect elementi topilmadi tab', tabId);
+                return;
+            }
+            console.log(`📍 Tab ${tabId} uchun joylashuvlar yuklanmoqda`);
             locationSelect.innerHTML = '<option value="">Tanlang...</option>';
             
             // Foydalanuvchining default store_id'sini olish
@@ -1090,16 +1098,26 @@
             // Mijozni avtomatik tanlash (selectCustomer funksiyasidan foydalanish)
             const customerName = result.customer.name;
             const customerPhone = result.customer.phone || '';
-            const customerDisplayText = customerPhone ? `${customerName} - ${customerPhone}` : customerName;
             
-            // Input'ga mijoz nomini yozish
-            document.getElementById('customerSearch').value = customerDisplayText;
-            document.getElementById('selectedCustomerId').value = result.customer.id;
-            
-            // Korzina sarlavhasida mijoz ma'lumotini ko'rsatish
-            const cartCustomerInfo = document.getElementById('cartCustomerInfo');
-            const customerDisplay = customerPhone ? `👤 ${customerName} ${customerPhone}` : `👤 ${customerName}`;
-            cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+            // Faol tabga mijozni qo'shish
+            const activeTab = document.querySelector('.sales-tab.active');
+            if (activeTab) {
+                const tabId = activeTab.dataset.tabId;
+                const customerDisplayText = customerPhone ? `${customerName} - ${customerPhone}` : customerName;
+                
+                // Input'ga mijoz nomini yozish
+                const customerSearch = document.getElementById(`customerSearch_tab${tabId}`);
+                const selectedCustomerId = document.getElementById(`selectedCustomerId_tab${tabId}`);
+                if (customerSearch) customerSearch.value = customerDisplayText;
+                if (selectedCustomerId) selectedCustomerId.value = result.customer.id;
+                
+                // Korzina sarlavhasida mijoz ma'lumotini ko'rsatish
+                const cartCustomerInfo = document.getElementById(`cartCustomerInfo_tab${tabId}`);
+                if (cartCustomerInfo) {
+                    const customerDisplay = customerPhone ? `👤 ${customerName} ${customerPhone}` : `👤 ${customerName}`;
+                    cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+                }
+            }
             
             console.log(`✅ Mijoz avtomatik tanlandi: ${customerName} (ID: ${result.customer.id})`);
             
@@ -1573,7 +1591,19 @@
     
     function searchCustomers(searchText) {
         console.log('🔍 searchCustomers chaqirildi:', searchText, 'Jami mijozlar:', allCustomers.length);
-        const dropdown = document.getElementById('customerDropdown');
+        
+        // Faol tabdagi dropdown'ni topish
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) {
+            console.warn('⚠️ Faol tab topilmadi');
+            return;
+        }
+        const tabId = activeTab.dataset.tabId;
+        const dropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+        if (!dropdown) {
+            console.warn('⚠️ customerDropdown topilmadi tab', tabId);
+            return;
+        }
         selectedCustomerIndex = -1;
         
         if (!searchText || searchText.length < 2) {
@@ -1608,7 +1638,13 @@
     }
     
     function renderCustomerDropdown() {
-        const dropdown = document.getElementById('customerDropdown');
+        // Faol tabdagi dropdown'ni topish
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) return;
+        const tabId = activeTab.dataset.tabId;
+        const dropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+        if (!dropdown) return;
+        
         dropdown.innerHTML = filteredCustomers.map((customer, index) => {
             const isSelected = index === selectedCustomerIndex;
             const bgColor = isSelected ? '#2196F3' : 'white';
@@ -1638,7 +1674,11 @@
         renderCustomerDropdown();
         
         // Scroll to selected item
-        const dropdown = document.getElementById('customerDropdown');
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) return;
+        const tabId = activeTab.dataset.tabId;
+        const dropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+        if (!dropdown) return;
         const selectedItem = dropdown.querySelector(`[data-index="${selectedCustomerIndex}"]`);
         if (selectedItem) {
             selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -1653,20 +1693,31 @@
     }
     
     function selectCustomer(id, name, phone) {
+        // Faol tabdagi elementlarni topish
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) return;
+        const tabId = activeTab.dataset.tabId;
+        
         const displayText = phone ? `${name} - ${phone}` : name;
-        document.getElementById('customerSearch').value = displayText;
-        document.getElementById('selectedCustomerId').value = id;
-        document.getElementById('customerDropdown').style.display = 'none';
+        const customerSearch = document.getElementById(`customerSearch_tab${tabId}`);
+        const selectedCustomerId = document.getElementById(`selectedCustomerId_tab${tabId}`);
+        const customerDropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+        
+        if (customerSearch) customerSearch.value = displayText;
+        if (selectedCustomerId) selectedCustomerId.value = id;
+        if (customerDropdown) customerDropdown.style.display = 'none';
         
         // Savdo korzinasi sarlavhasida mijoz ma'lumotlarini ko'rsatish
-        const cartCustomerInfo = document.getElementById('cartCustomerInfo');
-        const customerDisplay = phone ? `👤 ${name} ${phone}` : `👤 ${name}`;
-        cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+        const cartCustomerInfo = document.getElementById(`cartCustomerInfo_tab${tabId}`);
+        if (cartCustomerInfo) {
+            const customerDisplay = phone ? `👤 ${name} ${phone}` : `👤 ${name}`;
+            cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+        }
         
         console.log(`✅ Mijoz tanlandi: ${name} (ID: ${id})`);
         
         // Fokusni mahsulot qidirish maydoniga o'tkazish
-        const universalSearch = document.getElementById('universalSearch');
+        const universalSearch = document.getElementById(`universalSearch_tab${tabId}`);
         if (universalSearch) {
             setTimeout(() => universalSearch.focus(), 100);
         }
@@ -1674,8 +1725,20 @@
     
     // Mahsulotlarni yuklash
     async function loadProducts() {
-        const locationSelect = document.getElementById('locationSelect');
-        const tbody = document.getElementById('productsTable');
+        // Faol tabdagi elementlarni topish
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) {
+            console.warn('⚠️ Faol tab topilmadi');
+            return;
+        }
+        const tabId = activeTab.dataset.tabId;
+        const locationSelect = document.getElementById(`locationSelect_tab${tabId}`);
+        const tbody = document.getElementById(`productsTable_tab${tabId}`);
+        
+        if (!locationSelect || !tbody) {
+            console.warn('⚠️ locationSelect yoki productsTable topilmadi tab', tabId);
+            return;
+        }
         
         const locationValue = locationSelect.value;
         
@@ -2241,12 +2304,19 @@
     
     // Savatni yangilash
     function updateCart() {
-        const cartItemsDiv = document.getElementById('cartItems');
-        const cartTotalDiv = document.getElementById('cartTotal');
-        const cartTotalHeader = document.getElementById('cartTotalHeader');
-        const locationSelect = document.getElementById('locationSelect');
-        const customerSearch = document.getElementById('customerSearch');
-        const selectedCustomerId = document.getElementById('selectedCustomerId');
+        // Faol tabdagi elementlarni topish
+        const activeTab = document.querySelector('.sales-tab.active');
+        if (!activeTab) return;
+        const tabId = activeTab.dataset.tabId;
+        
+        const cartItemsDiv = document.getElementById(`cartItems_tab${tabId}`);
+        const cartTotalDiv = document.getElementById(`cartTotal_tab${tabId}`);
+        const cartTotalHeader = document.getElementById(`cartTotalHeader_tab${tabId}`);
+        const locationSelect = document.getElementById(`locationSelect_tab${tabId}`);
+        const customerSearch = document.getElementById(`customerSearch_tab${tabId}`);
+        const selectedCustomerId = document.getElementById(`selectedCustomerId_tab${tabId}`);
+        
+        if (!cartItemsDiv || !cartTotalDiv || !cartTotalHeader) return;
         
         if (cart.length === 0) {
             cartItemsDiv.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 50px; color: #999;">Savat bo\'sh</td></tr>';
