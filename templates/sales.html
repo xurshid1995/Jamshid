@@ -760,6 +760,9 @@
         
         document.getElementById('salesTabContentsWrapper').appendChild(contentDiv);
         
+        // Tab uchun event listener'larni o'rnatish
+        setupTabEventListeners(tabId);
+        
         // Tab uchun ma'lumotlarni yuklash
         loadTabData(tabId);
     }
@@ -785,6 +788,105 @@
                     el.setAttribute(attr, attrValue);
                 }
             });
+        });
+    }
+    
+    // Tab uchun event listener'larni o'rnatish
+    function setupTabEventListeners(tabId) {
+        console.log(`🎧 Tab ${tabId} uchun event listener'lar o'rnatilmoqda...`);
+        
+        // Universal qidiruv (barcode + mahsulot)
+        const universalSearch = document.getElementById(`universalSearch_tab${tabId}`);
+        if (universalSearch) {
+            // Keyboard navigation
+            universalSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    navigateProductTable('down');
+                    return;
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    navigateProductTable('up');
+                    return;
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    selectCurrentProduct();
+                    return;
+                }
+            });
+            
+            // Barcode scanner - faqat raqam tugmalari
+            universalSearch.addEventListener('keypress', function(e) {
+                // Agar faqat raqam bo'lsa, barcode deb hisoblaymiz
+                if (/^\d$/.test(e.key)) {
+                    barcodeBuffer += e.key;
+                    clearTimeout(barcodeTimeout);
+                    barcodeTimeout = setTimeout(() => barcodeBuffer = '', 100);
+                }
+            });
+            
+            // Real-time mahsulot qidiruv
+            universalSearch.addEventListener('input', function(e) {
+                const value = e.target.value.trim();
+                if (value.length >= 2) {
+                    searchProductsRealtime(value);
+                }
+            });
+            
+            // Focus bo'lganda placeholder o'zgartirish
+            universalSearch.addEventListener('focus', function() {
+                this.placeholder = 'Mahsulot yoki barcode kiriting...';
+            });
+            
+            console.log('✅ universalSearch event listener'lar qo\\'shildi');
+        }
+        
+        // Mijoz qidiruv input
+        const customerSearchInput = document.getElementById(`customerSearch_tab${tabId}`);
+        if (customerSearchInput) {
+            // Input event
+            customerSearchInput.addEventListener('input', function() {
+                console.log('⌨️ Tab', tabId, 'input event:', this.value);
+                searchCustomers(this.value);
+            });
+            
+            // Klaviatura navigatsiyasi
+            customerSearchInput.addEventListener('keydown', function(e) {
+                const dropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+                if (!dropdown) return;
+                const isDropdownVisible = dropdown.style.display === 'block';
+                
+                if (!isDropdownVisible) return;
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        navigateCustomerDropdown('down');
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        navigateCustomerDropdown('up');
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        selectCurrentCustomer();
+                        break;
+                    case 'Escape':
+                        dropdown.style.display = 'none';
+                        break;
+                }
+            });
+            
+            console.log('✅ customerSearch event listener'lar qo\'shildi');
+        }
+        
+        // Dropdown tashqarisiga bosish
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById(`customerDropdown_tab${tabId}`);
+            const input = document.getElementById(`customerSearch_tab${tabId}`);
+            if (dropdown && input && e.target !== input && e.target !== dropdown && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
         });
     }
     
