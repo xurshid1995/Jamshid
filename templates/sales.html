@@ -907,6 +907,22 @@
     function switchToTab(tabId) {
         console.log(`🔄 Tabga o'tilmoqda: ${tabId}`);
         
+        // Eski tabning state'ini saqlash
+        if (activeTabId) {
+            const oldState = tabStates[activeTabId];
+            if (oldState) {
+                // Global o'zgaruvchilardan state'ga ko'chirish
+                oldState.cart = cart;
+                oldState.currentProduct = currentProduct;
+                oldState.selectedLocationId = selectedLocationId;
+                oldState.selectedLocationType = selectedLocationType;
+                oldState.editingSaleId = editingSaleId;
+                oldState.currentPendingSaleId = currentPendingSaleId;
+                
+                console.log(`💾 Tab ${activeTabId} state saqlandi:`, oldState);
+            }
+        }
+        
         // Barcha tablarni deactivate qilish
         document.querySelectorAll('.sales-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -924,6 +940,17 @@
             contentElement.classList.add('active');
             activeTabId = tabId;
             
+            // Yangi tabning state'ini yuklash
+            const newState = initTabState(tabId);
+            cart = newState.cart || [];
+            currentProduct = newState.currentProduct || null;
+            selectedLocationId = newState.selectedLocationId || null;
+            selectedLocationType = newState.selectedLocationType || null;
+            editingSaleId = newState.editingSaleId || null;
+            currentPendingSaleId = newState.currentPendingSaleId || null;
+            
+            console.log(`📂 Tab ${tabId} state yuklandi:`, newState);
+            
             // Tablar strukturasini yangilash
             salesTabs.forEach(tab => {
                 tab.active = (tab.id === tabId);
@@ -931,8 +958,9 @@
             
             TabStorage.saveTabs();
             
-            // Tab ma'lumotlarini qayta yuklash
+            // Tab ma'lumotlarini qayta yuklash va UI'ni yangilash
             loadTabData(tabId);
+            updateCart(); // Korzinani yangilash
         }
     }
     
@@ -966,6 +994,9 @@
         
         // Strukturadan o'chirish
         salesTabs = salesTabs.filter(tab => tab.id !== tabId);
+        
+        // Tab state'ni tozalash
+        delete tabStates[tabId];
         
         // Storage'dan o'chirish
         TabStorage.clearTab(tabId);
@@ -1621,6 +1652,34 @@
 
     // Mijozlarni yuklash va qidirish
     let allCustomers = [];
+    
+    // Tab-specific state (har bir tab uchun alohida)
+    const tabStates = {};
+    
+    // Har bir tab uchun state yaratish
+    function initTabState(tabId) {
+        if (!tabStates[tabId]) {
+            tabStates[tabId] = {
+                cart: [],
+                currentProduct: null,
+                selectedLocationId: null,
+                selectedLocationType: null,
+                editingSaleId: null,
+                currentPendingSaleId: null,
+                autosaveTimeout: null
+            };
+        }
+        return tabStates[tabId];
+    }
+    
+    // Active tab state ni olish
+    function getTabState() {
+        if (!activeTabId) return null;
+        return initTabState(activeTabId);
+    }
+    
+    // Global o'zgaruvchilarni backward compatibility uchun saqlab qolamiz
+    // Lekin ular faqat active tab state'dan olinadi
     let cart = [];
     let currentProduct = null;
     let selectedLocationId = null;
@@ -1832,6 +1891,14 @@
         const [type, id] = locationValue.split('_');
         selectedLocationType = type;
         selectedLocationId = parseInt(id);
+        
+        // Tab state'ni yangilash
+        const tabState = getTabState();
+        if (tabState) {
+            tabState.selectedLocationType = type;
+            tabState.selectedLocationId = parseInt(id);
+            console.log(`💾 Tab ${tabId} location saqlandi:`, type, parseInt(id));
+        }
         
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #999;">⏳ Yuklanmoqda...</td></tr>';
         
@@ -2401,6 +2468,13 @@
             console.log(`➕ Yangi mahsulot qo'shildi: ${quantity} dona`);
         }
         
+        // Tab state'ni yangilash
+        const tabState = getTabState();
+        if (tabState) {
+            tabState.cart = [...cart]; // Deep copy
+            console.log(`💾 Tab cart saqlandi (${cart.length} items)`);
+        }
+        
         // currentProduct ma'lumotlarini saqlab qo'yish (closeModal() uni null qiladi)
         const addedProduct = {
             name: currentProduct?.name || `Mahsulot #${currentProduct?.id}`,
@@ -2604,6 +2678,14 @@
         }
         
         cart.splice(index, 1);
+        
+        // Tab state'ni yangilash
+        const tabState = getTabState();
+        if (tabState) {
+            tabState.cart = [...cart]; // Deep copy
+            console.log(`💾 Tab cart saqlandi (${cart.length} items after remove)`);
+        }
+        
         updateCart();
         
         // Avtomatik pending savdo yangilash
