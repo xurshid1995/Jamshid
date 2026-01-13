@@ -685,7 +685,8 @@
             // Oxirgi aktiv tabni qayta tiklash
             const lastActiveTab = savedTabs.find(t => t.active) || savedTabs[0];
             switchToTab(lastActiveTab.id);
-            tabCounter = Math.max(...savedTabs.map(t => t.id)) + 1;
+            // tabCounter ni eng katta ID asosida o'rnatish
+            tabCounter = Math.max(...savedTabs.map(t => t.id));
         } else {
             // Birinchi tabni yaratish
             console.log('➕ Birinchi tab yaratilmoqda...');
@@ -696,7 +697,9 @@
     // Yangi tab qo'shish
     function addNewSaleTab() {
         const tabId = ++tabCounter;
-        const tabTitle = `Savdo ${tabId}`;
+        // Tab nomini hozirgi mavjud tablar soni asosida berish (1, 2, 3, ...)
+        const tabNumber = salesTabs.length + 1;
+        const tabTitle = `Savdo ${tabNumber}`;
         
         console.log(`➕ Yangi tab yaratilmoqda: ${tabTitle} (ID: ${tabId})`);
         
