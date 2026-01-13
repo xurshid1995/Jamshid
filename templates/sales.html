@@ -1415,22 +1415,31 @@
     }
 
     // Scanner tugmasi event listener
-    document.getElementById('cameraScanBtn').addEventListener('click', function() {
-        console.log('📷 Camera scan button bosildi');
-        startBarcodeScanner();
-    });
+    const cameraScanBtn = document.getElementById('cameraScanBtn');
+    if (cameraScanBtn) {
+        cameraScanBtn.addEventListener('click', function() {
+            console.log('📷 Camera scan button bosildi');
+            startBarcodeScanner();
+        });
+    }
 
     // Yopish tugmasi
-    document.getElementById('closeScannerBtn').addEventListener('click', function() {
-        stopBarcodeScanner();
-    });
+    const closeScannerBtn = document.getElementById('closeScannerBtn');
+    if (closeScannerBtn) {
+        closeScannerBtn.addEventListener('click', function() {
+            stopBarcodeScanner();
+        });
+    }
 
     // Modal tashqarisiga bosganda yopish
-    document.getElementById('barcodeScannerModal').addEventListener('click', function(e) {
-        if (e.target.id === 'barcodeScannerModal') {
-            stopBarcodeScanner();
-        }
-    });
+    const barcodeScannerModal = document.getElementById('barcodeScannerModal');
+    if (barcodeScannerModal) {
+        barcodeScannerModal.addEventListener('click', function(e) {
+            if (e.target.id === 'barcodeScannerModal') {
+                stopBarcodeScanner();
+            }
+        });
+    }
 
     // Universal qidiruv maydoni (Barcode + Mahsulot)
     document.addEventListener('DOMContentLoaded', function() {
@@ -1913,9 +1922,13 @@
         qtyInput.parentNode.replaceChild(newQtyInput, qtyInput);
         
         // Yangi event listener'lar qo'shish
-        document.getElementById('modalPriceUSD').addEventListener('input', updateUZSPrice);
-        document.getElementById('modalPriceUZS').addEventListener('input', updateUSDPrice);
-        document.getElementById('modalQuantity').addEventListener('input', validateQuantity);
+        const modalPriceUSD = document.getElementById('modalPriceUSD');
+        const modalPriceUZS = document.getElementById('modalPriceUZS');
+        const modalQuantity = document.getElementById('modalQuantity');
+        
+        if (modalPriceUSD) modalPriceUSD.addEventListener('input', updateUZSPrice);
+        if (modalPriceUZS) modalPriceUZS.addEventListener('input', updateUSDPrice);
+        if (modalQuantity) modalQuantity.addEventListener('input', validateQuantity);
     }
     
     // Miqdorni validatsiya qilish
