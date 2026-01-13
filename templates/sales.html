@@ -1223,8 +1223,7 @@
                 // Tab sarlavhasida mijoz ma'lumotlarini ko'rsatish
                 const tabTitle = activeTab.querySelector('.tab-title');
                 if (tabTitle) {
-                    const shortPhone = customerPhone ? customerPhone.replace(/\+998\(|\)|\s|-/g, '') : '';
-                    const tabText = shortPhone ? `Savdo ${tabId}: ${customerName} (${shortPhone})` : `Savdo ${tabId}: ${customerName}`;
+                    const tabText = customerPhone ? `Savdo ${tabId}: ${customerName} - ${customerPhone}` : `Savdo ${tabId}: ${customerName}`;
                     tabTitle.textContent = tabText;
                     tabTitle.title = customerDisplayText; // Tooltip uchun to'liq ma'lumot
                 }
@@ -1828,8 +1827,7 @@
         // Tab sarlavhasida mijoz ma'lumotlarini ko'rsatish
         const tabTitle = activeTab.querySelector('.tab-title');
         if (tabTitle) {
-            const shortPhone = phone ? phone.replace(/\+998\(|\)|\s|-/g, '') : '';
-            const tabText = shortPhone ? `Savdo ${tabId}: ${name} (${shortPhone})` : `Savdo ${tabId}: ${name}`;
+            const tabText = phone ? `Savdo ${tabId}: ${name} - ${phone}` : `Savdo ${tabId}: ${name}`;
             tabTitle.textContent = tabText;
             tabTitle.title = displayText; // Tooltip uchun to'liq ma'lumot
         }
