@@ -679,7 +679,11 @@
         
         if (savedTabs.length > 0) {
             console.log('📂 Saqlangan tablar topildi:', savedTabs.length);
-            savedTabs.forEach(tab => {
+            
+            // Tab raqamlarini qayta hisoblash (1, 2, 3, ...)
+            savedTabs.forEach((tab, index) => {
+                const newTabNumber = index + 1;
+                tab.title = `Savdo ${newTabNumber}`;
                 salesTabs.push(tab);
                 createTabElement(tab.id, tab.title);
                 createTabContent(tab.id);
