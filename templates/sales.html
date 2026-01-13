@@ -3958,6 +3958,81 @@
         if (paymentDebtUZS) paymentDebtUZS.value = '';
         if (paymentModal) paymentModal.style.display = 'flex';
         
+        // Event listener'larni o'rnatish (real-time konversiya uchun)
+        if (paymentCashUSD && paymentCashUZS) {
+            // Eski listener'larni olib tashlash uchun clone qilish
+            const newCashUSD = paymentCashUSD.cloneNode(true);
+            const newCashUZS = paymentCashUZS.cloneNode(true);
+            paymentCashUSD.parentNode.replaceChild(newCashUSD, paymentCashUSD);
+            paymentCashUZS.parentNode.replaceChild(newCashUZS, paymentCashUZS);
+            
+            // Yangi listener'lar
+            newCashUSD.addEventListener('input', function() {
+                const usdValue = parseFloat(this.value) || 0;
+                const cashUZS = getActiveTabElement('paymentCashUZS');
+                if (cashUZS) cashUZS.value = Math.round(usdValue * exchangeRate);
+            });
+            newCashUZS.addEventListener('input', function() {
+                const uzsValue = parseFloat(this.value) || 0;
+                const cashUSD = getActiveTabElement('paymentCashUSD');
+                if (cashUSD) cashUSD.value = (uzsValue / exchangeRate).toFixed(2);
+            });
+        }
+        
+        if (paymentClickUSD && paymentClickUZS) {
+            const newClickUSD = paymentClickUSD.cloneNode(true);
+            const newClickUZS = paymentClickUZS.cloneNode(true);
+            paymentClickUSD.parentNode.replaceChild(newClickUSD, paymentClickUSD);
+            paymentClickUZS.parentNode.replaceChild(newClickUZS, paymentClickUZS);
+            
+            newClickUSD.addEventListener('input', function() {
+                const usdValue = parseFloat(this.value) || 0;
+                const clickUZS = getActiveTabElement('paymentClickUZS');
+                if (clickUZS) clickUZS.value = Math.round(usdValue * exchangeRate);
+            });
+            newClickUZS.addEventListener('input', function() {
+                const uzsValue = parseFloat(this.value) || 0;
+                const clickUSD = getActiveTabElement('paymentClickUSD');
+                if (clickUSD) clickUSD.value = (uzsValue / exchangeRate).toFixed(2);
+            });
+        }
+        
+        if (paymentTerminalUSD && paymentTerminalUZS) {
+            const newTerminalUSD = paymentTerminalUSD.cloneNode(true);
+            const newTerminalUZS = paymentTerminalUZS.cloneNode(true);
+            paymentTerminalUSD.parentNode.replaceChild(newTerminalUSD, paymentTerminalUSD);
+            paymentTerminalUZS.parentNode.replaceChild(newTerminalUZS, paymentTerminalUZS);
+            
+            newTerminalUSD.addEventListener('input', function() {
+                const usdValue = parseFloat(this.value) || 0;
+                const terminalUZS = getActiveTabElement('paymentTerminalUZS');
+                if (terminalUZS) terminalUZS.value = Math.round(usdValue * exchangeRate);
+            });
+            newTerminalUZS.addEventListener('input', function() {
+                const uzsValue = parseFloat(this.value) || 0;
+                const terminalUSD = getActiveTabElement('paymentTerminalUSD');
+                if (terminalUSD) terminalUSD.value = (uzsValue / exchangeRate).toFixed(2);
+            });
+        }
+        
+        if (paymentDebtUSD && paymentDebtUZS) {
+            const newDebtUSD = paymentDebtUSD.cloneNode(true);
+            const newDebtUZS = paymentDebtUZS.cloneNode(true);
+            paymentDebtUSD.parentNode.replaceChild(newDebtUSD, paymentDebtUSD);
+            paymentDebtUZS.parentNode.replaceChild(newDebtUZS, paymentDebtUZS);
+            
+            newDebtUSD.addEventListener('input', function() {
+                const usdValue = parseFloat(this.value) || 0;
+                const debtUZS = getActiveTabElement('paymentDebtUZS');
+                if (debtUZS) debtUZS.value = Math.round(usdValue * exchangeRate);
+            });
+            newDebtUZS.addEventListener('input', function() {
+                const uzsValue = parseFloat(this.value) || 0;
+                const debtUSD = getActiveTabElement('paymentDebtUSD');
+                if (debtUSD) debtUSD.value = (uzsValue / exchangeRate).toFixed(2);
+            });
+        }
+        
         // Fokusni Naxt so'm maydoniga berish
         setTimeout(() => {
             const cashUZS = getActiveTabElement('paymentCashUZS');
