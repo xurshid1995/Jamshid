@@ -984,6 +984,9 @@
     function loadTabData(tabId) {
         console.log(`📂 Tab ${tabId} uchun ma'lumotlar yuklanmoqda...`);
         
+        // Joylashuvlarni yuklash (har bir tab uchun)
+        loadLocations();
+        
         // Saqlangan ma'lumotlarni olish
         const cart = TabStorage.get(tabId, 'cart') || [];
         const locationId = TabStorage.get(tabId, 'locationId');
