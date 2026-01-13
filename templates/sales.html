@@ -1219,6 +1219,15 @@
                     const customerDisplay = customerPhone ? `👤 ${customerName} ${customerPhone}` : `👤 ${customerName}`;
                     cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
                 }
+                
+                // Tab sarlavhasida mijoz ma'lumotlarini ko'rsatish
+                const tabTitle = activeTab.querySelector('.tab-title');
+                if (tabTitle) {
+                    const shortPhone = customerPhone ? customerPhone.replace(/\+998\(|\)|\s|-/g, '') : '';
+                    const tabText = shortPhone ? `Savdo ${tabId}: ${customerName} (${shortPhone})` : `Savdo ${tabId}: ${customerName}`;
+                    tabTitle.textContent = tabText;
+                    tabTitle.title = customerDisplayText; // Tooltip uchun to'liq ma'lumot
+                }
             }
             
             console.log(`✅ Mijoz avtomatik tanlandi: ${customerName} (ID: ${result.customer.id})`);
@@ -1814,6 +1823,15 @@
         if (cartCustomerInfo) {
             const customerDisplay = phone ? `👤 ${name} ${phone}` : `👤 ${name}`;
             cartCustomerInfo.innerHTML = `<h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600;">${customerDisplay}</h3>`;
+        }
+        
+        // Tab sarlavhasida mijoz ma'lumotlarini ko'rsatish
+        const tabTitle = activeTab.querySelector('.tab-title');
+        if (tabTitle) {
+            const shortPhone = phone ? phone.replace(/\+998\(|\)|\s|-/g, '') : '';
+            const tabText = shortPhone ? `Savdo ${tabId}: ${name} (${shortPhone})` : `Savdo ${tabId}: ${name}`;
+            tabTitle.textContent = tabText;
+            tabTitle.title = displayText; // Tooltip uchun to'liq ma'lumot
         }
         
         console.log(`✅ Mijoz tanlandi: ${name} (ID: ${id})`);
