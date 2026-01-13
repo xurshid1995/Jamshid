@@ -1944,8 +1944,8 @@
     
     // USD dan UZS ga avtomatik konversiya
     function updateUZSPrice() {
-        const usdInput = document.getElementById('modalPriceUSD');
-        const uzsInput = document.getElementById('modalPriceUZS');
+        const usdInput = getActiveTabElement('modalPriceUSD');
+        const uzsInput = getActiveTabElement('modalPriceUZS');
         
         if (!usdInput || !uzsInput) {
             console.error('❌ Modal input elementlari topilmadi');
@@ -1966,8 +1966,8 @@
     
     // UZS dan USD ga avtomatik konversiya
     function updateUSDPrice() {
-        const usdInput = document.getElementById('modalPriceUSD');
-        const uzsInput = document.getElementById('modalPriceUZS');
+        const usdInput = getActiveTabElement('modalPriceUSD');
+        const uzsInput = getActiveTabElement('modalPriceUZS');
         
         if (!usdInput || !uzsInput) {
             console.error('❌ Modal input elementlari topilmadi');
@@ -1996,11 +1996,23 @@
         
         currentProduct = { id: productId, name: productName, available: quantity, price: price, costPrice: costPrice };
         
-        document.getElementById('modalProductName').textContent = productName;
-        document.getElementById('modalAvailable').value = quantity;
-        document.getElementById('modalQuantity').value = 1;
-        document.getElementById('modalQuantity').max = quantity;
-        document.getElementById('modalPriceUSD').value = price.toFixed(2);
+        // Tab-aware modal elementlarini topish
+        const modalProductName = getActiveTabElement('modalProductName');
+        const modalAvailable = getActiveTabElement('modalAvailable');
+        const modalQuantity = getActiveTabElement('modalQuantity');
+        const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+        const quantityModal = getActiveTabElement('quantityModal');
+        
+        if (!modalProductName || !modalAvailable || !modalQuantity || !modalPriceUSD || !quantityModal) {
+            console.error('❌ Modal elementlari topilmadi');
+            return;
+        }
+        
+        modalProductName.textContent = productName;
+        modalAvailable.value = quantity;
+        modalQuantity.value = 1;
+        modalQuantity.max = quantity;
+        modalPriceUSD.value = price.toFixed(2);
         updateUZSPrice();
         
         // Validatsiyalarni o'rnatish
@@ -2010,11 +2022,11 @@
         validatePrice();
         validateQuantity();
         
-        document.getElementById('quantityModal').style.display = 'flex';
+        quantityModal.style.display = 'flex';
         
         // Fokusni miqdor maydoniga berish
         setTimeout(() => {
-            const quantityInput = document.getElementById('modalQuantity');
+            const quantityInput = getActiveTabElement('modalQuantity');
             if (quantityInput) {
                 quantityInput.focus();
                 quantityInput.select(); // Matnni belgilash
@@ -2054,9 +2066,14 @@
     // Bu funksiya faqat dastlabki validatsiyalarni ishga tushirish uchun
     function setupValidation() {
         // Eski event listener'larni olib tashlash (clone qilish orqali)
-        const usdInput = document.getElementById('modalPriceUSD');
-        const uzsInput = document.getElementById('modalPriceUZS');
-        const qtyInput = document.getElementById('modalQuantity');
+        const usdInput = getActiveTabElement('modalPriceUSD');
+        const uzsInput = getActiveTabElement('modalPriceUZS');
+        const qtyInput = getActiveTabElement('modalQuantity');
+        
+        if (!usdInput || !uzsInput || !qtyInput) {
+            console.error('❌ Modal validation elementlari topilmadi');
+            return;
+        }
         
         // Element'larni clone qilish barcha eski listener'larni olib tashlaydi
         const newUsdInput = usdInput.cloneNode(true);
@@ -2068,9 +2085,9 @@
         qtyInput.parentNode.replaceChild(newQtyInput, qtyInput);
         
         // Yangi event listener'lar qo'shish
-        const modalPriceUSD = document.getElementById('modalPriceUSD');
-        const modalPriceUZS = document.getElementById('modalPriceUZS');
-        const modalQuantity = document.getElementById('modalQuantity');
+        const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+        const modalPriceUZS = getActiveTabElement('modalPriceUZS');
+        const modalQuantity = getActiveTabElement('modalQuantity');
         
         if (modalPriceUSD) modalPriceUSD.addEventListener('input', updateUZSPrice);
         if (modalPriceUZS) modalPriceUZS.addEventListener('input', updateUSDPrice);
@@ -2083,34 +2100,41 @@
             return; // Mahsulot mavjud emas
         }
         
-        const quantity = parseInt(document.getElementById('modalQuantity').value) || 0;
+        const modalQuantity = getActiveTabElement('modalQuantity');
+        const warningDiv = getActiveTabElement('priceWarning');
+        const warningText = getActiveTabElement('priceWarningText');
+        
+        if (!modalQuantity || !warningDiv || !warningText) {
+            console.error('❌ Validation elementlari topilmadi');
+            return;
+        }
+        
+        const quantity = parseInt(modalQuantity.value) || 0;
         const available = currentProduct.available || 0;
-        const warningDiv = document.getElementById('priceWarning');
-        const warningText = document.getElementById('priceWarningText');
-        const quantityInput = document.getElementById('modalQuantity');
         
         // Miqdor mavjud miqdordan oshib ketsa yoki 0 dan kichik bo'lsa
         if (quantity > available) {
             warningDiv.style.display = 'block';
             warningText.textContent = `Stokda faqat ${available} dona mavjud!`;
-            quantityInput.style.borderColor = '#dc3545';
-            quantityInput.style.backgroundColor = '#ffe6e6';
+            modalQuantity.style.borderColor = '#dc3545';
+            modalQuantity.style.backgroundColor = '#ffe6e6';
         } else if (quantity <= 0) {
             warningDiv.style.display = 'block';
             warningText.textContent = 'Miqdor 0 dan katta bo\'lishi kerak!';
-            quantityInput.style.borderColor = '#dc3545';
-            quantityInput.style.backgroundColor = '#ffe6e6';
+            modalQuantity.style.borderColor = '#dc3545';
+            modalQuantity.style.backgroundColor = '#ffe6e6';
         } else {
             // Agar narx validatsiyasi bo'lmasa, warningni yashirish
-            const priceUSD = parseFloat(document.getElementById('modalPriceUSD').value) || 0;
+            const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+            const priceUSD = modalPriceUSD ? parseFloat(modalPriceUSD.value) || 0 : 0;
             const costPrice = parseFloat(currentProduct.costPrice) || 0;
             
             if (priceUSD > costPrice || priceUSD <= 0) {
                 warningDiv.style.display = 'none';
             }
             
-            quantityInput.style.borderColor = '#ced4da';
-            quantityInput.style.backgroundColor = '#ffffff';
+            modalQuantity.style.borderColor = '#ced4da';
+            modalQuantity.style.backgroundColor = '#ffffff';
         }
     }
     
@@ -2120,10 +2144,18 @@
             return; // Tan narx mavjud emas
         }
         
-        const priceUSD = parseFloat(document.getElementById('modalPriceUSD').value) || 0;
+        const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+        const modalPriceUZS = getActiveTabElement('modalPriceUZS');
+        const warningDiv = getActiveTabElement('priceWarning');
+        const warningText = getActiveTabElement('priceWarningText');
+        
+        if (!modalPriceUSD || !modalPriceUZS || !warningDiv || !warningText) {
+            console.error('❌ Price validation elementlari topilmadi');
+            return;
+        }
+        
+        const priceUSD = parseFloat(modalPriceUSD.value) || 0;
         const costPrice = parseFloat(currentProduct.costPrice) || 0;
-        const warningDiv = document.getElementById('priceWarning');
-        const warningText = document.getElementById('priceWarningText');
         
         // Narx tan narxdan past yoki teng bo'lsa
         if (priceUSD <= costPrice && priceUSD > 0) {
@@ -2131,57 +2163,61 @@
             warningText.textContent = 'Bu narxda sotib bo\'lmaydi, narx juda past!';
             
             // Input border va background'ini qizil qilish
-            document.getElementById('modalPriceUSD').style.borderColor = '#dc3545';
-            document.getElementById('modalPriceUSD').style.backgroundColor = '#ffe6e6';
-            document.getElementById('modalPriceUZS').style.borderColor = '#dc3545';
-            document.getElementById('modalPriceUZS').style.backgroundColor = '#ffe6e6';
+            modalPriceUSD.style.borderColor = '#dc3545';
+            modalPriceUSD.style.backgroundColor = '#ffe6e6';
+            modalPriceUZS.style.borderColor = '#dc3545';
+            modalPriceUZS.style.backgroundColor = '#ffe6e6';
         } else if (priceUSD <= 0) {
             // Narx 0 yoki manfiy bo'lsa
             warningDiv.style.display = 'block';
             warningText.textContent = 'Narx 0 dan katta bo\'lishi kerak!';
             
             // Input border va background'ini qizil qilish
-            document.getElementById('modalPriceUSD').style.borderColor = '#dc3545';
-            document.getElementById('modalPriceUSD').style.backgroundColor = '#ffe6e6';
-            document.getElementById('modalPriceUZS').style.borderColor = '#dc3545';
-            document.getElementById('modalPriceUZS').style.backgroundColor = '#ffe6e6';
+            modalPriceUSD.style.borderColor = '#dc3545';
+            modalPriceUSD.style.backgroundColor = '#ffe6e6';
+            modalPriceUZS.style.borderColor = '#dc3545';
+            modalPriceUZS.style.backgroundColor = '#ffe6e6';
         } else {
             warningDiv.style.display = 'none';
             
             // Input border va background'ini normal holatga qaytarish
-            document.getElementById('modalPriceUSD').style.borderColor = '#ced4da';
-            document.getElementById('modalPriceUSD').style.backgroundColor = '#ffffff';
-            document.getElementById('modalPriceUZS').style.borderColor = '#ced4da';
-            document.getElementById('modalPriceUZS').style.backgroundColor = '#ffffff';
+            modalPriceUSD.style.borderColor = '#ced4da';
+            modalPriceUSD.style.backgroundColor = '#ffffff';
+            modalPriceUZS.style.borderColor = '#ced4da';
+            modalPriceUZS.style.backgroundColor = '#ffffff';
         }
     }
     
     // Modal yopish
     function closeModal() {
-        document.getElementById('quantityModal').style.display = 'none';
+        const quantityModal = getActiveTabElement('quantityModal');
+        if (quantityModal) {
+            quantityModal.style.display = 'none';
+        }
+        
         currentProduct = null;
         delete window.editingCartIndex; // Tahrirlash rejimini tozalash
         
         // Warning xabarini yashirish
-        const warningDiv = document.getElementById('priceWarning');
+        const warningDiv = getActiveTabElement('priceWarning');
         if (warningDiv) {
             warningDiv.style.display = 'none';
         }
         
         // Input border va background'larini tozalash
-        const quantityInput = document.getElementById('modalQuantity');
+        const quantityInput = getActiveTabElement('modalQuantity');
         if (quantityInput) {
             quantityInput.style.borderColor = '#ced4da';
             quantityInput.style.backgroundColor = '#ffffff';
         }
         
-        const usdPriceInput = document.getElementById('modalPriceUSD');
+        const usdPriceInput = getActiveTabElement('modalPriceUSD');
         if (usdPriceInput) {
             usdPriceInput.style.borderColor = '#ced4da';
             usdPriceInput.style.backgroundColor = '#ffffff';
         }
         
-        const uzsPriceInput = document.getElementById('modalPriceUZS');
+        const uzsPriceInput = getActiveTabElement('modalPriceUZS');
         if (uzsPriceInput) {
             uzsPriceInput.style.borderColor = '#ced4da';
             uzsPriceInput.style.backgroundColor = '#ffffff';
@@ -2198,9 +2234,18 @@
     
     // Savatga qo'shish
     async function confirmAddToCart() {
-        const quantity = parseInt(document.getElementById('modalQuantity').value);
-        const priceUSD = parseFloat(document.getElementById('modalPriceUSD').value);
-        const priceUZS = parseFloat(document.getElementById('modalPriceUZS').value);
+        const modalQuantity = getActiveTabElement('modalQuantity');
+        const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+        const modalPriceUZS = getActiveTabElement('modalPriceUZS');
+        
+        if (!modalQuantity || !modalPriceUSD || !modalPriceUZS) {
+            console.error('❌ Modal input elementlari topilmadi');
+            return;
+        }
+        
+        const quantity = parseInt(modalQuantity.value);
+        const priceUSD = parseFloat(modalPriceUSD.value);
+        const priceUZS = parseFloat(modalPriceUZS.value);
         
         // Narx validatsiyasi - tan narxdan past yoki teng bo'lsa, tasdiqlash
         if (currentProduct && currentProduct.costPrice) {
@@ -2744,12 +2789,26 @@
         // Chap tomondagi jadvalni yangilash
         await loadProducts();
         
+        // Tab-aware modal elementlarini topish
+        const quantityModal = getActiveTabElement('quantityModal');
+        const modalProductName = getActiveTabElement('modalProductName');
+        const locationSelect = getActiveTabElement('locationSelect');
+        const modalAvailable = getActiveTabElement('modalAvailable');
+        const modalQuantity = getActiveTabElement('modalQuantity');
+        const modalPriceUSD = getActiveTabElement('modalPriceUSD');
+        const modalPriceUZS = getActiveTabElement('modalPriceUZS');
+        
+        if (!quantityModal || !modalProductName || !locationSelect) {
+            console.error('❌ Modal elementlari topilmadi');
+            return;
+        }
+        
         // Modal oynani ochish
-        document.getElementById('quantityModal').style.display = 'flex';
-        document.getElementById('modalProductName').textContent = item.name;
+        quantityModal.style.display = 'flex';
+        modalProductName.textContent = item.name;
         
         // Mavjud miqdorni olish (stokka qaytarilgandan keyin)
-        const locationValue = document.getElementById('locationSelect').value;
+        const locationValue = locationSelect.value;
         const [type, id] = locationValue.split('_');
         try {
             const response = await fetch(`/api/products?location=${locationValue}`);
@@ -2768,24 +2827,24 @@
                     return false;
                 });
                 
-                if (matchingStock) {
-                    document.getElementById('modalAvailable').value = matchingStock.quantity || 0;
-                    document.getElementById('modalQuantity').max = matchingStock.quantity || 0;
+                if (matchingStock && modalAvailable && modalQuantity) {
+                    modalAvailable.value = matchingStock.quantity || 0;
+                    modalQuantity.max = matchingStock.quantity || 0;
                 }
             }
         } catch (error) {
             console.error('Mavjud miqdorni olishda xatolik:', error);
-            document.getElementById('modalAvailable').value = 0;
+            if (modalAvailable) modalAvailable.value = 0;
         }
         
         // Korzinada qancha bo'lsa o'sha miqdorni ko'rsatish
-        document.getElementById('modalQuantity').value = item.quantity;
-        document.getElementById('modalPriceUSD').value = item.priceUSD.toFixed(2);
-        document.getElementById('modalPriceUZS').value = item.priceUZS;
+        if (modalQuantity) modalQuantity.value = item.quantity;
+        if (modalPriceUSD) modalPriceUSD.value = item.priceUSD.toFixed(2);
+        if (modalPriceUZS) modalPriceUZS.value = item.priceUZS;
         
         // Miqdor maydonini avtomatik select qilish
         setTimeout(() => {
-            const quantityInput = document.getElementById('modalQuantity');
+            const quantityInput = getActiveTabElement('modalQuantity');
             if (quantityInput) {
                 quantityInput.focus();
                 quantityInput.select(); // Ctrl+A effekti
@@ -2796,7 +2855,7 @@
         // Tan narxni mahsulot ma'lumotlaridan olish
         let costPrice = 0;
         try {
-            const locationValue = document.getElementById('locationSelect').value;
+            const locationValue = locationSelect.value;
             const response = await fetch(`/api/products?location=${locationValue}`);
             const data = await response.json();
             const products = Array.isArray(data) ? data : (data.products || []);
