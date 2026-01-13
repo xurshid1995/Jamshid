@@ -3203,7 +3203,7 @@
             // Dropdown tashqarisiga bosilganda yopish
             document.addEventListener('click', function(e) {
                 const dropdown = document.getElementById('customerDropdown');
-                if (!customerSearchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                if (dropdown && !customerSearchInput.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
             });
@@ -3331,7 +3331,7 @@
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('customerDropdown');
             const input = document.getElementById('customerSearch');
-            if (e.target !== input && e.target !== dropdown && !dropdown.contains(e.target)) {
+            if (dropdown && input && e.target !== input && e.target !== dropdown && !dropdown.contains(e.target)) {
                 dropdown.style.display = 'none';
             }
         });
