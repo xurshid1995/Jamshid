@@ -906,6 +906,10 @@
             console.log(`📍 API'dan ${locations.length} ta joylashuv olinadi:`, locations);
             
             const locationSelect = document.getElementById('locationSelect');
+            if (!locationSelect) {
+                console.warn('⚠️ locationSelect elementi topilmadi (tab sistemada bo\'lishi mumkin)');
+                return;
+            }
             locationSelect.innerHTML = '<option value="">Tanlang...</option>';
             
             // Foydalanuvchining default store_id'sini olish
@@ -1444,6 +1448,10 @@
     // Universal qidiruv maydoni (Barcode + Mahsulot)
     document.addEventListener('DOMContentLoaded', function() {
         const universalSearch = document.getElementById('universalSearch');
+        if (!universalSearch) {
+            console.warn('⚠️ universalSearch elementi topilmadi (tab sistemada)');
+            return;
+        }
         
         // Keyboard navigation
         universalSearch.addEventListener('keydown', function(e) {
@@ -3204,46 +3212,94 @@
         }
         
         // To'lov modal oynasida USD dan UZS ga avtomatik konversiya
-        document.getElementById('paymentCashUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentCashUZS').value = Math.round(usd * exchangeRate);
-        });
+        const paymentCashUSD = document.getElementById('paymentCashUSD');
+        if (paymentCashUSD) {
+            paymentCashUSD.addEventListener('input', function() {
+                const usd = parseFloat(this.value) || 0;
+                const paymentCashUZS = document.getElementById('paymentCashUZS');
+                if (paymentCashUZS) {
+                    paymentCashUZS.value = Math.round(usd * exchangeRate);
+                }
+            });
+        }
         
-        document.getElementById('paymentClickUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentClickUZS').value = Math.round(usd * exchangeRate);
-        });
+        const paymentClickUSD = document.getElementById('paymentClickUSD');
+        if (paymentClickUSD) {
+            paymentClickUSD.addEventListener('input', function() {
+                const usd = parseFloat(this.value) || 0;
+                const paymentClickUZS = document.getElementById('paymentClickUZS');
+                if (paymentClickUZS) {
+                    paymentClickUZS.value = Math.round(usd * exchangeRate);
+                }
+            });
+        }
         
-        document.getElementById('paymentTerminalUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentTerminalUZS').value = Math.round(usd * exchangeRate);
-        });
+        const paymentTerminalUSD = document.getElementById('paymentTerminalUSD');
+        if (paymentTerminalUSD) {
+            paymentTerminalUSD.addEventListener('input', function() {
+                const usd = parseFloat(this.value) || 0;
+                const paymentTerminalUZS = document.getElementById('paymentTerminalUZS');
+                if (paymentTerminalUZS) {
+                    paymentTerminalUZS.value = Math.round(usd * exchangeRate);
+                }
+            });
+        }
         
-        document.getElementById('paymentDebtUSD').addEventListener('input', function() {
-            const usd = parseFloat(this.value) || 0;
-            document.getElementById('paymentDebtUZS').value = Math.round(usd * exchangeRate);
-        });
+        const paymentDebtUSD = document.getElementById('paymentDebtUSD');
+        if (paymentDebtUSD) {
+            paymentDebtUSD.addEventListener('input', function() {
+                const usd = parseFloat(this.value) || 0;
+                const paymentDebtUZS = document.getElementById('paymentDebtUZS');
+                if (paymentDebtUZS) {
+                    paymentDebtUZS.value = Math.round(usd * exchangeRate);
+                }
+            });
+        }
         
         // To'lov modal oynasida UZS dan USD ga avtomatik konversiya
-        document.getElementById('paymentCashUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentCashUSD').value = (uzs / exchangeRate).toFixed(2);
-        });
+        const paymentCashUZS = document.getElementById('paymentCashUZS');
+        if (paymentCashUZS) {
+            paymentCashUZS.addEventListener('input', function() {
+                const uzs = parseFloat(this.value) || 0;
+                const paymentCashUSD_elem = document.getElementById('paymentCashUSD');
+                if (paymentCashUSD_elem) {
+                    paymentCashUSD_elem.value = (uzs / exchangeRate).toFixed(2);
+                }
+            });
+        }
         
-        document.getElementById('paymentClickUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentClickUSD').value = (uzs / exchangeRate).toFixed(2);
-        });
+        const paymentClickUZS = document.getElementById('paymentClickUZS');
+        if (paymentClickUZS) {
+            paymentClickUZS.addEventListener('input', function() {
+                const uzs = parseFloat(this.value) || 0;
+                const paymentClickUSD_elem = document.getElementById('paymentClickUSD');
+                if (paymentClickUSD_elem) {
+                    paymentClickUSD_elem.value = (uzs / exchangeRate).toFixed(2);
+                }
+            });
+        }
         
-        document.getElementById('paymentTerminalUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentTerminalUSD').value = (uzs / exchangeRate).toFixed(2);
-        });
+        const paymentTerminalUZS = document.getElementById('paymentTerminalUZS');
+        if (paymentTerminalUZS) {
+            paymentTerminalUZS.addEventListener('input', function() {
+                const uzs = parseFloat(this.value) || 0;
+                const paymentTerminalUSD_elem = document.getElementById('paymentTerminalUSD');
+                if (paymentTerminalUSD_elem) {
+                    paymentTerminalUSD_elem.value = (uzs / exchangeRate).toFixed(2);
+                }
+            });
+        }
         
-        document.getElementById('paymentDebtUZS').addEventListener('input', function() {
-            const uzs = parseFloat(this.value) || 0;
-            document.getElementById('paymentDebtUSD').value = (uzs / exchangeRate).toFixed(2);
-        });
+        const paymentDebtUZS = document.getElementById('paymentDebtUZS');
+        if (paymentDebtUZS) {
+            paymentDebtUZS.addEventListener('input', function() {
+                const uzs = parseFloat(this.value) || 0;
+                const paymentDebtUSD_elem = document.getElementById('paymentDebtUSD');
+                if (paymentDebtUSD_elem) {
+                    paymentDebtUSD_elem.value = (uzs / exchangeRate).toFixed(2);
+                }
+            });
+        }
         
         // Input focus bo'lganda dropdown'ni ko'rsatish
         const customerSearchInput2 = document.getElementById('customerSearch');
