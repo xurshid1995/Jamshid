@@ -972,7 +972,7 @@
     }
     
     // Tabni yopish
-    function closeSaleTab(tabId) {
+    function closeSaleTab(tabId, skipConfirmation = false) {
         console.log(`❌ Tab yopilmoqda: ${tabId}`);
         
         // Agar faqat bitta tab qolgan bo'lsa, yopishga ruxsat bermaslik
@@ -981,15 +981,18 @@
             return;
         }
         
-        // Tab ma'lumotlarini tekshirish
-        const cart = TabStorage.get(tabId, 'cart') || [];
-        if (cart.length > 0) {
-            const confirmClose = confirm(
-                `⚠️ Bu tabda ${cart.length} ta mahsulot bor!\n\n` +
-                'Tabni yopsangiz, barcha ma\'lumotlar o\'chadi.\n\n' +
-                'Davom etasizmi?'
-            );
-            if (!confirmClose) return;
+        // Tab ma'lumotlarini tekshirish (faqat manual yopilganda)
+        if (!skipConfirmation) {
+            const tabState = tabStates[tabId];
+            const cart = (tabState && tabState.cart) || [];
+            if (cart.length > 0) {
+                const confirmClose = confirm(
+                    `⚠️ Bu tabda ${cart.length} ta mahsulot bor!\n\n` +
+                    'Tabni yopsangiz, barcha ma\'lumotlar o\'chadi.\n\n' +
+                    'Davom etasizmi?'
+                );
+                if (!confirmClose) return;
+            }
         }
         
         // Tabni o'chirish
@@ -4292,22 +4295,47 @@
             
             alert('✅ Savdo muvaffaqiyatli yakunlandi!');
             
-            // Savatni tozalash va modal yopish
-            cart = [];
-            updateCart();
-            closePaymentModal();
-            
-            // Mijoz ma'lumotlarini tozalash
-            const customerSearch = getActiveTabElement('customerSearch');
-            const selectedCustomerId = getActiveTabElement('selectedCustomerId');
-            const cartCustomerInfo = getActiveTabElement('cartCustomerInfo');
-            
-            if (customerSearch) customerSearch.value = '';
-            if (selectedCustomerId) selectedCustomerId.value = '';
-            if (cartCustomerInfo) cartCustomerInfo.innerHTML = '<h3 style="margin: 0; color: #333;">🛒 Savdo Korzinasi</h3>';
-            
-            // Mahsulotlar jadvalini yangilash
-            await loadProducts();
+            // Tab strategiyasi: 1 ta tab bo'lsa yangilash, ko'p bo'lsa yopish
+            if (salesTabs.length === 1) {
+                // Faqat 1 ta tab ochiq - to'liq yangilash
+                console.log('🔄 Yagona tab - ma\'lumotlarni tozalash');
+                
+                // Savatni tozalash
+                cart = [];
+                updateCart();
+                closePaymentModal();
+                
+                // Mijoz ma'lumotlarini tozalash
+                const customerSearch = getActiveTabElement('customerSearch');
+                const selectedCustomerId = getActiveTabElement('selectedCustomerId');
+                const cartCustomerInfo = getActiveTabElement('cartCustomerInfo');
+                
+                if (customerSearch) customerSearch.value = '';
+                if (selectedCustomerId) selectedCustomerId.value = '';
+                if (cartCustomerInfo) cartCustomerInfo.innerHTML = '<h3 style="margin: 0; color: #333;">🛒 Savdo Korzinasi</h3>';
+                
+                // Tab state'ni tozalash
+                const tabState = getTabState();
+                if (tabState) {
+                    tabState.cart = [];
+                    tabState.currentProduct = null;
+                    tabState.editingSaleId = null;
+                    tabState.currentPendingSaleId = null;
+                }
+                
+                // Mahsulotlar jadvalini yangilash
+                await loadProducts();
+                
+            } else {
+                // Ko'p tab ochiq - hozirgi tabni yopish
+                console.log('❌ Ko\'p tab - hozirgi tabni yopish');
+                closePaymentModal();
+                
+                // Aktiv tabni yopish (tasdiqlashsiz)
+                if (activeTabId) {
+                    closeSaleTab(activeTabId, true); // skipConfirmation = true
+                }
+            }
             
         } catch (error) {
             console.error('❌ Savdoni yuborishda xatolik:', error);
