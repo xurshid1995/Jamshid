@@ -4353,13 +4353,23 @@
                 }
                 
                 // Savdo ma'lumotlarini tayyorlash
+                const sellerName = '{{ (current_user.first_name + " " + current_user.last_name) if current_user and current_user.first_name else current_user.username if current_user else "Sotuvchi" }}';
+                const sellerPhone = '{{ current_user.phone if current_user and current_user.phone else "" }}';
+                console.log('🔍 Debug - Seller info:', {
+                    sellerName: sellerName,
+                    sellerPhone: sellerPhone,
+                    currentUser: '{{ current_user.username if current_user else "None" }}',
+                    firstName: '{{ current_user.first_name if current_user else "None" }}',
+                    lastName: '{{ current_user.last_name if current_user else "None" }}'
+                });
+                
                 const saleForPrint = {
                     id: result.sale_id || result.id,
                     sale_date: new Date().toISOString(),
                     customer_name: customerName,
                     customer_phone: '',
-                    seller_name: '{{ (current_user.first_name + " " + current_user.last_name) if current_user and current_user.first_name else current_user.username if current_user else "Sotuvchi" }}',
-                    seller_phone: '{{ current_user.phone if current_user and current_user.phone else "" }}',
+                    seller_name: sellerName,
+                    seller_phone: sellerPhone,
                     store_name: selectedLocationId ? (document.querySelector('#locationSelect option:checked')?.text || 'Do\'kon') : 'Do\'kon',
                     total_amount: totalUSD,
                     payment_details: paymentDetails.join(', '),
