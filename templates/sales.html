@@ -3318,9 +3318,15 @@
                 console.log('📦 items.length:', sale.items?.length);
                 
                 // 1. JOYLASHUVNI TANLASH
-                const locationSelect = document.getElementById('locationSelect');
+                const locationSelect = getActiveTabElement('locationSelect');
                 console.log('📍 locationSelect element:', locationSelect);
                 console.log('📍 locationSelect.options.length:', locationSelect?.options?.length);
+                
+                if (!locationSelect) {
+                    console.error('❌ locationSelect elementi topilmadi');
+                    alert('Joylashuv tanlash elementi topilmadi');
+                    return;
+                }
                 
                 const locationValue = sale.location_type === 'store' ? `store_${sale.location_id}` : `warehouse_${sale.location_id}`;
                 console.log(`📍 Joylashuv qiymati o'rnatilmoqda: ${locationValue}`);
@@ -3346,6 +3352,9 @@
                 selectedLocationType = sale.location_type;
                 selectedLocationId = sale.location_id;
                 console.log(`📍 Global o'zgaruvchilar o'rnatildi: type=${selectedLocationType}, id=${selectedLocationId}`);
+                
+                // Locationni triggerChange orqali yangilash
+                triggerChangeEvent(locationSelect);
                 
                 // 2. MAHSULOTLARNI YUKLASH
                 console.log('📦 Mahsulotlar yuklanmoqda...');
