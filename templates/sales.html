@@ -2015,7 +2015,7 @@
                 }
                 
                 const productName = product.name || `Mahsulot #${product.id}`;
-                const safeProductName = productName.replace(/'/g, "\\'");
+                const safeProductName = productName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const costPrice = product.cost_price || 0;
                 
                 const row = document.createElement('tr');
@@ -3181,7 +3181,7 @@
                 }
                 
                 const productName = product.name || `Mahsulot #${product.id}`;
-                const safeProductName = productName.replace(/'/g, "\\'");
+                const safeProductName = productName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const costPrice = product.cost_price || 0;
                 
                 const row = document.createElement('tr');
