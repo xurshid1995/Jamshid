@@ -4565,11 +4565,9 @@
                     <div class="receipt-info">
                         <div>Chek #${sale.id}</div>
                         <div>${new Date(sale.sale_date).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</div>
-                        <div>Sotuvchi: ${sale.seller_name || 'Sotuvchi'}</div>
-                        ${sale.seller_phone ? '<div>' + sale.seller_phone + '</div>' : ''}
+                        <div><strong>Sotuvchi:</strong> ${sale.seller_name || 'Sotuvchi'}${sale.seller_phone ? ' (' + sale.seller_phone + ')' : ''}</div>
                         <div style="margin-top: 2mm; border-top: 1px dashed #ccc; padding-top: 2mm;">
-                            <div><strong>Mijoz:</strong> ${sale.customer_name || 'Naqd mijoz'}</div>
-                            ${sale.customer_phone ? '<div>' + sale.customer_phone + '</div>' : ''}
+                            <div><strong>Mijoz:</strong> ${sale.customer_name || 'Naqd mijoz'}${sale.customer_phone ? ' (' + sale.customer_phone + ')' : ''}</div>
                         </div>
                     </div>
                 </div>
