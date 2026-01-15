@@ -4468,6 +4468,13 @@
         const exchangeRate = 12700;
         const receiptWindow = window.open('', '_blank', 'width=400,height=600');
         
+        // Popup blocker tekshiruvi
+        if (!receiptWindow) {
+            alert('⚠️ Popup blocker chekni blokladi! Brauzer sozlamalarida popup\'larga ruxsat bering.');
+            console.error('❌ window.open() null qaytardi - popup blocker faol');
+            return;
+        }
+        
         const receiptHTML = `
             <!DOCTYPE html>
             <html>
