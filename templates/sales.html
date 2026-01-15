@@ -4583,16 +4583,17 @@
                 <div class="totals" style="margin-top: 3mm;">
                     <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 2mm;">
                         <span>Jami summa:</span>
-                        <span>${
-                            currency === 'both'
-                                ? '$' + parseFloat(sale.total_amount).toFixed(2) + '<br><span style="font-size: 12px; color: #666;">' + Math.round(parseFloat(sale.total_amount) * exchangeRate).toLocaleString('uz-UZ') + ' so\'m</span>'
-                                : currency === 'uzs' 
-                                    ? Math.round(parseFloat(sale.total_amount) * exchangeRate).toLocaleString('uz-UZ') + ' so\'m'
-                                    : '$' + parseFloat(sale.total_amount).toFixed(2)
-                        }</span>
-                            : '$' + parseFloat(sale.total_amount).toFixed(2)
-                        }</span>
+                        <span>${(() => {
+                            if (currency === 'both') {
+                                return '$' + parseFloat(sale.total_amount).toFixed(2) + '<br><span style="font-size: 12px; color: #666;">' + Math.round(parseFloat(sale.total_amount) * exchangeRate).toLocaleString('uz-UZ') + ' so\\'m</span>';
+                            } else if (currency === 'uzs') {
+                                return Math.round(parseFloat(sale.total_amount) * exchangeRate).toLocaleString('uz-UZ') + ' so\\'m';
+                            } else {
+                                return '$' + parseFloat(sale.total_amount).toFixed(2);
+                            }
+                        })()}</span>
                     </div>
+                </div>
                 </div>
                 
                 <div class="footer" style="text-align: center; padding-top: 3mm; font-size: 10px;">
