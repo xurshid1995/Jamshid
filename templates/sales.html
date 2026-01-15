@@ -4341,13 +4341,21 @@
             if ((printUSD && printUSD.checked) || (printUZS && printUZS.checked)) {
                 console.log('✅ Chek chiqarish boshlandi...');
                 
-                // Mijoz ma'lumotlarini olish
-                const customerSearchInput = getActiveTabElement('customerSearch');
-                const customerName = customerId && customerSearchInput ? customerSearchInput.value : 'Naqd mijoz';
+                // Popup blocker'dan qochish uchun darhol window ochish
+                const receiptWindow = window.open('', '_blank', 'width=400,height=600');
                 
-                // Qaysi valyuta tanlangani aniqlash
-                const selectedCurrency = (printUSD && printUSD.checked && printUZS && printUZS.checked) ? 'both' 
-                                      : (printUZS && printUZS.checked) ? 'uzs' 
+                if (!receiptWindow) {
+                    alert('⚠️ Popup blocker chekni blokladi! Brauzer sozlamalarida popup\'larga ruxsat bering.');
+                    console.error('❌ window.open() null qaytardi - popup blocker faol');
+                } else {
+                    // Mijoz ma'lumotlarini olish
+                    const customerSearchInput = getActiveTabElement('customerSearch');
+                    const customerName = customerId && customerSearchInput ? customerSearchInput.value : 'Naqd mijoz';
+                    
+                    // Qaysi valyuta tanlangani aniqlash
+                    const selectedCurrency = (printUSD && printUSD.checked && printUZS && printUZS.checked) ? 'both' 
+                                          : (printUZS && printUZS.checked) ? 'uzs' 
+                                          : 'usd';
                                       : 'usd';
                 
                 // To'lov turlarini tanlangan valyutada formatlash
@@ -4399,11 +4407,10 @@
                     }))
                 };
                 
-                // Tanlangan valyuta bo'yicha chek chiqarish
+                // Tanlangan valyuta bo'yicha chek chiqarish (receiptWindow allaqachon ochilgan)
                 console.log('🖨️ Chek chiqarish, valyuta:', selectedCurrency);
-                setTimeout(() => {
-                    generatePrintableReceipt(saleForPrint, selectedCurrency);
-                }, 800);
+                generatePrintableReceiptToWindow(receiptWindow, saleForPrint, selectedCurrency);
+                }
             } else {
                 console.log('ℹ️ Chek chiqarish belgilanmagan');
             }
@@ -4513,16 +4520,8 @@
     });
     
     // Chek chiqarish funksiyasi
-    function generatePrintableReceipt(sale, currency = 'uzs') {
+    function generatePrintableReceiptToWindow(receiptWindow, sale, currency = 'uzs') {
         // Global exchangeRate o'zgaruvchisidan foydalanish
-        const receiptWindow = window.open('', '_blank', 'width=400,height=600');
-        
-        // Popup blocker tekshiruvi
-        if (!receiptWindow) {
-            alert('⚠️ Popup blocker chekni blokladi! Brauzer sozlamalarida popup\'larga ruxsat bering.');
-            console.error('❌ window.open() null qaytardi - popup blocker faol');
-            return;
-        }
         
         const receiptHTML = `
             <!DOCTYPE html>
