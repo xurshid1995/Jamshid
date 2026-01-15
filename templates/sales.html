@@ -4404,9 +4404,26 @@
                 console.log('ℹ️ Chek chiqarish belgilanmagan');
             }
             
+            // Modalni yopish
+            closePaymentModal();
+            
             // Tahrirlash rejimida eski sahifaga qaytish
             if (editingSaleId) {
                 alert('✅ Savdo muvaffaqiyatli tahrirlandi!');
+                
+                // Chek chiqarish (tahrirlash rejimida ham)
+                if (pendingReceiptData) {
+                    console.log('🖨️ Chek chiqarish boshlandi (tahrirlash rejimi)...');
+                    const receiptWindow = window.open('', '_blank', 'width=400,height=600');
+                    
+                    if (!receiptWindow) {
+                        alert('⚠️ Popup blocker chekni blokladi! Brauzer sozlamalarida popup\'larga ruxsat bering.');
+                        console.error('❌ window.open() null qaytardi - popup blocker faol');
+                    } else {
+                        generatePrintableReceiptToWindow(receiptWindow, pendingReceiptData.sale, pendingReceiptData.currency);
+                    }
+                }
+                
                 console.log('🔄 Sales history sahifasiga qaytish...');
                 window.location.href = '/sales-history';
                 return;
@@ -4417,9 +4434,6 @@
                 console.log('✅ Pending savdo yakunlandi va paid/partial statusga o\'tdi:', currentPendingSaleId);
                 currentPendingSaleId = null;
             }
-            
-            // Modalni yopish
-            closePaymentModal();
             
             // Alert'dan keyin chek chiqarish
             alert('✅ Savdo muvaffaqiyatli yakunlandi!');
