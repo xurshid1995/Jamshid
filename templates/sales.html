@@ -1825,15 +1825,26 @@
             const hoverBg = isSelected ? '#2196F3' : '#f8f9fa';
             const textColor = isSelected ? 'white' : '#333';
             const phoneColor = isSelected ? 'white' : '#6c757d';
-            return `<div onclick="selectCustomer(${customer.id}, '${customer.name.replace(/'/g, "\\'")}', '${customer.phone || ''}')" 
-                    class="customer-item" data-index="${index}"
+            const safeName = customer.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safePhone = (customer.phone || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return `<div class="customer-item" data-customer-id="${customer.id}" data-customer-name="${safeName}" data-customer-phone="${safePhone}" data-index="${index}"
                     style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: all 0.2s; background: ${bgColor};"
                     onmouseover="this.style.background='${hoverBg}'"
                     onmouseout="this.style.background='${bgColor}'">
-                    <div style="font-weight: 500; color: ${textColor};">${customer.name}</div>
-                    <div style="font-size: 12px; color: ${phoneColor};">${customer.phone || 'Telefon yo\'q'}</div>
+                    <div style="font-weight: 500; color: ${textColor};">${safeName}</div>
+                    <div style="font-size: 12px; color: ${phoneColor};">${safePhone || 'Telefon yo\'q'}</div>
                 </div>`;
         }).join('');
+        
+        // Event listener'larni qo'shish
+        dropdown.querySelectorAll('.customer-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const customerId = parseInt(this.dataset.customerId);
+                const customerName = this.dataset.customerName;
+                const customerPhone = this.dataset.customerPhone;
+                selectCustomer(customerId, customerName, customerPhone);
+            });
+        });
     }
     
     function navigateCustomerDropdown(direction) {
@@ -1972,9 +1983,13 @@
                 const response = await fetch(`/api/products?location=${locationValue}&page=${page}&per_page=${itemsPerPage}`);
                 data = await response.json();
                 
-                // API dan kelgan ma'lumotni tekshirish
-                products = Array.isArray(data) ? data : (data.products || []);
-                totalProducts = data.total || products.length;
+                console.log('🌐 API response:', data);
+                
+                // API dan kelgan ma'lumotni to'g'ri parse qilish
+                products = data.products || [];
+                totalProducts = (data.pagination && data.pagination.total) ? data.pagination.total : products.length;
+                
+                console.log('📊 Parsed:', products.length, 'ta mahsulot, jami:', totalProducts);
                 
                 // Cache'ga saqlash
                 productsCache.set(cacheKey, { products, total: totalProducts });
