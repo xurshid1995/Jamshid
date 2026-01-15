@@ -601,6 +601,8 @@
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="barcode">📷 Barcode:</label>
+                            <!-- Barcode xatolik xabari - label dan keyingi qator -->
+                            <div id="barcodeErrorContainer" style="margin-top: 4px; margin-bottom: 4px;"></div>
                             <div style="display: flex; gap: 5px;">
                                 <input type="text" id="barcode" name="barcode" class="form-control" 
                                        placeholder="Avtomatik yoki kiriting" 
@@ -1198,10 +1200,10 @@
                 // Reset styling
                 this.style.borderColor = '#28a745';
                 
-                // Remove previous error message
-                const existingError = this.parentElement.querySelector('.barcode-error-msg');
-                if (existingError) {
-                    existingError.remove();
+                // Clear error container
+                const errorContainer = document.getElementById('barcodeErrorContainer');
+                if (errorContainer) {
+                    errorContainer.innerHTML = '';
                 }
                 
                 // Check if barcode is empty
@@ -1225,16 +1227,24 @@
                             // Barcode already exists
                             barcodeInput.style.borderColor = '#dc3545';
                             
-                            // Show error message
-                            const errorMsg = document.createElement('div');
-                            errorMsg.className = 'barcode-error-msg';
-                            errorMsg.style.color = '#dc3545';
-                            errorMsg.style.fontSize = '12px';
-                            errorMsg.style.marginTop = '4px';
-                            errorMsg.style.fontWeight = 'bold';
-                            errorMsg.innerHTML = `⚠️ Bu barcode "${data.product.name}" mahsulotida mavjud!`;
-                            
-                            barcodeInput.parentElement.appendChild(errorMsg);
+                            // Show error message in dedicated container
+                            const errorContainer = document.getElementById('barcodeErrorContainer');
+                            if (errorContainer) {
+                                errorContainer.innerHTML = `
+                                    <div class="barcode-error-msg" style="
+                                        color: #dc3545;
+                                        font-size: 13px;
+                                        font-weight: bold;
+                                        padding: 8px 12px;
+                                        background: #ffe6e6;
+                                        border: 2px solid #dc3545;
+                                        border-radius: 6px;
+                                        display: inline-block;
+                                    ">
+                                        ⚠️ Bu barcode "${data.product.name}" mahsulotida mavjud!
+                                    </div>
+                                `;
+                            }
                             
                             // Disable add to list button
                             const addToListBtn = document.getElementById('addToListBtn');
