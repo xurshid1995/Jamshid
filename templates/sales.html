@@ -1424,15 +1424,19 @@
                 })
             });
             
-            const product = await response.json();
+            const result = await response.json();
             
-            if (!response.ok) {
-                showBarcodeStatus(`❌ ${product.error || 'Mahsulot topilmadi'}`, 'error');
+            // Yangi API format: { success: true, data: {...} } yoki { success: false, error: '...' }
+            if (!response.ok || !result.success) {
+                const errorMsg = result.error || 'Mahsulot topilmadi';
+                showBarcodeStatus(`❌ ${errorMsg}`, 'error');
                 // Barcode inputni tozalash
                 document.getElementById('barcodeInput').value = '';
                 return;
             }
             
+            // Mahsulot ma'lumotlarini olish (yangi formatda data ichida)
+            const product = result.data || result;
             console.log('✅ Mahsulot topildi:', product);
             
             // Mahsulotni avtomatik savatga qo'shish
