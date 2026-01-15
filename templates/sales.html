@@ -3353,8 +3353,9 @@
                 selectedLocationId = sale.location_id;
                 console.log(`📍 Global o'zgaruvchilar o'rnatildi: type=${selectedLocationType}, id=${selectedLocationId}`);
                 
-                // Locationni triggerChange orqali yangilash
-                triggerChangeEvent(locationSelect);
+                // Location change event'ni trigger qilish
+                const changeEvent = new Event('change', { bubbles: true });
+                locationSelect.dispatchEvent(changeEvent);
                 
                 // 2. MAHSULOTLARNI YUKLASH
                 console.log('📦 Mahsulotlar yuklanmoqda...');
