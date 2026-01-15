@@ -1132,7 +1132,7 @@ def api_products():
     # Pagination parametrlar
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)  # Default 50
-    per_page = min(per_page, 100)  # Maximum 100 limit
+    per_page = min(per_page, 20000)  # Maximum 20000 limit (transfer uchun barcha mahsulotlar)
 
     # Search parameter
     search = request.args.get('search', '', type=str).strip()
