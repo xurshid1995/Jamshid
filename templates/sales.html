@@ -367,49 +367,6 @@
                 </div>
             </div>
             
-            <!-- Barcode Scanner Modal - TO'LIQ EKRAN -->
-            <div id="barcodeScannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999;">
-                <!-- Yopish tugmasi -->
-                <button id="closeScannerBtn" type="button" style="position: fixed; top: 15px; right: 15px; background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(5px);" title="Yopish">×</button>
-                
-                <!-- Kamera video - TO'LIQ EKRAN -->
-                <div id="barcodeScannerContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;">
-                    <div id="barcodeScanner" style="width: 100%; height: 100%; object-fit: cover;"></div>
-                    
-                    <!-- Skaner overlay -->
-                    <div id="scannerOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-                        <!-- Markaz ramka -->
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; height: 200px; border: 3px solid #28a745; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);"></div>
-                        <!-- Markaziy chiziq -->
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; height: 2px; background: linear-gradient(90deg, transparent, #28a745, transparent); animation: scanLine 2s ease-in-out infinite;"></div>
-                    </div>
-                    
-                    <!-- Status pastda -->
-                    <div id="scannerStatus" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center; font-size: 16px; font-weight: 600; color: white; padding: 15px 20px; background: rgba(40, 167, 69, 0.9); border-radius: 10px; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-                        📷 Barcode ni yashil ramka ichiga joylashtiring
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Scan animatsiyasi -->
-            <style>
-                @keyframes scanLine {
-                    0%, 100% { top: 40%; opacity: 0.3; }
-                    50% { top: 60%; opacity: 1; }
-                }
-                
-                /* Video element to'liq ekran */
-                #barcodeScanner video {
-                    width: 100% !important;
-                    height: 100% !important;
-                    object-fit: cover !important;
-                }
-                
-                #barcodeScanner canvas {
-                    display: none !important;
-                }
-            </style>
-            
             <!-- Mahsulotlar jadvali -->
             <div class="table-wrapper" style="overflow-x: auto;">
                 <table class="sales-product-table" style="width: 100%; min-width: 500px; max-width: 100%; border-collapse: collapse; table-layout: fixed;">
@@ -574,6 +531,49 @@
     </div>
     </div> <!-- End of sales-tab-content -->
 </template> <!-- End of saleTabContentTemplate -->
+
+<!-- Barcode Scanner Modal - Global (barcha tablar uchun bitta modal) -->
+<div id="barcodeScannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999;">
+    <!-- Yopish tugmasi -->
+    <button id="closeScannerBtn" type="button" style="position: fixed; top: 15px; right: 15px; background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(5px);" title="Yopish">×</button>
+    
+    <!-- Kamera video - TO'LIQ EKRAN -->
+    <div id="barcodeScannerContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;">
+        <div id="barcodeScanner" style="width: 100%; height: 100%; object-fit: cover;"></div>
+        
+        <!-- Skaner overlay -->
+        <div id="scannerOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+            <!-- Markaz ramka -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; height: 200px; border: 3px solid #28a745; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);"></div>
+            <!-- Markaziy chiziq -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; height: 2px; background: linear-gradient(90deg, transparent, #28a745, transparent); animation: scanLine 2s ease-in-out infinite;"></div>
+        </div>
+        
+        <!-- Status pastda -->
+        <div id="scannerStatus" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center; font-size: 16px; font-weight: 600; color: white; padding: 15px 20px; background: rgba(40, 167, 69, 0.9); border-radius: 10px; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+            📷 Barcode ni yashil ramka ichiga joylashtiring
+        </div>
+    </div>
+</div>
+
+<!-- Scan animatsiyasi -->
+<style>
+    @keyframes scanLine {
+        0%, 100% { top: 40%; opacity: 0.3; }
+        50% { top: 60%; opacity: 1; }
+    }
+    
+    /* Video element to'liq ekran */
+    #barcodeScanner video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    
+    #barcodeScanner canvas {
+        display: none !important;
+    }
+</style>
 
 <!-- Mijoz qo'shish modal oyna (Global - barcha tablar uchun) -->
 <div id="addCustomerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
