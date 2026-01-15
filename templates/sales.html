@@ -4673,9 +4673,11 @@
         receiptWindow.document.write(receiptHTML);
         receiptWindow.document.close();
         
-        // Window'ni ko'rsatish (foydalanuvchi o'zi Ctrl+P bosib chop etadi)
+        // Window'ga focus qilish va avtomatik print
         setTimeout(() => {
             receiptWindow.focus();
+            // Avtomatik chop etish
+            receiptWindow.print();
         }, 500);
     }
     
