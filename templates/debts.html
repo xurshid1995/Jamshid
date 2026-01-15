@@ -468,6 +468,9 @@
         <h2 style="margin-bottom: 15px; color: #28a745; display: flex; align-items: center; gap: 10px;">
             <span>✅ To'langan qarzlar tarixi</span>
         </h2>
+        <div class="search-container">
+            <input type="text" id="paidDebtSearchInput" class="search-input" placeholder="🔍 Mijoz nomi yoki savdo raqami orqali qidirish..." oninput="searchPaidDebts()">
+        </div>
         <table class="debts-table">
             <thead>
                 <tr>
@@ -641,6 +644,47 @@
             }
         } else {
             const noResultRow = document.querySelector('#debtsTableBody .no-result');
+            if (noResultRow) noResultRow.remove();
+        }
+    }
+
+    // To'langan qarzlarni qidirish
+    function searchPaidDebts() {
+        const searchTerm = document.getElementById('paidDebtSearchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#paidDebtsTableBody tr');
+        
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const dateCell = row.querySelector('td:nth-child(2)');
+            const nameCell = row.querySelector('td:nth-child(3)');
+            const saleCell = row.querySelector('td:nth-child(4)');
+            
+            if (dateCell && nameCell && saleCell) {
+                const date = dateCell.textContent.toLowerCase();
+                const name = nameCell.textContent.toLowerCase();
+                const sale = saleCell.textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || sale.includes(searchTerm) || date.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Agar hech narsa topilmasa
+        if (visibleCount === 0 && searchTerm !== '') {
+            const noResultRow = document.querySelector('#paidDebtsTableBody .no-result');
+            if (!noResultRow) {
+                const tbody = document.getElementById('paidDebtsTableBody');
+                const tr = document.createElement('tr');
+                tr.className = 'no-result';
+                tr.innerHTML = '<td colspan="6" class="no-data">🔍 Hech narsa topilmadi</td>';
+                tbody.appendChild(tr);
+            }
+        } else {
+            const noResultRow = document.querySelector('#paidDebtsTableBody .no-result');
             if (noResultRow) noResultRow.remove();
         }
     }
