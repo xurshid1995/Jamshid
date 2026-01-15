@@ -3140,13 +3140,22 @@
             console.error('Tan narxni olishda xatolik:', error);
         }
         
+        // modalAvailable elementini tab-aware usulda olish
+        const modalAvailableElement = getActiveTabElement('modalAvailable');
+        let availableQuantity = 0;
+        if (modalAvailableElement && modalAvailableElement.value) {
+            availableQuantity = parseInt(modalAvailableElement.value) || 0;
+        }
+        
         currentProduct = { 
             id: item.id, 
             name: item.name, 
-            available: parseInt(document.getElementById('modalAvailable').value),
+            available: availableQuantity,
             price: item.priceUSD,
             costPrice: costPrice
         };
+        
+        console.log('✅ currentProduct o\'rnatildi:', currentProduct);
         
         // Validatsiyalarni o'rnatish
         setupValidation();
