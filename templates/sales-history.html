@@ -2406,15 +2406,28 @@ function showSaleDetailsModal(sale) {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${sale.items.map(item => `
+                                ${sale.items.map(item => {
+                                    const exchangeRate = 12700;
+                                    const unitPriceUSD = parseFloat(item.unit_price || 0);
+                                    const totalPriceUSD = parseFloat(item.total_price || 0);
+                                    const unitPriceUZS = Math.round(unitPriceUSD * exchangeRate);
+                                    const totalPriceUZS = Math.round(totalPriceUSD * exchangeRate);
+                                    
+                                    return `
                                     <tr>
                                         <td>${item.product_name}</td>
                                         <td>${item.location_name}</td>
                                         <td>${item.quantity}</td>
-                                        <td>$${parseFloat(item.unit_price || 0).toFixed(2)}</td>
-                                        <td>$${parseFloat(item.total_price || 0).toFixed(2)}</td>
+                                        <td>
+                                            <div>$${unitPriceUSD.toFixed(2)}</div>
+                                            <div style="font-size: 11px; color: #666;">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                        </td>
+                                        <td>
+                                            <div>$${totalPriceUSD.toFixed(2)}</div>
+                                            <div style="font-size: 11px; color: #666;">${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                        </td>
                                     </tr>
-                                `).join('')}
+                                `}).join('')}
                             </tbody>
                         </table>
                     </div>
