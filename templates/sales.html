@@ -1439,19 +1439,19 @@
             const product = result.data || result;
             console.log('✅ Mahsulot topildi:', product);
             
-            // Mahsulotni avtomatik savatga qo'shish
-            showBarcodeStatus(`✓ ${product.name} topildi!`, 'success');
+            // Mahsulotni darhol savatga qo'shish
+            addToCart(product.id, product.name, product.available_quantity, product.sell_price, product.cost_price);
             
-            // 1 soniyadan keyin avtomatik savatga qo'shish
-            setTimeout(() => {
-                addToCart(product.id, product.name, product.available_quantity, product.sell_price, product.cost_price);
-                // Universal qidiruv inputini tozalash
-                const universalSearch = getActiveTabElement('universalSearch');
-                if (universalSearch) universalSearch.value = '';
-                // Statusni yashirish
-                const searchStatus = getActiveTabElement('searchStatus');
-                if (searchStatus) searchStatus.style.display = 'none';
-            }, 500);
+            // Statusni ko'rsatish
+            showBarcodeStatus(`✓ ${product.name} savatga qo'shildi!`, 'success');
+            
+            // Universal qidiruv inputini tozalash
+            const universalSearch = getActiveTabElement('universalSearch');
+            if (universalSearch) universalSearch.value = '';
+            
+            // Barcode inputni tozalash
+            const barcodeInput = document.getElementById('barcodeInput');
+            if (barcodeInput) barcodeInput.value = '';
             
         } catch (error) {
             console.error('❌ Barcode qidiruv xatosi:', error);
@@ -1472,21 +1472,22 @@
             statusDiv.style.background = '#d4edda';
             statusDiv.style.borderColor = '#c3e6cb';
             statusDiv.style.color = '#155724';
+            // Success xabarni 1 soniyadan keyin yashirish
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 1000);
         } else if (type === 'error') {
             statusDiv.style.background = '#f8d7da';
             statusDiv.style.borderColor = '#f5c6cb';
             statusDiv.style.color = '#721c24';
+            // Error xabarni 3 soniyadan keyin yashirish
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
         } else if (type === 'loading') {
             statusDiv.style.background = '#d1ecf1';
             statusDiv.style.borderColor = '#bee5eb';
             statusDiv.style.color = '#0c5460';
-        }
-        
-        // Agar error yoki success bo'lsa, 3 soniyadan keyin yashirish
-        if (type === 'error' || type === 'success') {
-            setTimeout(() => {
-                statusDiv.style.display = 'none';
-            }, 3000);
         }
     }
     
