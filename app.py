@@ -8762,6 +8762,7 @@ def api_login():
         session['username'] = user.username
         session['role'] = user.role
         session['user_name'] = f"{user.first_name} {user.last_name}"
+        session['user_phone'] = user.phone or ''
         session['store_id'] = user.store_id
 
         # Session tracking - database'da session yaratish - vaqtincha disabled
