@@ -4345,15 +4345,15 @@
                 // Global exchangeRate o'zgaruvchisidan foydalanish
                 
                 if (selectedCurrency === 'uzs') {
-                    if (cashUSD > 0) paymentDetails.push('Naqd: ' + Math.round(cashUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (clickUSD > 0) paymentDetails.push('Click: ' + Math.round(clickUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (terminalUSD > 0) paymentDetails.push('Terminal: ' + Math.round(terminalUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (debtUSD > 0) paymentDetails.push('Qarz: ' + Math.round(debtUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
+                    if (cashUSD > 0) paymentDetails.push('Naqd: ' + Math.round(cashUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (clickUSD > 0) paymentDetails.push('Click: ' + Math.round(clickUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (terminalUSD > 0) paymentDetails.push('Terminal: ' + Math.round(terminalUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (debtUSD > 0) paymentDetails.push('Qarz: ' + Math.round(debtUSD * exchangeRate).toLocaleString('uz-UZ'));
                 } else if (selectedCurrency === 'both') {
-                    if (cashUSD > 0) paymentDetails.push('Naqd: $' + cashUSD.toFixed(2) + ' / ' + Math.round(cashUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (clickUSD > 0) paymentDetails.push('Click: $' + clickUSD.toFixed(2) + ' / ' + Math.round(clickUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (terminalUSD > 0) paymentDetails.push('Terminal: $' + terminalUSD.toFixed(2) + ' / ' + Math.round(terminalUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
-                    if (debtUSD > 0) paymentDetails.push('Qarz: $' + debtUSD.toFixed(2) + ' / ' + Math.round(debtUSD * exchangeRate).toLocaleString('uz-UZ') + ' som');
+                    if (cashUSD > 0) paymentDetails.push('Naqd: $' + cashUSD.toFixed(2) + ' / ' + Math.round(cashUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (clickUSD > 0) paymentDetails.push('Click: $' + clickUSD.toFixed(2) + ' / ' + Math.round(clickUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (terminalUSD > 0) paymentDetails.push('Terminal: $' + terminalUSD.toFixed(2) + ' / ' + Math.round(terminalUSD * exchangeRate).toLocaleString('uz-UZ'));
+                    if (debtUSD > 0) paymentDetails.push('Qarz: $' + debtUSD.toFixed(2) + ' / ' + Math.round(debtUSD * exchangeRate).toLocaleString('uz-UZ'));
                 } else {
                     if (cashUSD > 0) paymentDetails.push('Naqd: $' + cashUSD.toFixed(2));
                     if (clickUSD > 0) paymentDetails.push('Click: $' + clickUSD.toFixed(2));
@@ -4381,7 +4381,7 @@
                     seller_phone: sellerPhone,
                     store_name: selectedLocationId ? (document.querySelector('#locationSelect option:checked')?.text || 'Do\'kon') : 'Do\'kon',
                     total_amount: totalUSD,
-                    payment_details: paymentDetails.join(', '),
+                    payment_details: paymentDetails.join(' / '),
                     items: cart.map(item => ({
                         product_name: item.name || item.productName,
                         quantity: item.quantity,
@@ -4632,7 +4632,7 @@
                     </div>
                 </div>
                 
-                ${sale.payment_details ? '<div style="margin-top: 3mm; padding: 2mm; background: #f8f9fa; border-radius: 2mm;"><strong style="font-size: 13px;">To\'lov:</strong><br><div style="margin-top: 2mm; font-size: 13px; font-weight: bold;">' + sale.payment_details.replace(/, /g, ',<br>') + '</div></div>' : ''}
+                ${sale.payment_details ? '<div style="margin-top: 3mm; padding: 2mm; background: #f8f9fa; border-radius: 2mm;"><strong style="font-size: 10px;">To\'lov:</strong><br><div style="margin-top: 2mm; font-size: 10px; font-weight: bold;">' + sale.payment_details.replace(/ \/ /g, '<br>') + '</div></div>' : ''}
                 </div>
                 
                 <div class="footer" style="text-align: center; padding-top: 3mm; font-size: 10px;">
