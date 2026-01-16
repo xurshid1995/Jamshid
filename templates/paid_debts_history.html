@@ -43,6 +43,13 @@
         color: white;
     }
 
+    /* Qidiruv maydoni */
+    #searchInput:focus {
+        outline: none;
+        border-color: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    }
+
     .table-container {
         background: white;
         border-radius: 10px;
@@ -189,6 +196,18 @@
     <!-- To'langan qarzlar jadvali -->
     <div class="table-container">
         <h2>✅ To'langan qarzlar ro'yxati</h2>
+        
+        <!-- Qidiruv maydoni -->
+        <div style="margin-bottom: 15px;">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="🔍 Mijoz nomi, sana yoki qabul qilgan shaxs bo'yicha qidirish..."
+                style="width: 100%; max-width: 500px; padding: 10px 15px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;"
+                oninput="searchPayments()"
+            >
+        </div>
+        
         <table class="history-table">
             <thead>
                 <tr>
@@ -296,6 +315,9 @@
         tbody.innerHTML = '';
         paidDebts.forEach((debt, index) => {
             const row = document.createElement('tr');
+            row.setAttribute('data-customer', debt.customer_name.toLowerCase());
+            row.setAttribute('data-date', debt.payment_date.toLowerCase());
+            row.setAttribute('data-receiver', debt.received_by.toLowerCase());
             
             // To'lov turlarini ko'rsatish
             const paymentTypes = [];
@@ -322,6 +344,48 @@
             
             tbody.appendChild(row);
         });
+    }
+
+    // Qidiruv funksiyasi
+    function searchPayments() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#historyTableBody tr');
+        
+        let visibleCount = 0;
+        rows.forEach(row => {
+            // Agar no-data row bo'lsa, o'tkazib yuborish
+            if (row.querySelector('.no-data')) {
+                return;
+            }
+            
+            const customerName = row.getAttribute('data-customer') || '';
+            const date = row.getAttribute('data-date') || '';
+            const receiver = row.getAttribute('data-receiver') || '';
+            
+            if (customerName.includes(searchTerm) || date.includes(searchTerm) || receiver.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Agar hech narsa topilmasa
+        const tbody = document.getElementById('historyTableBody');
+        const existingNoResult = tbody.querySelector('.no-result-row');
+        
+        if (visibleCount === 0 && searchTerm !== '') {
+            if (!existingNoResult) {
+                const noResultRow = document.createElement('tr');
+                noResultRow.className = 'no-result-row';
+                noResultRow.innerHTML = '<td colspan="6" class="no-data">🔍 Hech narsa topilmadi</td>';
+                tbody.appendChild(noResultRow);
+            }
+        } else {
+            if (existingNoResult) {
+                existingNoResult.remove();
+            }
+        }
     }
 </script>
 {% endblock %}
