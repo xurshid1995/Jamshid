@@ -4355,28 +4355,52 @@ def api_debts():
         # Exchange rate olish
         rate = CurrencyRate.query.order_by(CurrencyRate.id.desc()).first()
         exchange_rate = float(rate.rate) if rate else 13000
+        
+        # Location filter parametri
+        location_id = request.args.get('location_id', type=int)
 
         # Qarzli mijozlar ro'yxati
-        query = text("""
-            SELECT 
-                c.id as customer_id,
-                c.name as customer_name,
-                c.phone as customer_phone,
-                c.address as customer_address,
-                COALESCE(SUM(s.debt_usd), 0) as total_debt,
-                0 as paid_amount,
-                COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
-                c.last_debt_payment_date as last_payment_date,
-                COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
-                COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
-            FROM customers c
-            LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0
-            GROUP BY c.id, c.name, c.phone, c.address, c.last_debt_payment_date, c.last_debt_payment_usd, c.last_debt_payment_rate
-            HAVING COALESCE(SUM(s.debt_usd), 0) > 0
-            ORDER BY remaining_debt DESC
-        """)
-
-        result = db.session.execute(query)
+        if location_id:
+            query = text("""
+                SELECT 
+                    c.id as customer_id,
+                    c.name as customer_name,
+                    c.phone as customer_phone,
+                    c.address as customer_address,
+                    COALESCE(SUM(s.debt_usd), 0) as total_debt,
+                    0 as paid_amount,
+                    COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
+                    c.last_debt_payment_date as last_payment_date,
+                    COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
+                    COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
+                FROM customers c
+                LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0 AND s.location_id = :location_id
+                GROUP BY c.id, c.name, c.phone, c.address, c.last_debt_payment_date, c.last_debt_payment_usd, c.last_debt_payment_rate
+                HAVING COALESCE(SUM(s.debt_usd), 0) > 0
+                ORDER BY remaining_debt DESC
+            """)
+            result = db.session.execute(query, {'location_id': location_id})
+        else:
+            query = text("""
+                SELECT 
+                    c.id as customer_id,
+                    c.name as customer_name,
+                    c.phone as customer_phone,
+                    c.address as customer_address,
+                    COALESCE(SUM(s.debt_usd), 0) as total_debt,
+                    0 as paid_amount,
+                    COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
+                    c.last_debt_payment_date as last_payment_date,
+                    COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
+                    COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
+                FROM customers c
+                LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0
+                GROUP BY c.id, c.name, c.phone, c.address, c.last_debt_payment_date, c.last_debt_payment_usd, c.last_debt_payment_rate
+                HAVING COALESCE(SUM(s.debt_usd), 0) > 0
+                ORDER BY remaining_debt DESC
+            """)
+            result = db.session.execute(query)
+            
         debts = []
         
         for row in result:
@@ -4412,28 +4436,54 @@ def api_debts():
 def api_paid_debts():
     """To'langan qarzlar tarixi - faqat qarz to'lash orqali to'langan savdolar (eski format)"""
     try:
-        query = text("""
-            SELECT 
-                s.id as sale_id,
-                s.updated_at as payment_date,
-                s.created_at as sale_date,
-                c.name as customer_name,
-                s.total_amount as total_amount,
-                COALESCE(s.cash_usd, 0) as cash_usd,
-                COALESCE(s.click_usd, 0) as click_usd,
-                COALESCE(s.terminal_usd, 0) as terminal_usd
-            FROM sales s
-            JOIN customers c ON s.customer_id = c.id
-            WHERE s.payment_status = 'paid' 
-                AND s.debt_usd = 0
-                AND s.total_amount > 0
-                AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
-                AND s.updated_at > s.created_at + INTERVAL '1 second'
-            ORDER BY s.updated_at DESC
-            LIMIT 200
-        """)
-
-        result = db.session.execute(query)
+        # Location filter parametri
+        location_id = request.args.get('location_id', type=int)
+        
+        if location_id:
+            query = text("""
+                SELECT 
+                    s.id as sale_id,
+                    s.updated_at as payment_date,
+                    s.created_at as sale_date,
+                    c.name as customer_name,
+                    s.total_amount as total_amount,
+                    COALESCE(s.cash_usd, 0) as cash_usd,
+                    COALESCE(s.click_usd, 0) as click_usd,
+                    COALESCE(s.terminal_usd, 0) as terminal_usd
+                FROM sales s
+                JOIN customers c ON s.customer_id = c.id
+                WHERE s.payment_status = 'paid' 
+                    AND s.debt_usd = 0
+                    AND s.total_amount > 0
+                    AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
+                    AND s.updated_at > s.created_at + INTERVAL '1 second'
+                    AND s.location_id = :location_id
+                ORDER BY s.updated_at DESC
+                LIMIT 200
+            """)
+            result = db.session.execute(query, {'location_id': location_id})
+        else:
+            query = text("""
+                SELECT 
+                    s.id as sale_id,
+                    s.updated_at as payment_date,
+                    s.created_at as sale_date,
+                    c.name as customer_name,
+                    s.total_amount as total_amount,
+                    COALESCE(s.cash_usd, 0) as cash_usd,
+                    COALESCE(s.click_usd, 0) as click_usd,
+                    COALESCE(s.terminal_usd, 0) as terminal_usd
+                FROM sales s
+                JOIN customers c ON s.customer_id = c.id
+                WHERE s.payment_status = 'paid' 
+                    AND s.debt_usd = 0
+                    AND s.total_amount > 0
+                    AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
+                    AND s.updated_at > s.created_at + INTERVAL '1 second'
+                ORDER BY s.updated_at DESC
+                LIMIT 200
+            """)
+            result = db.session.execute(query)
         paid_debts = []
         
         for row in result:
