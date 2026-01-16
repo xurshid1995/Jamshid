@@ -1436,6 +1436,7 @@ def api_locations():
                 'type': 'warehouse',
                 'id': warehouse.id,
                 'name': warehouse.name,
+                'emoji': '📦',
                 'display': f'📦 {warehouse.name} (Ombor)'
             })
 
@@ -1451,6 +1452,7 @@ def api_locations():
                 'type': 'store',
                 'id': store.id,
                 'name': store.name,
+                'emoji': '🏪',
                 'display': f'🏪 {store.name} (Do\'kon)'
             })
 
