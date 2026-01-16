@@ -503,9 +503,11 @@
         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             <!-- Joylashuv tugmalari -->
             <div id="locationButtons" style="margin: 15px 0;">
+                {% if current_user.role in ['admin', 'kassir'] %}
                 <button class="btn btn-sm me-2 mb-2 location-btn active" data-location="" onclick="selectLocation(this, '')">
                     🏢 Barchasi
                 </button>
+                {% endif %}
             </div>
             <button onclick="sendBulkDebtSMS()" class="btn-sms" style="padding: 10px 20px; border-radius: 8px; font-weight: 500;">
                 📱 Barchaga SMS yuborish
