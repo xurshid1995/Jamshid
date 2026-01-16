@@ -2452,8 +2452,8 @@ def debts():
         'debts.html',
         page_title='Qarzlar',
         icon='💰',
-        user_role=user.get('role'),
-        allowed_locations=user.get('allowed_locations', []))
+        user_role=user.role if user else 'guest',
+        allowed_locations=user.allowed_locations if user else [])
 
 
 @app.route('/paid-debts-history')
