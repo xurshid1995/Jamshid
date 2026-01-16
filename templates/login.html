@@ -64,6 +64,36 @@
         position: relative;
         z-index: 1;
     }
+    
+    /* Aylanuvchi qizil border animatsiyasi */
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        background: linear-gradient(45deg, 
+            #ff0000, #ff4500, #ff6b00, #ff8c00,
+            #ff0000, #ff4500, #ff6b00, #ff8c00);
+        background-size: 400% 400%;
+        border-radius: 24px;
+        z-index: -1;
+        animation: rotatingBorder 4s linear infinite;
+        opacity: 0.8;
+    }
+    
+    @keyframes rotatingBorder {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
 
     .login-header {
         margin-bottom: 2rem;
