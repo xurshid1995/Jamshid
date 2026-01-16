@@ -4435,7 +4435,13 @@ def api_debts():
                     # Hech qanday location'ga ruxsat yo'q
                     return jsonify({'success': True, 'debts': [], 'exchange_rate': exchange_rate})
                 
+                # Parametrlarni tayyorlash
+                params = {f'loc{i}': loc_id for i, loc_id in enumerate(allowed_location_ids)}
                 placeholders = ','.join([f':loc{i}' for i in range(len(allowed_location_ids))])
+                
+                logger.info(f"🔍 Debts query params: {params}")
+                logger.info(f"🔍 Debts query placeholders: {placeholders}")
+                
                 query = text(f"""
                     SELECT 
                         c.id as customer_id,
@@ -4455,7 +4461,6 @@ def api_debts():
                     HAVING COALESCE(SUM(s.debt_usd), 0) > 0
                     ORDER BY remaining_debt DESC
                 """)
-                params = {f'loc{i}': loc_id for i, loc_id in enumerate(allowed_location_ids)}
                 result = db.session.execute(query, params)
             else:
                 # Admin - barcha qarzlar
