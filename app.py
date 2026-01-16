@@ -4530,8 +4530,23 @@ def api_paid_debts():
 def api_debt_payment_history():
     """Qarz to'lovlar tarixi - debt_payments jadvalidan (yangi format)"""
     try:
+        # Location filter parametri
+        location_id = request.args.get('location_id', type=int)
+        
         # Debt payments jadvalidan ma'lumotlarni olish
-        debt_payments = DebtPayment.query.order_by(DebtPayment.payment_date.desc()).limit(200).all()
+        query = DebtPayment.query
+        
+        # Agar location_id berilgan bo'lsa, sale orqali filtrlash
+        if location_id:
+            # Faqat berilgan location'dagi savdolar uchun to'lovlar
+            query = query.join(Sale, DebtPayment.sale_id == Sale.id, isouter=True).filter(
+                db.or_(
+                    Sale.location_id == location_id,
+                    DebtPayment.sale_id == None  # sale_id NULL bo'lgan to'lovlar ham ko'rinadi
+                )
+            )
+        
+        debt_payments = query.order_by(DebtPayment.payment_date.desc()).limit(200).all()
         
         payments = []
         for payment in debt_payments:

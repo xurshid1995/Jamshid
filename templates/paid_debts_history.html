@@ -138,6 +138,56 @@
         color: #999;
         font-size: 16px;
     }
+
+    /* Location buttons */
+    #locationButtons {
+        max-height: 120px;
+        overflow-y: auto;
+    }
+
+    #locationButtons::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #locationButtons::-webkit-scrollbar-track {
+        background: #e9ecef;
+        border-radius: 3px;
+    }
+
+    #locationButtons::-webkit-scrollbar-thumb {
+        background: #6c757d;
+        border-radius: 3px;
+    }
+
+    /* Tugmalar - Bosilmagan holat */
+    .location-btn {
+        background: none !important;
+        background-color: transparent !important;
+        border: 1px solid #007bff !important;
+        color: black !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+        font-weight: 450;
+        font-size: 14px !important;
+        padding: 6px 12px !important;
+        border-radius: 5px;
+    }
+
+    /* Tugma bosilganda */
+    .location-btn.active {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+        color: white !important;
+        box-shadow: none !important;
+        transform: scale(1.02) !important;
+    }
+
+    /* Hover effect */
+    .location-btn:hover:not(.active) {
+        background-color: rgba(0, 123, 255, 0.1) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: none !important;
+    }
 </style>
 {% endblock %}
 
@@ -148,6 +198,13 @@
         <a href="/debts" class="back-btn">
             <i class="fas fa-arrow-left"></i> Orqaga
         </a>
+    </div>
+
+    <!-- Joylashuv tugmalari -->
+    <div id="locationButtons" style="margin: 15px 0; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <button class="btn btn-sm me-2 mb-2 location-btn active" data-location="" onclick="selectLocation(this, '')">
+            🏢 Barchasi
+        </button>
     </div>
 
     <!-- Statistika -->
@@ -182,16 +239,65 @@
 <script>
     let paidDebts = [];
     let exchangeRate = 13000;
+    let selectedLocation = '';
 
     // Sahifa yuklanganda ma'lumotlarni olish
     document.addEventListener('DOMContentLoaded', function() {
+        loadLocations();
         loadPaidDebts();
     });
+
+    // Locationlarni yuklash va tugmalar yaratish
+    async function loadLocations() {
+        try {
+            const response = await fetch('/api/locations');
+            const locations = await response.json();
+            
+            const container = document.getElementById('locationButtons');
+            // Barchasi tugmasini yaratish
+            const allButton = document.createElement('button');
+            allButton.className = 'btn btn-sm me-2 mb-2 location-btn active';
+            allButton.setAttribute('data-location', '');
+            allButton.onclick = () => selectLocation(allButton, '');
+            allButton.textContent = '🏢 Barchasi';
+            container.innerHTML = '';
+            container.appendChild(allButton);
+            
+            locations.forEach(loc => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm me-2 mb-2 location-btn';
+                button.setAttribute('data-location', loc.id);
+                button.onclick = () => selectLocation(button, loc.id);
+                button.textContent = `${loc.emoji} ${loc.name}`;
+                container.appendChild(button);
+            });
+        } catch (error) {
+            console.error('Locationlarni yuklashda xatolik:', error);
+        }
+    }
+
+    // Location tugmasini tanlash
+    function selectLocation(button, locationId) {
+        // Barcha tugmalardan active classni olib tashlash
+        document.querySelectorAll('.location-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Tanlangan tugmaga active class qo'shish
+        button.classList.add('active');
+        
+        // Tanlangan locationni saqlash
+        selectedLocation = locationId;
+        
+        // Ma'lumotlarni yangilash
+        loadPaidDebts();
+    }
 
     // To'langan qarzlarni yuklash
     async function loadPaidDebts() {
         try {
-            const response = await fetch('/api/debt-payments');
+            const url = selectedLocation ? `/api/debt-payments?location_id=${selectedLocation}` : '/api/debt-payments';
+            const response = await fetch(url);
             if (!response.ok) throw new Error('Ma\'lumotlarni yuklashda xatolik');
             
             const data = await response.json();
