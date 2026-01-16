@@ -1513,23 +1513,7 @@ def api_locations():
             logger.debug(f" Allowed store IDs: {allowed_store_ids}")
             logger.debug(f" Allowed warehouse IDs: {allowed_warehouse_ids}")
 
-        # Omborlarni qo'shish
-        if allowed_warehouse_ids is None:
-            warehouses = Warehouse.query.all()
-        else:
-            warehouses = Warehouse.query.filter(Warehouse.id.in_(
-                allowed_warehouse_ids)).all() if allowed_warehouse_ids else []
-
-        for warehouse in warehouses:
-            locations.append({
-                'type': 'warehouse',
-                'id': warehouse.id,
-                'name': warehouse.name,
-                'emoji': '📦',
-                'display': f'📦 {warehouse.name} (Ombor)'
-            })
-
-        # Do'konlarni qo'shish
+        # Do'konlarni qo'shish (birinchi bo'lib)
         if allowed_store_ids is None:
             stores = Store.query.all()
         else:
@@ -1543,6 +1527,22 @@ def api_locations():
                 'name': store.name,
                 'emoji': '🏪',
                 'display': f'🏪 {store.name} (Do\'kon)'
+            })
+
+        # Omborlarni qo'shish (ikkinchi bo'lib)
+        if allowed_warehouse_ids is None:
+            warehouses = Warehouse.query.all()
+        else:
+            warehouses = Warehouse.query.filter(Warehouse.id.in_(
+                allowed_warehouse_ids)).all() if allowed_warehouse_ids else []
+
+        for warehouse in warehouses:
+            locations.append({
+                'type': 'warehouse',
+                'id': warehouse.id,
+                'name': warehouse.name,
+                'emoji': '📦',
+                'display': f'📦 {warehouse.name} (Ombor)'
             })
 
         logger.debug(f" Final locations count: {len(locations)}")
