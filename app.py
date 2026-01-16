@@ -6300,6 +6300,12 @@ def delete_customer(customer_id):
         if sales_count > 0:
             logger.info(f" Bu mijozda {sales_count} ta savdo mavjud, lekin savdolar saqlanadi")
 
+        # Avval debt_payments yozuvlarini o'chirish (cascade ishlamasa ham)
+        debt_payments_count = DebtPayment.query.filter_by(customer_id=customer_id).count()
+        if debt_payments_count > 0:
+            DebtPayment.query.filter_by(customer_id=customer_id).delete()
+            logger.info(f" {debt_payments_count} ta debt payment o'chirildi")
+
         # Mijoz nomini saqlash
         customer_name = customer.name
 
