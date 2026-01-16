@@ -714,7 +714,7 @@ class DebtPayment(db.Model):
     __tablename__ = 'debt_payments'
     
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='SET NULL'), nullable=True)
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='SET NULL'), nullable=True)
     payment_date = db.Column(db.DateTime, default=lambda: get_tashkent_time())
     cash_usd = db.Column(db.DECIMAL(precision=12, scale=2), default=0)
@@ -6300,11 +6300,11 @@ def delete_customer(customer_id):
         if sales_count > 0:
             logger.info(f" Bu mijozda {sales_count} ta savdo mavjud, lekin savdolar saqlanadi")
 
-        # Avval debt_payments yozuvlarini o'chirish (cascade ishlamasa ham)
+        # Debt payments yozuvlarida customer_id ni NULL qilish (tarixi saqlanadi)
         debt_payments_count = DebtPayment.query.filter_by(customer_id=customer_id).count()
         if debt_payments_count > 0:
-            DebtPayment.query.filter_by(customer_id=customer_id).delete()
-            logger.info(f" {debt_payments_count} ta debt payment o'chirildi")
+            DebtPayment.query.filter_by(customer_id=customer_id).update({'customer_id': None})
+            logger.info(f" {debt_payments_count} ta debt payment'da customer_id NULL qilindi")
 
         # Mijoz nomini saqlash
         customer_name = customer.name
