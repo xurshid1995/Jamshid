@@ -685,6 +685,18 @@ class Customer(db.Model):
         return f'<Customer {self.id}: {self.name}>'
 
     def to_dict(self):
+        try:
+            store_name = 'Umumiy'
+            if self.store_id and self.store:
+                store_name = self.store.name
+            elif self.store_id:
+                # Agar store_id bor lekin relationship yuklanmagan bo'lsa
+                store = Store.query.get(self.store_id)
+                store_name = store.name if store else 'Umumiy'
+        except Exception as e:
+            store_name = 'Umumiy'
+            logger.error(f"Error getting store name for customer {self.id}: {str(e)}")
+        
         return {
             'id': self.id,
             'name': self.name,
@@ -692,7 +704,7 @@ class Customer(db.Model):
             'email': self.email,
             'address': self.address,
             'store_id': self.store_id,
-            'store_name': self.store.name if self.store else 'Umumiy',
+            'store_name': store_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None}
 
