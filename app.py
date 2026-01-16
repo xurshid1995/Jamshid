@@ -248,6 +248,59 @@ def check_password(password, hashed):
         return False
 
 
+def log_operation(operation_type, table_name=None, record_id=None, description=None, 
+                  old_data=None, new_data=None, location_id=None, location_type=None,
+                  location_name=None, amount=None):
+    """
+    Tizim amaliyotlarini loglash
+    
+    Args:
+        operation_type: Amaliyot turi ('sale', 'add_product', 'transfer', 'return', 'edit', 'delete', 'payment')
+        table_name: Ta'sirlangan jadval nomi
+        record_id: Ta'sirlangan record ID
+        description: Amaliyot tavsifi
+        old_data: Eski ma'lumotlar (dict)
+        new_data: Yangi ma'lumotlar (dict)
+        location_id: Joylashuv ID
+        location_type: 'store' yoki 'warehouse'
+        location_name: Joylashuv nomi
+        amount: Summa
+    """
+    try:
+        current_user = get_current_user()
+        
+        # IP addressni olish
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ip_address and ',' in ip_address:
+            ip_address = ip_address.split(',')[0].strip()
+        
+        log_entry = OperationHistory(
+            operation_type=operation_type,
+            table_name=table_name,
+            record_id=record_id,
+            user_id=current_user.id if current_user else None,
+            username=current_user.username if current_user else 'System',
+            description=description,
+            old_data=old_data,
+            new_data=new_data,
+            ip_address=ip_address,
+            location_id=location_id,
+            location_type=location_type,
+            location_name=location_name,
+            amount=float(amount) if amount else None
+        )
+        
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        logger.info(f"📝 Operation logged: {operation_type} by {log_entry.username}")
+        
+    except Exception as e:
+        logger.error(f"❌ Operatsiyani loglashda xatolik: {str(e)}")
+        # Loglash xatosi asosiy amaliyotni to'xtatmasligi kerak
+        db.session.rollback()
+
+
 # Role-based access control decorator
 def role_required(*allowed_roles):
     def decorator(f):
@@ -828,6 +881,30 @@ class ApiOperation(db.Model):
     
     def __repr__(self):
         return f'<ApiOperation {self.operation_type} - {self.idempotency_key}>'
+
+
+class OperationHistory(db.Model):
+    """Barcha tizim amaliyotlarini saqlash uchun audit log"""
+    __tablename__ = 'operations_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    operation_type = db.Column(db.String(50), nullable=False, index=True)  # 'sale', 'add_product', 'transfer', 'return', 'edit', 'delete', 'payment'
+    table_name = db.Column(db.String(50))  # Ta'sirlangan jadval
+    record_id = db.Column(db.Integer)  # Ta'sirlangan record ID
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    username = db.Column(db.String(100))  # Foydalanuvchi nomi (cache)
+    description = db.Column(db.Text)  # Amaliyot tavsifi
+    old_data = db.Column(db.JSON)  # Eski ma'lumotlar (edit/delete uchun)
+    new_data = db.Column(db.JSON)  # Yangi ma'lumotlar
+    ip_address = db.Column(db.String(50))  # Foydalanuvchi IP
+    location_id = db.Column(db.Integer)  # Joylashuv ID
+    location_type = db.Column(db.String(20))  # 'store' yoki 'warehouse'
+    location_name = db.Column(db.String(200))  # Joylashuv nomi (cache)
+    amount = db.Column(db.Numeric(15, 2))  # Summa (agar mavjud bo'lsa)
+    created_at = db.Column(db.DateTime, default=get_tashkent_time, index=True)
+    
+    def __repr__(self):
+        return f'<OperationHistory {self.operation_type} by {self.username}>'
 
 
 # Foydalanuvchi session'lari modeli - vaqtincha disabled
@@ -2578,6 +2655,68 @@ def transfer():
 def operations_history():
     """Amaliyotlar tarixi sahifasi"""
     return render_template('operations_history.html')
+
+
+@app.route('/api/operations-history')
+@role_required('admin', 'kassir')
+def api_operations_history():
+    """Amaliyotlar tarixini olish API"""
+    try:
+        # Filterlar
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        operation_type = request.args.get('operation_type')
+        user_id = request.args.get('user_id', type=int)
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        
+        # Query yaratish
+        query = OperationHistory.query
+        
+        # Filterlarni qo'llash
+        if start_date:
+            query = query.filter(OperationHistory.created_at >= start_date)
+        if end_date:
+            # End date'ga 1 kun qo'shish (oxirgi kunni ham qamrab olish uchun)
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(OperationHistory.created_at < end_datetime)
+        if operation_type:
+            query = query.filter(OperationHistory.operation_type == operation_type)
+        if user_id:
+            query = query.filter(OperationHistory.user_id == user_id)
+        
+        # Pagination
+        query = query.order_by(OperationHistory.created_at.desc())
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        # Ma'lumotlarni formatlash
+        operations = []
+        for op in paginated.items:
+            operations.append({
+                'id': op.id,
+                'operation_type': op.operation_type,
+                'table_name': op.table_name,
+                'record_id': op.record_id,
+                'username': op.username,
+                'description': op.description,
+                'location_name': op.location_name,
+                'amount': float(op.amount) if op.amount else None,
+                'created_at': op.created_at.strftime('%Y-%m-%d %H:%M:%S') if op.created_at else None,
+                'old_data': op.old_data,
+                'new_data': op.new_data
+            })
+        
+        return jsonify({
+            'success': True,
+            'operations': operations,
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'current_page': page
+        })
+        
+    except Exception as e:
+        logger.error(f"Operations history API xatosi: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/check_stock')
