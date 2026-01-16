@@ -4364,17 +4364,47 @@ def users():
 @app.route('/api/debts')
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_debts():
-    """Barcha qarzlar ro'yxati"""
+    """Barcha qarzlar ro'yxati - allowed_locations bo'yicha filtrlangan"""
     try:
         # Exchange rate olish
         rate = CurrencyRate.query.order_by(CurrencyRate.id.desc()).first()
         exchange_rate = float(rate.rate) if rate else 13000
         
-        # Location filter parametri
+        # Joriy foydalanuvchini olish
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Foydalanuvchi topilmadi'}), 401
+        
+        # Location filter parametri (frontend dan)
         location_id = request.args.get('location_id', type=int)
+        
+        # Foydalanuvchi huquqlarini tekshirish
+        allowed_location_ids = None
+        if current_user.role != 'admin':
+            # Admin bo'lmagan foydalanuvchilar uchun ruxsat etilgan locationlarni olish
+            allowed_locations = current_user.allowed_locations or []
+            if allowed_locations:
+                # Store va warehouse ID'larni olish
+                store_ids = extract_location_ids(allowed_locations, 'store')
+                warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
+                
+                # Barcha ruxsat etilgan location ID'larni birlashtirish
+                allowed_location_ids = []
+                if store_ids:
+                    allowed_location_ids.extend(store_ids)
+                if warehouse_ids:
+                    allowed_location_ids.extend(warehouse_ids)
+                
+                logger.info(f"📋 User {current_user.username} allowed locations: {allowed_location_ids}")
 
         # Qarzli mijozlar ro'yxati
         if location_id:
+            # Frontend'dan tanlangan location bo'yicha filter
+            # Agar user allowed locations'ga ega bo'lsa, tekshirish
+            if allowed_location_ids is not None and location_id not in allowed_location_ids:
+                logger.warning(f"⚠️ User {current_user.username} tried to access unauthorized location {location_id}")
+                return jsonify({'success': True, 'debts': [], 'exchange_rate': exchange_rate})
+            
             query = text("""
                 SELECT 
                     c.id as customer_id,
@@ -4395,20 +4425,51 @@ def api_debts():
             """)
             result = db.session.execute(query, {'location_id': location_id})
         else:
-            query = text("""
-                SELECT 
-                    c.id as customer_id,
-                    c.name as customer_name,
-                    c.phone as customer_phone,
-                    c.address as customer_address,
-                    COALESCE(SUM(s.debt_usd), 0) as total_debt,
-                    0 as paid_amount,
-                    COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
-                    c.last_debt_payment_date as last_payment_date,
-                    COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
-                    COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
-                FROM customers c
-                LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0
+            # Location tanlanmagan - barcha ruxsat etilgan locationlar
+            if allowed_location_ids is not None:
+                # Admin bo'lmagan user - faqat ruxsat etilgan locationlar
+                if not allowed_location_ids:
+                    # Hech qanday location'ga ruxsat yo'q
+                    return jsonify({'success': True, 'debts': [], 'exchange_rate': exchange_rate})
+                
+                placeholders = ','.join([f':loc{i}' for i in range(len(allowed_location_ids))])
+                query = text(f"""
+                    SELECT 
+                        c.id as customer_id,
+                        c.name as customer_name,
+                        c.phone as customer_phone,
+                        c.address as customer_address,
+                        COALESCE(SUM(s.debt_usd), 0) as total_debt,
+                        0 as paid_amount,
+                        COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
+                        c.last_debt_payment_date as last_payment_date,
+                        COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
+                        COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
+                    FROM customers c
+                    LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0 
+                        AND s.location_id IN ({placeholders})
+                    GROUP BY c.id, c.name, c.phone, c.address, c.last_debt_payment_date, c.last_debt_payment_usd, c.last_debt_payment_rate
+                    HAVING COALESCE(SUM(s.debt_usd), 0) > 0
+                    ORDER BY remaining_debt DESC
+                """)
+                params = {f'loc{i}': loc_id for i, loc_id in enumerate(allowed_location_ids)}
+                result = db.session.execute(query, params)
+            else:
+                # Admin - barcha qarzlar
+                query = text("""
+                    SELECT 
+                        c.id as customer_id,
+                        c.name as customer_name,
+                        c.phone as customer_phone,
+                        c.address as customer_address,
+                        COALESCE(SUM(s.debt_usd), 0) as total_debt,
+                        0 as paid_amount,
+                        COALESCE(SUM(s.debt_usd), 0) as remaining_debt,
+                        c.last_debt_payment_date as last_payment_date,
+                        COALESCE(c.last_debt_payment_usd, 0) as last_payment_amount,
+                        COALESCE(c.last_debt_payment_rate, 13000) as last_payment_rate
+                    FROM customers c
+                    LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0
                 GROUP BY c.id, c.name, c.phone, c.address, c.last_debt_payment_date, c.last_debt_payment_usd, c.last_debt_payment_rate
                 HAVING COALESCE(SUM(s.debt_usd), 0) > 0
                 ORDER BY remaining_debt DESC
@@ -4448,12 +4509,34 @@ def api_debts():
 @app.route('/api/debts/paid')
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_paid_debts():
-    """To'langan qarzlar tarixi - faqat qarz to'lash orqali to'langan savdolar (eski format)"""
+    """To'langan qarzlar tarixi - allowed_locations bo'yicha filtrlangan"""
     try:
+        # Joriy foydalanuvchini olish
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Foydalanuvchi topilmadi'}), 401
+        
         # Location filter parametri
         location_id = request.args.get('location_id', type=int)
         
+        # Allowed locations tekshirish
+        allowed_location_ids = None
+        if current_user.role != 'admin':
+            allowed_locations = current_user.allowed_locations or []
+            if allowed_locations:
+                store_ids = extract_location_ids(allowed_locations, 'store')
+                warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
+                allowed_location_ids = []
+                if store_ids:
+                    allowed_location_ids.extend(store_ids)
+                if warehouse_ids:
+                    allowed_location_ids.extend(warehouse_ids)
+        
         if location_id:
+            # Location'ga ruxsat tekshirish
+            if allowed_location_ids is not None and location_id not in allowed_location_ids:
+                return jsonify({'success': True, 'paid_debts': []})
+            
             query = text("""
                 SELECT 
                     s.id as sale_id,
@@ -4477,7 +4560,38 @@ def api_paid_debts():
             """)
             result = db.session.execute(query, {'location_id': location_id})
         else:
-            query = text("""
+            # Allowed locations bo'yicha filtrlash
+            if allowed_location_ids is not None:
+                if not allowed_location_ids:
+                    return jsonify({'success': True, 'paid_debts': []})
+                
+                placeholders = ','.join([f':loc{i}' for i in range(len(allowed_location_ids))])
+                query = text(f"""
+                SELECT 
+                    s.id as sale_id,
+                    s.updated_at as payment_date,
+                    s.created_at as sale_date,
+                    c.name as customer_name,
+                    s.total_amount as total_amount,
+                    COALESCE(s.cash_usd, 0) as cash_usd,
+                    COALESCE(s.click_usd, 0) as click_usd,
+                    COALESCE(s.terminal_usd, 0) as terminal_usd
+                FROM sales s
+                JOIN customers c ON s.customer_id = c.id
+                WHERE s.payment_status = 'paid' 
+                    AND s.debt_usd = 0
+                    AND s.total_amount > 0
+                    AND (COALESCE(s.cash_usd, 0) + COALESCE(s.click_usd, 0) + COALESCE(s.terminal_usd, 0)) > 0
+                    AND s.updated_at > s.created_at + INTERVAL '1 second'
+                    AND s.location_id IN ({placeholders})
+                ORDER BY s.updated_at DESC
+                LIMIT 200
+            """)
+                params = {f'loc{i}': loc_id for i, loc_id in enumerate(allowed_location_ids)}
+                result = db.session.execute(query, params)
+            else:
+                # Admin - barcha qarzlarni ko'radi
+                query = text("""
                 SELECT 
                     s.id as sale_id,
                     s.updated_at as payment_date,
@@ -4497,7 +4611,7 @@ def api_paid_debts():
                 ORDER BY s.updated_at DESC
                 LIMIT 200
             """)
-            result = db.session.execute(query)
+                result = db.session.execute(query)
         paid_debts = []
         
         for row in result:
@@ -4528,16 +4642,38 @@ def api_paid_debts():
 @app.route('/api/debt-payments')
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_debt_payment_history():
-    """Qarz to'lovlar tarixi - debt_payments jadvalidan (yangi format)"""
+    """Qarz to'lovlar tarixi - allowed_locations bo'yicha filtrlangan"""
     try:
+        # Joriy foydalanuvchini olish
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'error': 'Foydalanuvchi topilmadi'}), 401
+        
         # Location filter parametri
         location_id = request.args.get('location_id', type=int)
+        
+        # Allowed locations tekshirish
+        allowed_location_ids = None
+        if current_user.role != 'admin':
+            allowed_locations = current_user.allowed_locations or []
+            if allowed_locations:
+                store_ids = extract_location_ids(allowed_locations, 'store')
+                warehouse_ids = extract_location_ids(allowed_locations, 'warehouse')
+                allowed_location_ids = []
+                if store_ids:
+                    allowed_location_ids.extend(store_ids)
+                if warehouse_ids:
+                    allowed_location_ids.extend(warehouse_ids)
         
         # Debt payments jadvalidan ma'lumotlarni olish
         query = DebtPayment.query
         
         # Agar location_id berilgan bo'lsa, sale orqali filtrlash
         if location_id:
+            # Location'ga ruxsat tekshirish
+            if allowed_location_ids is not None and location_id not in allowed_location_ids:
+                return jsonify({'success': True, 'payments': []})
+            
             # Faqat berilgan location'dagi savdolar uchun to'lovlar
             query = query.join(Sale, DebtPayment.sale_id == Sale.id, isouter=True).filter(
                 db.or_(
@@ -4545,6 +4681,19 @@ def api_debt_payment_history():
                     DebtPayment.sale_id == None  # sale_id NULL bo'lgan to'lovlar ham ko'rinadi
                 )
             )
+        else:
+            # Allowed locations bo'yicha filtrlash
+            if allowed_location_ids is not None:
+                if not allowed_location_ids:
+                    return jsonify({'success': True, 'payments': []})
+                
+                # Faqat ruxsat etilgan locationlardagi to'lovlar
+                query = query.join(Sale, DebtPayment.sale_id == Sale.id, isouter=True).filter(
+                    db.or_(
+                        Sale.location_id.in_(allowed_location_ids),
+                        DebtPayment.sale_id == None
+                    )
+                )
         
         debt_payments = query.order_by(DebtPayment.payment_date.desc()).limit(200).all()
         
