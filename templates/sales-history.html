@@ -2418,12 +2418,12 @@ function showSaleDetailsModal(sale) {
                                     
                                     // Agar miqdor 0 yoki manfiy bo'lsa, qaytarilgan mahsulot
                                     const isReturned = item.quantity <= 0;
-                                    const rowStyle = isReturned ? 'background: #ffebee; color: #c62828;' : '';
-                                    const quantityBadge = isReturned ? '🔴' : '';
+                                    const rowStyle = isReturned ? 'background: #ffebee; color: #c62828; text-decoration: line-through;' : '';
+                                    const quantityBadge = isReturned ? '❌ ' : '';
                                     
                                     return `
                                     <tr style="${rowStyle}">
-                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${quantityBadge} ${item.product_name}</td>
+                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${quantityBadge}${item.product_name}${isReturned ? ' (Qaytarilgan)' : ''}</td>
                                         <td>${item.location_name}</td>
                                         <td style="font-weight: ${isReturned ? '600' : 'normal'};">${item.quantity}</td>
                                         <td>
@@ -2436,6 +2436,23 @@ function showSaleDetailsModal(sale) {
                                         </td>
                                     </tr>
                                 `}).join('')}
+                                ${sale.returned_products && sale.returned_products.length > 0 ? `
+                                    <tr style="background: #fff3cd; border-top: 2px solid #ffc107;">
+                                        <td colspan="5" style="text-align: center; font-weight: 600; padding: 10px; color: #856404;">
+                                            ⚠️ Qaytarilgan mahsulotlar
+                                        </td>
+                                    </tr>
+                                    ${sale.returned_products.map(item => `
+                                        <tr style="background: #ffebee; color: #c62828;">
+                                            <td style="font-weight: 600;">❌ ${item.product_name} (Qaytarilgan)</td>
+                                            <td>-</td>
+                                            <td style="font-weight: 600;">-${item.returned_quantity}</td>
+                                            <td colspan="2" style="font-size: 12px; font-style: italic;">
+                                                ${item.return_date ? new Date(item.return_date).toLocaleString('uz-UZ', {timeZone: 'Asia/Tashkent'}) : ''}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                ` : ''}
                             </tbody>
                         </table>
                     </div>

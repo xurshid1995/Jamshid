@@ -2415,21 +2415,42 @@ function showSaleDetailsModal(sale) {
                                     const unitPriceUZS = Math.round(unitPriceUSD * exchangeRate);
                                     const totalPriceUZS = Math.round(totalPriceUSD * exchangeRate);
                                     
+                                    const isReturned = item.quantity <= 0;
+                                    const rowStyle = isReturned ? 'background: #ffebee; color: #c62828; text-decoration: line-through;' : '';
+                                    const quantityBadge = isReturned ? '❌ ' : '';
+                                    
                                     return `
-                                    <tr>
-                                        <td>${item.product_name}</td>
+                                    <tr style="${rowStyle}">
+                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${quantityBadge}${item.product_name}${isReturned ? ' (Qaytarilgan)' : ''}</td>
                                         <td>${item.location_name}</td>
-                                        <td>${item.quantity}</td>
+                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${item.quantity}</td>
                                         <td>
                                             <div>$${unitPriceUSD.toFixed(2)}</div>
-                                            <div style="font-size: 11px; color: #666;">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                            <div style="font-size: 11px; color: ${isReturned ? '#c62828' : '#666'};">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
                                         </td>
                                         <td>
                                             <div>$${totalPriceUSD.toFixed(2)}</div>
-                                            <div style="font-size: 11px; color: #666;">${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                            <div style="font-size: 11px; color: ${isReturned ? '#c62828' : '#666'};">${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
                                         </td>
                                     </tr>
                                 `}).join('')}
+                                ${sale.returned_products && sale.returned_products.length > 0 ? `
+                                    <tr style="background: #fff3cd; border-top: 2px solid #ffc107;">
+                                        <td colspan="5" style="text-align: center; font-weight: 600; padding: 10px; color: #856404;">
+                                            ⚠️ Qaytarilgan mahsulotlar
+                                        </td>
+                                    </tr>
+                                    ${sale.returned_products.map(item => `
+                                        <tr style="background: #ffebee; color: #c62828;">
+                                            <td style="font-weight: 600;">❌ ${item.product_name} (Qaytarilgan)</td>
+                                            <td>-</td>
+                                            <td style="font-weight: 600;">-${item.returned_quantity}</td>
+                                            <td colspan="2" style="font-size: 12px; font-style: italic;">
+                                                ${item.return_date ? new Date(item.return_date).toLocaleString('uz-UZ', {timeZone: 'Asia/Tashkent'}) : ''}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                ` : ''}
                             </tbody>
                         </table>
                     </div>

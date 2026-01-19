@@ -1159,6 +1159,30 @@ class Sale(db.Model):
 
     def __repr__(self):
         return f'<Sale {self.id}: {self.total_amount}>'
+    
+    def _get_returned_products(self):
+        """Qaytarilgan mahsulotlarni operation_history dan topish"""
+        try:
+            # Bu savdoga tegishli qaytarilgan mahsulotlarni topish
+            returned_ops = OperationHistory.query.filter_by(
+                record_id=self.id,
+                operation_type='return'
+            ).all()
+            
+            returned_items = []
+            for op in returned_ops:
+                if op.new_data and isinstance(op.new_data, dict):
+                    returned_items.append({
+                        'product_id': op.new_data.get('product_id'),
+                        'product_name': op.new_data.get('product_name'),
+                        'returned_quantity': op.new_data.get('returned_quantity', 0),
+                        'return_date': op.created_at.isoformat() if op.created_at else None
+                    })
+            
+            return returned_items
+        except Exception as e:
+            app.logger.error(f"Error getting returned products for sale {self.id}: {str(e)}")
+            return []
 
     def to_dict(self):
         # Mijoz nomini aniqlash
@@ -1212,6 +1236,7 @@ class Sale(db.Model):
             'created_by': self.created_by if self.created_by else 'System',
             'items': [
                 item.to_dict() for item in self.items] if self.items else [],
+            'returned_products': self._get_returned_products(),
             'debt_payments': [
                 {
                     'id': dp.id,
