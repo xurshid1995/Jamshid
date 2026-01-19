@@ -2794,9 +2794,16 @@ def api_return_product():
             sale_item.quantity -= return_quantity
             
             # Qaytariladigan summa, xarajat va foyda (USD da)
+            # SaleItem da total qiymatlar saqlanadi, shuning uchun unit qiymatni hisoblash kerak
             returned_usd = sale_item.unit_price * Decimal(str(return_quantity))
             returned_cost = Decimal(str(sale_item.cost_price or 0)) * Decimal(str(return_quantity))
-            returned_profit = Decimal(str(sale_item.profit or 0)) * Decimal(str(return_quantity))
+            
+            # Foyda = total_profit dan proporsional qismini olish
+            if old_quantity > 0:
+                unit_profit = Decimal(str(sale_item.profit or 0)) / Decimal(str(old_quantity))
+                returned_profit = unit_profit * Decimal(str(return_quantity))
+            else:
+                returned_profit = Decimal('0')
             
             total_returned_usd += returned_usd
             total_returned_cost += returned_cost
