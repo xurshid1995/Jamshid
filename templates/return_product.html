@@ -1158,10 +1158,10 @@
                             </div>
                         </td>
                         <td style="padding: 12px; text-align: center;">
-                            <button onclick="viewReturnDetails(${item.id})" 
+                            <button onclick="viewSaleDetails(${item.sale_id})" 
                                     style="padding: 6px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 13px;"
-                                    title="Ko'rish">
-                                👁️
+                                    title="Savdo tafsilotlarini ko'rish">
+                                👁️ Savdo
                             </button>
                         </td>
                     `;
@@ -1184,12 +1184,6 @@
                     </td>
                 </tr>`;
         }
-    }
-
-    // Qaytarish tafsilotlarini ko'rish
-    function viewReturnDetails(returnId) {
-        // Bu funksiya keyinchalik to'ldiriladi
-        showMessage('Ma\'lumot: Tafsilotlar ko\'rish imkoniyati qo\'shilmoqda', 'info');
     }
 
     // Sahifa yuklanganda tarixni yuklash
