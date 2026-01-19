@@ -3074,6 +3074,9 @@ def api_sales_by_product(product_id):
                     except Exception as ce:
                         logger.warning(f"Customer ma'lumotini olishda xatolik: {str(ce)}")
                     
+                    # Savdodagi jami mahsulot turlarini hisoblash
+                    total_items_count = SaleItem.query.filter_by(sale_id=sale.id).count()
+                    
                     sales_list.append({
                         'id': sale.id,
                         'customer_name': customer_name,
@@ -3083,7 +3086,8 @@ def api_sales_by_product(product_id):
                         'location_type': sale.location_type,
                         'product_quantity': sale_item.quantity,
                         'product_price': float(sale_item.unit_price),
-                        'total_usd': float(sale_item.total_price)
+                        'total_usd': float(sale_item.total_price),
+                        'total_items': total_items_count
                     })
             except Exception as se:
                 logger.error(f"Savdo {sale.id} ni qayta ishlashda xatolik: {str(se)}")

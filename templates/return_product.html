@@ -54,12 +54,11 @@
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                        <th style="padding: 12px; text-align: left; font-weight: 600;">ID</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600;">Sana va vaqt</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">ID</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Mijoz</th>
-                        <th style="padding: 12px; text-align: center; font-weight: 600;">Sana</th>
-                        <th style="padding: 12px; text-align: center; font-weight: 600;">Miqdor</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 600;">Narx</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 600;">Summa</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Mahsulot soni</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Joriy mahsulot miqdori</th>
                         <th style="padding: 12px; text-align: center; font-weight: 600;">Holat</th>
                         <th style="padding: 12px; text-align: center; font-weight: 600;">Amal</th>
                     </tr>
@@ -413,7 +412,7 @@
             let html = '';
 
             if (data.sales.length === 0) {
-                html = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">Bu mahsulot hech bir savdoda ishtirok etmagan</td></tr>';
+                html = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">Bu mahsulot hech bir savdoda ishtirok etmagan</td></tr>';
             } else {
                 data.sales.forEach(sale => {
                     const saleDate = new Date(sale.created_at).toLocaleString('uz-UZ', {
@@ -425,15 +424,17 @@
                     });
                     
                     const statusBadge = getPaymentStatusBadge(sale.payment_status);
+                    
+                    // Savdodagi jami mahsulot turlarini hisoblash
+                    const totalProductTypes = sale.total_items || 0;
 
                     html += `
                         <tr style="border-bottom: 1px solid #f0f0f0;">
-                            <td style="padding: 12px; font-weight: 600;">#${sale.id}</td>
+                            <td style="padding: 12px;">${saleDate}</td>
+                            <td style="padding: 12px; text-align: center; font-weight: 600;">#${sale.id}</td>
                             <td style="padding: 12px;">${sale.customer_name}</td>
-                            <td style="padding: 12px; text-align: center;">${saleDate}</td>
-                            <td style="padding: 12px; text-align: center; font-weight: 600;">${sale.product_quantity}</td>
-                            <td style="padding: 12px; text-align: right;">$${sale.product_price.toFixed(2)}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600;">$${sale.total_usd.toFixed(2)}</td>
+                            <td style="padding: 12px; text-align: center; font-weight: 600;">${totalProductTypes}</td>
+                            <td style="padding: 12px; text-align: center; font-weight: 600; color: #007bff;">${sale.product_quantity}</td>
                             <td style="padding: 12px; text-align: center;">${statusBadge}</td>
                             <td style="padding: 12px; text-align: center;">
                                 <button onclick="selectSaleForReturn(${sale.id}, ${sale.product_quantity})" 
