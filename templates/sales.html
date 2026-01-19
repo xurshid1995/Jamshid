@@ -2400,6 +2400,8 @@
     
     // Modal ochish
     function addToCart(productId, productName, quantity, price, costPrice) {
+        console.log('🛒 addToCart() chaqirildi:', { productId, productName, quantity, price, costPrice });
+        
         // Miqdori 0 bo'lsa xabar chiqarish
         if (quantity <= 0) {
             alert('Bu mahsulot miqdori 0, shuning uchun uni sotib bo\'lmaydi');
@@ -2407,6 +2409,7 @@
         }
         
         currentProduct = { id: productId, name: productName, available: quantity, price: price, costPrice: costPrice };
+        console.log('📦 currentProduct:', currentProduct);
         
         // Tab-aware modal elementlarini topish
         const modalProductName = getActiveTabElement('modalProductName');
@@ -2425,6 +2428,7 @@
         modalQuantity.value = 1;
         modalQuantity.max = quantity;
         modalPriceUSD.value = price.toFixed(2);
+        console.log('💵 modalPriceUSD.value o\'rnatildi:', modalPriceUSD.value);
         updateUZSPrice();
         
         // Validatsiyalarni o'rnatish
