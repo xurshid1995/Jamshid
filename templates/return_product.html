@@ -207,35 +207,37 @@
     async function loadLocations() {
         try {
             const response = await fetch('/api/locations');
-            const data = await response.json();
+            const locations = await response.json();
 
-            if (!data.success) {
-                showMessage('❌ Joylashuvlarni yuklashda xatolik!', 'error');
-                return;
-            }
+            console.log('Joylashuvlar yuklandi:', locations);
 
             const locationSelect = document.getElementById('returnLocationSelect');
             let html = '<option value="">Joylashuvni tanlang...</option>';
 
+            // Joylashuvlarni guruhlash
+            const stores = locations.filter(loc => loc.type === 'store');
+            const warehouses = locations.filter(loc => loc.type === 'warehouse');
+
             // Do'konlar
-            if (data.stores && data.stores.length > 0) {
+            if (stores && stores.length > 0) {
                 html += '<optgroup label="🏬 Do\'konlar">';
-                data.stores.forEach(store => {
+                stores.forEach(store => {
                     html += `<option value="store_${store.id}">🏬 ${store.name}</option>`;
                 });
                 html += '</optgroup>';
             }
 
             // Omborlar
-            if (data.warehouses && data.warehouses.length > 0) {
+            if (warehouses && warehouses.length > 0) {
                 html += '<optgroup label="🏭 Omborlar">';
-                data.warehouses.forEach(warehouse => {
+                warehouses.forEach(warehouse => {
                     html += `<option value="warehouse_${warehouse.id}">🏭 ${warehouse.name}</option>`;
                 });
                 html += '</optgroup>';
             }
 
             locationSelect.innerHTML = html;
+            console.log('Joylashuvlar dropdown\'ga qo\'shildi');
         } catch (error) {
             console.error('Joylashuvlarni yuklashda xatolik:', error);
             showMessage('❌ Joylashuvlarni yuklashda xatolik!', 'error');
