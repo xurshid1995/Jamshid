@@ -400,6 +400,8 @@
 
     async function loadSalesByProduct(productId) {
         try {
+            console.log('📦 Mahsulot bo\'yicha savdolar yuklanmoqda, productId:', productId);
+            
             const response = await fetch(`/api/sales-by-product/${productId}`);
             const data = await response.json();
 
@@ -443,7 +445,7 @@
                                         style="padding: 6px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 5px;">
                                     👁️ Ko'rish
                                 </button>
-                                <button onclick="selectSaleForReturn(${sale.id}, ${sale.product_quantity})" 
+                                <button onclick="selectSaleForReturn(${sale.id}, ${productId})" 
                                         style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;">
                                     ↩️ Qaytarish
                                 </button>
@@ -462,7 +464,7 @@
         }
     }
 
-    async function selectSaleForReturn(saleId, productQuantity) {
+    async function selectSaleForReturn(saleId, productId) {
         try {
             const response = await fetch(`/api/sales/${saleId}`);
             const data = await response.json();
@@ -473,6 +475,8 @@
             }
 
             const sale = data.sale;
+            
+            console.log('Modal ochilmoqda - productId:', productId, 'saleId:', saleId);
             
             // Sana formati
             const saleDate = new Date(sale.sale_date).toLocaleString('uz-UZ', {
@@ -526,16 +530,12 @@
                                 <tbody>`;
             
             sale.items.forEach(item => {
-                // Qidirilgan mahsulotni topish (selectedProduct dan yoki productQuantity dan)
-                let isSelectedProduct = false;
-                if (selectedProduct && selectedProduct.id) {
-                    isSelectedProduct = item.product_id === selectedProduct.id;
-                } else {
-                    // Agar selectedProduct bo'lmasa, miqdor bo'yicha topamiz
-                    isSelectedProduct = item.quantity === productQuantity;
-                }
+                // Qidirilgan mahsulotni topish - to'g'ridan-to'g'ri productId bilan
+                const isSelectedProduct = item.product_id === productId;
                 
                 const bgColor = isSelectedProduct ? '#e3f2fd' : 'white';
+                
+                console.log('Mahsulot tekshirilmoqda:', item.product_name, 'product_id:', item.product_id, 'isSelected:', isSelectedProduct);
                 
                 modalHTML += `
                     <tr style="background: ${bgColor};">
