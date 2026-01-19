@@ -2787,7 +2787,8 @@ def api_return_product():
         
         for item in items:
             product_id = item.get('product_id')
-            return_quantity = item.get('return_quantity', 0)
+            # Frontend'dan 'quantity' yoki 'return_quantity' kelishi mumkin
+            return_quantity = item.get('return_quantity') or item.get('quantity', 0)
             
             if return_quantity <= 0:
                 continue
