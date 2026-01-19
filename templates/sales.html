@@ -2992,6 +2992,13 @@
     async function removeFromCart(index) {
         const item = cart[index];
         
+        // Tasdiqlash so'rovi
+        const confirmMessage = `"${item.name}" mahsulotini savatdan o'chirmoqchimisiz?\n\nMiqdor: ${item.quantity} dona\nNarx: $${item.price.toFixed(2)}`;
+        if (!confirm(confirmMessage)) {
+            console.log('❌ Foydalanuvchi o\'chirishni bekor qildi');
+            return;
+        }
+        
         // Debug: funksiya chaqirilgan vaqtni log qilish
         const timestamp = new Date().toISOString();
         console.log(`\n${'='.repeat(80)}`);
@@ -3231,6 +3238,13 @@
     // Savat elementini tahrirlash
     async function editCartItem(index) {
         const item = cart[index];
+        
+        // Tasdiqlash so'rovi
+        const confirmMessage = `"${item.name}" mahsulotini tahrirlashni xohlaysizmi?\n\nHozirgi miqdor: ${item.quantity} dona\nHozirgi narx: $${item.price.toFixed(2)}`;
+        if (!confirm(confirmMessage)) {
+            console.log('❌ Foydalanuvchi tahrirlashni bekor qildi');
+            return;
+        }
         
         // Avval eski miqdorni stokka qaytarish
         try {
