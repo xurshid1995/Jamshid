@@ -3583,13 +3583,9 @@
         const quantitySpan = cells[1].querySelector('span');
         const quantity = quantitySpan ? parseInt(quantitySpan.textContent.trim()) : 0;
         
-        // Narxni span ichidan olish (cells[2] = Narx, birinchi span USD)
-        const priceSpans = cells[2].querySelectorAll('span');
-        let price = 0;
-        if (priceSpans.length > 0) {
-            const priceText = priceSpans[0].textContent.replace(/[$,]/g, '').trim();
-            price = parseFloat(priceText) || 0;
-        }
+        // Narxni button'ning data-price attributidan olish (formatlanmagan)
+        const priceButton = cells[3].querySelector('.add-to-cart-btn');
+        const price = priceButton ? parseFloat(priceButton.getAttribute('data-price')) || 0 : 0;
         
         console.log('🔍 Tanlangan mahsulot:', { productId, productName, quantity, price, costPrice });
         
