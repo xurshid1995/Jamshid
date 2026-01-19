@@ -2416,18 +2416,23 @@ function showSaleDetailsModal(sale) {
                                     const unitPriceUZS = Math.round(unitPriceUSD * exchangeRate);
                                     const totalPriceUZS = Math.round(totalPriceUSD * exchangeRate);
                                     
+                                    // Agar miqdor 0 yoki manfiy bo'lsa, qaytarilgan mahsulot
+                                    const isReturned = item.quantity <= 0;
+                                    const rowStyle = isReturned ? 'background: #ffebee; color: #c62828;' : '';
+                                    const quantityBadge = isReturned ? '🔴' : '';
+                                    
                                     return `
-                                    <tr>
-                                        <td>${item.product_name}</td>
+                                    <tr style="${rowStyle}">
+                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${quantityBadge} ${item.product_name}</td>
                                         <td>${item.location_name}</td>
-                                        <td>${item.quantity}</td>
+                                        <td style="font-weight: ${isReturned ? '600' : 'normal'};">${item.quantity}</td>
                                         <td>
                                             <div>$${unitPriceUSD.toFixed(2)}</div>
-                                            <div style="font-size: 11px; color: #666;">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                            <div style="font-size: 11px; color: ${isReturned ? '#c62828' : '#666'};">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
                                         </td>
                                         <td>
                                             <div>$${totalPriceUSD.toFixed(2)}</div>
-                                            <div style="font-size: 11px; color: #666;">${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                            <div style="font-size: 11px; color: ${isReturned ? '#c62828' : '#666'};">${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
                                         </td>
                                     </tr>
                                 `}).join('')}
@@ -2474,7 +2479,129 @@ function generatePaymentDetailsHTML(sale) {
     
     const rate = sale.currency_rate || 12000;
     
-    // USD qiymatlarini olish
+    // DebtPayment jadvalidagi barcha to'lovlarni guruhlab olish
+    if (sale.debt_payments && sale.debt_payments.length > 0) {
+        console.log('💰 debt_payments mavjud:', sale.debt_payments);
+        
+        // To'lovlarni turi bo'yicha guruhlash
+        const paymentGroups = {};
+        const refundGroups = {};
+        
+        sale.debt_payments.forEach(payment => {
+            const type = payment.payment_type;
+            const amountUSD = parseFloat(payment.amount_usd || 0);
+            const amountUZS = parseFloat(payment.amount_uzs || 0);
+            
+            // Agar refund (qaytarish) bo'lsa
+            if (type.includes('_refund') || amountUSD < 0) {
+                const baseType = type.replace('_refund', '');
+                if (!refundGroups[baseType]) {
+                    refundGroups[baseType] = { usd: 0, uzs: 0 };
+                }
+                refundGroups[baseType].usd += Math.abs(amountUSD);
+                refundGroups[baseType].uzs += Math.abs(amountUZS);
+            } else {
+                // Oddiy to'lov
+                if (!paymentGroups[type]) {
+                    paymentGroups[type] = { usd: 0, uzs: 0 };
+                }
+                paymentGroups[type].usd += amountUSD;
+                paymentGroups[type].uzs += amountUZS;
+            }
+        });
+        
+        console.log('📊 Guruhlangan to\'lovlar:', paymentGroups);
+        console.log('↩️ Qaytarilgan to\'lovlar:', refundGroups);
+        
+        let html = `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h4 style="margin-bottom: 15px; color: #333;">💰 To'lov turlari:</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">`;
+        
+        // Har bir to'lov turini ko'rsatish
+        const paymentTypeNames = {
+            'cash': '💵 Naqd pul',
+            'click': '📱 Click',
+            'terminal': '💳 Terminal',
+            'payme': '💳 Payme',
+            'bank_transfer': '🏦 Bank o\'tkazma',
+            'debt': '📝 Qarz'
+        };
+        
+        Object.keys(paymentGroups).forEach(type => {
+            const payment = paymentGroups[type];
+            const refund = refundGroups[type] || { usd: 0, uzs: 0 };
+            const current = {
+                usd: payment.usd - refund.usd,
+                uzs: payment.uzs - refund.uzs
+            };
+            
+            const typeName = paymentTypeNames[type] || type;
+            
+            html += `
+                <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #007bff;">
+                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">${typeName}</div>
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; font-size: 14px;">
+                        <div style="color: #666;">Asl:</div>
+                        <div style="font-weight: 500;">
+                            $${payment.usd.toFixed(2)} 
+                            <span style="color: #6c757d; font-size: 12px;">(${Math.round(payment.uzs).toLocaleString('uz-UZ')} so'm)</span>
+                        </div>`;
+            
+            if (refund.usd > 0) {
+                html += `
+                        <div style="color: #dc3545;">Qaytarildi:</div>
+                        <div style="font-weight: 500; color: #dc3545;">
+                            -$${refund.usd.toFixed(2)} 
+                            <span style="font-size: 12px;">(-${Math.round(refund.uzs).toLocaleString('uz-UZ')} so'm)</span>
+                        </div>
+                        <div style="color: #28a745;">Hozir:</div>
+                        <div style="font-weight: 600; color: #28a745;">
+                            $${current.usd.toFixed(2)} 
+                            <span style="font-size: 12px;">(${Math.round(current.uzs).toLocaleString('uz-UZ')} so'm)</span>
+                        </div>`;
+            }
+            
+            html += `
+                    </div>
+                </div>`;
+        });
+        
+        // Jami summa
+        const totalOriginalUSD = Object.values(paymentGroups).reduce((sum, p) => sum + p.usd, 0);
+        const totalRefundedUSD = Object.values(refundGroups).reduce((sum, p) => sum + p.usd, 0);
+        const totalCurrentUSD = totalOriginalUSD - totalRefundedUSD;
+        
+        const totalOriginalUZS = Object.values(paymentGroups).reduce((sum, p) => sum + p.uzs, 0);
+        const totalRefundedUZS = Object.values(refundGroups).reduce((sum, p) => sum + p.uzs, 0);
+        const totalCurrentUZS = totalOriginalUZS - totalRefundedUZS;
+        
+        html += `
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #28a745; color: white; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 18px; font-weight: 700;">✅ JAMI SUMMA</div>
+                    <div style="font-size: 24px; font-weight: 800; margin-top: 8px;">
+                        $${totalCurrentUSD.toFixed(2)}
+                    </div>
+                    <div style="font-size: 16px; margin-top: 4px;">
+                        ${Math.round(totalCurrentUZS).toLocaleString('uz-UZ')} so'm
+                    </div>`;
+        
+        if (totalRefundedUSD > 0) {
+            html += `
+                    <div style="font-size: 13px; margin-top: 8px; opacity: 0.9;">
+                        (Asl: $${totalOriginalUSD.toFixed(2)} - Qaytarildi: $${totalRefundedUSD.toFixed(2)})
+                    </div>`;
+        }
+        
+        html += `
+                </div>
+            </div>`;
+        
+        return html;
+    }
+    
+    // Eski formatdagi to'lovlar (agar debt_payments mavjud bo'lmasa)
     const cashUSD = parseFloat(sale.cash_usd || 0);
     const clickUSD = parseFloat(sale.click_usd || 0);
     const terminalUSD = parseFloat(sale.terminal_usd || 0);
@@ -2482,13 +2609,10 @@ function generatePaymentDetailsHTML(sale) {
     
     console.log('💰 USD qiymatlar:', { cashUSD, clickUSD, terminalUSD, debtUSD });
     
-    // UZS qiymatlarini olish yoki hisoblash
     const cashUZS = sale.cash_amount || (cashUSD * rate);
     const clickUZS = sale.click_amount || (clickUSD * rate);
     const terminalUZS = sale.terminal_amount || (terminalUSD * rate);
     const debtUZS = sale.debt_amount || (debtUSD * rate);
-    
-    console.log('💵 UZS qiymatlar:', { cashUZS, clickUZS, terminalUZS, debtUZS });
     
     const payments = [
         { name: '💵 Naqd pul', usd: cashUSD, uzs: cashUZS, isDebt: false },
@@ -2497,10 +2621,8 @@ function generatePaymentDetailsHTML(sale) {
         { name: '📝 Qarz', usd: debtUSD, uzs: debtUZS, isDebt: true }
     ];
     
-    // Faqat 0 dan katta to'lovlarni ko'rsatish
     const activePayments = payments.filter(p => p.usd > 0);
     
-    // Agar hech qanday to'lov bo'lmasa
     if (activePayments.length === 0) {
         return `
             <div class="total-row">
@@ -2510,7 +2632,6 @@ function generatePaymentDetailsHTML(sale) {
         `;
     }
     
-    // To'lov turlarini ko'rsatish - har biri USD va UZS bilan
     const paymentsHTML = activePayments
         .map(p => `
             <div style="display: inline-block; background: #f8f9fa; padding: 8px 14px; margin: 4px ${p.isDebt ? '40px' : '8px'} 4px 0; border-radius: 6px; border-left: 4px solid #007bff;">
@@ -2521,11 +2642,9 @@ function generatePaymentDetailsHTML(sale) {
         `)
         .join('');
     
-    // Jami to'lov
     const totalUSD = activePayments.reduce((sum, p) => sum + p.usd, 0);
     const totalUZS = activePayments.reduce((sum, p) => sum + p.uzs, 0);
     
-    // Jami to'lov kartasi
     const totalHTML = `
         <div style="display: inline-block; background: #007bff; padding: 8px 14px; margin: 4px 8px 4px 0; border-radius: 6px; border-left: 4px solid #0056b3;">
             <div style="font-weight: 600; color: #ffffff; margin-bottom: 2px;">Jami to'lov</div>
