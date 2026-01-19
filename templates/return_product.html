@@ -1014,6 +1014,13 @@
 
             const sale = data.sale;
             
+            // Qaytarilgan mahsulotlar ID larini olish
+            const returnedProducts = sale.returned_products || [];
+            const returnedProductIds = returnedProducts.map(rp => rp.product_id);
+            
+            // Qaytarilgan to'lovlar
+            const paymentRefunds = sale.payment_refunds || [];
+            
             // Sana formati
             const saleDate = new Date(sale.sale_date).toLocaleString('uz-UZ', {
                 year: 'numeric',
@@ -1065,20 +1072,61 @@
                                 <tbody>`;
             
             sale.items.forEach(item => {
+                // Qaytarilgan mahsulotni aniqlash
+                const isReturned = returnedProductIds.includes(item.product_id);
+                const returnedItem = returnedProducts.find(rp => rp.product_id === item.product_id);
+                const returnedQty = returnedItem ? returnedItem.returned_quantity : 0;
+                
+                const rowStyle = isReturned ? 'background: #ffe6e6;' : '';
+                const textColor = isReturned ? 'color: #dc3545;' : '';
+                
                 modalHTML += `
-                                    <tr>
-                                        <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">${item.product_name}</td>
-                                        <td style="padding: 10px; text-align: center; border-bottom: 1px solid #f0f0f0; font-weight: 600;">${item.quantity}</td>
-                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #f0f0f0;">$${parseFloat(item.unit_price).toFixed(2)}</td>
-                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #f0f0f0; font-weight: 600;">$${parseFloat(item.total_price).toFixed(2)}</td>
+                                    <tr style="${rowStyle}">
+                                        <td style="padding: 10px; border-bottom: 1px solid #f0f0f0; ${textColor}">
+                                            ${item.product_name}
+                                            ${isReturned ? '<span style="color: #dc3545; font-weight: 600; margin-left: 8px;">↩️ Qaytarilgan</span>' : ''}
+                                        </td>
+                                        <td style="padding: 10px; text-align: center; border-bottom: 1px solid #f0f0f0; font-weight: 600; ${textColor}">
+                                            ${item.quantity}
+                                            ${isReturned ? `<span style="font-size: 11px; color: #dc3545;"> (-${returnedQty})</span>` : ''}
+                                        </td>
+                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #f0f0f0; ${textColor}">$${parseFloat(item.unit_price).toFixed(2)}</td>
+                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #f0f0f0; font-weight: 600; ${textColor}">$${parseFloat(item.total_price).toFixed(2)}</td>
                                     </tr>`;
             });
 
             modalHTML += `
                                 </tbody>
                             </table>
-                        </div>
+                        </div>`;
+            
+            // Qaytarilgan to'lovlarni ko'rsatish
+            if (paymentRefunds.length > 0) {
+                modalHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                            <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 14px;">↩️ Qaytarilgan to'lovlar:</h4>`;
+                
+                paymentRefunds.forEach(refund => {
+                    const paymentTypeNames = {
+                        'cash': '💵 Naqd',
+                        'click': '📱 Click',
+                        'terminal': '💳 Terminal',
+                        'debt': '📝 Qarzdan'
+                    };
+                    const refundAmount = parseFloat(refund.refund_amount_usd || 0);
+                    
+                    modalHTML += `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="color: #856404;">${paymentTypeNames[refund.payment_type] || refund.payment_type}:</span>
+                                <span style="font-weight: 600; color: #dc3545;">-$${refundAmount.toFixed(2)}</span>
+                            </div>`;
+                });
+                
+                modalHTML += `
+                        </div>`;
+            }
 
+            modalHTML += `
                         <div style="background: #e3f2fd; padding: 15px; border-radius: 6px; margin-top: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span style="color: #666;">Jami summa:</span>
