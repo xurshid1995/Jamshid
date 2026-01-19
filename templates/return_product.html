@@ -526,7 +526,15 @@
                                 <tbody>`;
             
             sale.items.forEach(item => {
-                const isSelectedProduct = item.quantity === productQuantity && item.product_id === selectedProduct.id;
+                // Qidirilgan mahsulotni topish (selectedProduct dan yoki productQuantity dan)
+                let isSelectedProduct = false;
+                if (selectedProduct && selectedProduct.id) {
+                    isSelectedProduct = item.product_id === selectedProduct.id;
+                } else {
+                    // Agar selectedProduct bo'lmasa, miqdor bo'yicha topamiz
+                    isSelectedProduct = item.quantity === productQuantity;
+                }
+                
                 const bgColor = isSelectedProduct ? '#e3f2fd' : 'white';
                 
                 modalHTML += `
@@ -582,7 +590,19 @@
     }
 
     async function confirmReturn(saleId, productId, productName, maxQuantity) {
+        // Joylashuv tekshiruvi
+        if (!returnLocationId || !returnLocationType) {
+            showMessage('❌ Iltimos avval qaytarish joyini tanlang!', 'error');
+            return;
+        }
+
         const qtyInput = document.getElementById(`returnQty_${productId}`);
+        if (!qtyInput) {
+            console.error('Input topilmadi:', `returnQty_${productId}`);
+            showMessage('❌ Xatolik yuz berdi!', 'error');
+            return;
+        }
+
         const returnQty = parseInt(qtyInput.value);
 
         if (!returnQty || returnQty <= 0) {
@@ -598,6 +618,14 @@
         if (!confirm(`${productName} mahsulotidan ${returnQty} dona qaytarilsinmi?`)) {
             return;
         }
+
+        console.log('Qaytarish ma\'lumotlari:', {
+            saleId,
+            productId,
+            returnQty,
+            returnLocationId,
+            returnLocationType
+        });
 
         try {
             const response = await fetch('/api/return-product', {
