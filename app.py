@@ -2755,6 +2755,49 @@ def return_product():
     return render_template('return_product.html')
 
 
+@app.route('/api/returned-products-history', methods=['GET'])
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_returned_products_history():
+    """Qaytarilgan mahsulotlar tarixi"""
+    try:
+        # OperationHistory dan 'return' tipidagi operatsiyalarni olish
+        returned_operations = OperationHistory.query.filter_by(
+            operation_type='return'
+        ).order_by(OperationHistory.created_at.desc()).limit(100).all()
+        
+        history = []
+        for op in returned_operations:
+            # new_data dan mahsulot ma'lumotlarini olish
+            new_data = op.new_data or {}
+            product_name = new_data.get('product_name', 'Noma\'lum')
+            returned_qty = new_data.get('returned_quantity', 0)
+            sale_id = new_data.get('sale_id', op.record_id)
+            
+            # Location ma'lumotini formatlash
+            location_info = op.location_name or 'Noma\'lum'
+            if op.location_type:
+                location_type_uz = 'Do\'kon' if op.location_type == 'store' else 'Ombor'
+                location_info = f"{location_type_uz}: {location_info}"
+            
+            history.append({
+                'id': op.id,
+                'date': op.created_at.strftime('%d/%m/%y %H:%M'),
+                'sale_id': sale_id,
+                'product_name': product_name,
+                'quantity': returned_qty,
+                'location': location_info,
+                'user': op.username or 'Noma\'lum',
+                'description': op.description,
+                'amount_uzs': float(op.amount) if op.amount else 0
+            })
+        
+        return jsonify({'success': True, 'history': history})
+        
+    except Exception as e:
+        logger.error(f"Qaytarilgan mahsulotlar tarixini olishda xatolik: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/return-product', methods=['POST'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def api_return_product():

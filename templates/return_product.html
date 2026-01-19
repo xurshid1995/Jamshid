@@ -104,6 +104,38 @@
         </div>
     </div>
 
+    <!-- Qaytarilgan mahsulotlar tarixi -->
+    <div class="history-section" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #333;">📜 Qaytarilgan mahsulotlar tarixi</h3>
+            <button onclick="loadReturnHistory()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                🔄 Yangilash
+            </button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                        <th style="padding: 12px; text-align: left; font-weight: 600;">Sana va vaqt</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Savdo ID</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600;">Mahsulot</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Miqdor</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600;">Qaytarilgan joy</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600;">Foydalanuvchi</th>
+                        <th style="padding: 12px; text-align: right; font-weight: 600;">Summa (UZS)</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                            <span style="font-size: 16px;">⏳ Yuklanmoqda...</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Xabarlar -->
     <div id="messageDiv" style="margin-top: 20px;"></div>
 </div>
@@ -654,6 +686,9 @@
                 if (selectedProduct) {
                     await loadSalesByProduct(selectedProduct.id);
                 }
+                
+                // Tarixni yangilash
+                await loadReturnHistory();
             } else {
                 showMessage(`❌ Xatolik: ${data.error}`, 'error');
             }
@@ -1082,5 +1117,65 @@
             modal.remove();
         }
     }
+
+    // Qaytarilgan mahsulotlar tarixini yuklash
+    async function loadReturnHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                    <span style="font-size: 16px;">⏳ Yuklanmoqda...</span>
+                </td>
+            </tr>`;
+
+        try {
+            const response = await fetch('/api/returned-products-history');
+            const data = await response.json();
+
+            if (data.success && data.history.length > 0) {
+                tbody.innerHTML = '';
+                data.history.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid #f0f0f0';
+                    row.innerHTML = `
+                        <td style="padding: 12px;">${item.date}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600;">#${item.sale_id}</span>
+                        </td>
+                        <td style="padding: 12px;">${item.product_name}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #fff3cd; padding: 4px 8px; border-radius: 4px; font-weight: 600;">${item.quantity} dona</span>
+                        </td>
+                        <td style="padding: 12px;">${item.location}</td>
+                        <td style="padding: 12px;">${item.user}</td>
+                        <td style="padding: 12px; text-align: right; font-weight: 600;">
+                            ${item.amount_uzs.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} so'm
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                            <span style="font-size: 16px;">📭 Hozircha qaytarilgan mahsulotlar yo'q</span>
+                        </td>
+                    </tr>`;
+            }
+        } catch (error) {
+            console.error('Tarixni yuklashda xatolik:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="padding: 20px; text-align: center; color: #dc3545;">
+                        <span style="font-size: 16px;">❌ Tarixni yuklashda xatolik yuz berdi</span>
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // Sahifa yuklanganda tarixni yuklash
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReturnHistory();
+    });
 </script>
 {% endblock %}
