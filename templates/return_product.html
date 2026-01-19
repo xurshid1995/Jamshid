@@ -239,6 +239,25 @@
 
             locationSelect.innerHTML = html;
             console.log('Joylashuvlar dropdown\'ga qo\'shildi');
+
+            // Sotuvchi uchun avtomatik tanlash
+            {% if session.role == 'sotuvchi' %}
+            if (locations.length === 1) {
+                // Agar bitta joylashuv bo'lsa, uni avtomatik tanlash
+                const loc = locations[0];
+                const locationValue = `${loc.type}_${loc.id}`;
+                locationSelect.value = locationValue;
+                console.log('✅ Bitta joylashuv avtomatik tanlandi:', loc.name);
+                handleLocationChange();
+            } else if (locations.length > 1) {
+                // Agar bir nechta bo'lsa, birinchi do'konni yoki birinchi joylashuvni tanlash
+                const firstStore = stores.length > 0 ? stores[0] : locations[0];
+                const locationValue = `${firstStore.type}_${firstStore.id}`;
+                locationSelect.value = locationValue;
+                console.log('✅ Birinchi joylashuv avtomatik tanlandi:', firstStore.name);
+                handleLocationChange();
+            }
+            {% endif %}
         } catch (error) {
             console.error('Joylashuvlarni yuklashda xatolik:', error);
             showMessage('❌ Joylashuvlarni yuklashda xatolik!', 'error');
