@@ -2442,16 +2442,31 @@ function showSaleDetailsModal(sale) {
                                             ⚠️ Qaytarilgan mahsulotlar
                                         </td>
                                     </tr>
-                                    ${sale.returned_products.map(item => `
+                                    ${sale.returned_products.map(item => {
+                                        const exchangeRate = 12700;
+                                        const unitPriceUSD = parseFloat(item.unit_price || 0);
+                                        const totalPriceUSD = parseFloat(item.total_price || 0);
+                                        const unitPriceUZS = Math.round(unitPriceUSD * exchangeRate);
+                                        const totalPriceUZS = Math.round(totalPriceUSD * exchangeRate);
+                                        
+                                        return `
                                         <tr style="background: #ffebee; color: #c62828;">
                                             <td style="font-weight: 600;">❌ ${item.product_name} (Qaytarilgan)</td>
-                                            <td>-</td>
+                                            <td>${item.location_name}</td>
                                             <td style="font-weight: 600;">-${item.returned_quantity}</td>
-                                            <td colspan="2" style="font-size: 12px; font-style: italic;">
-                                                ${item.return_date ? new Date(item.return_date).toLocaleString('uz-UZ', {timeZone: 'Asia/Tashkent'}) : ''}
+                                            <td>
+                                                <div>$${unitPriceUSD.toFixed(2)}</div>
+                                                <div style="font-size: 11px; color: #c62828;">${unitPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                            </td>
+                                            <td>
+                                                <div>-$${totalPriceUSD.toFixed(2)}</div>
+                                                <div style="font-size: 11px; color: #c62828;">-${totalPriceUZS.toLocaleString('uz-UZ')} so'm</div>
+                                                <div style="font-size: 11px; font-style: italic; margin-top: 4px;">
+                                                    ${item.return_date ? new Date(item.return_date).toLocaleString('uz-UZ', {timeZone: 'Asia/Tashkent', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : ''}
+                                                </div>
                                             </td>
                                         </tr>
-                                    `).join('')}
+                                    `}).join('')}
                                 ` : ''}
                             </tbody>
                         </table>

@@ -1172,10 +1172,25 @@ class Sale(db.Model):
             returned_items = []
             for op in returned_ops:
                 if op.new_data and isinstance(op.new_data, dict):
+                    # Narxni old_data dan olish (unit_price va total_price)
+                    unit_price = 0
+                    total_price = 0
+                    if op.old_data and isinstance(op.old_data, dict):
+                        old_quantity = op.old_data.get('quantity', 0)
+                        old_total = op.old_data.get('total_price', 0)
+                        if old_quantity > 0:
+                            unit_price = old_total / old_quantity
+                    
+                    returned_quantity = op.new_data.get('returned_quantity', 0)
+                    total_price = unit_price * returned_quantity
+                    
                     returned_items.append({
                         'product_id': op.new_data.get('product_id'),
                         'product_name': op.new_data.get('product_name'),
-                        'returned_quantity': op.new_data.get('returned_quantity', 0),
+                        'returned_quantity': returned_quantity,
+                        'unit_price': float(unit_price),
+                        'total_price': float(total_price),
+                        'location_name': op.location_name if op.location_name else 'Noma\'lum',
                         'return_date': op.created_at.isoformat() if op.created_at else None
                     })
             
