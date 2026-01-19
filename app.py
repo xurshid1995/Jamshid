@@ -2701,6 +2701,8 @@ def api_return_product():
         
         # Har bir mahsulotni qaytarish
         returned_items = []
+        total_returned_usd = Decimal('0')
+        
         for item in items:
             product_id = item.get('product_id')
             return_quantity = item.get('return_quantity', 0)
@@ -2711,7 +2713,39 @@ def api_return_product():
             # Mahsulotni topish
             product = Product.query.get(product_id)
             if not product:
+                logger.warning(f"Mahsulot topilmadi: {product_id}")
                 continue
+            
+            # Savdodagi bu mahsulotni topish
+            sale_item = SaleItem.query.filter_by(
+                sale_id=sale_id,
+                product_id=product_id
+            ).first()
+            
+            if not sale_item:
+                logger.warning(f"Bu mahsulot bu savdoda yo'q: {product_id} (Savdo #{sale_id})")
+                continue
+            
+            # Qaytariladigan miqdor savdodagi miqdordan ko'p bo'lmasligi kerak
+            if return_quantity > sale_item.quantity:
+                logger.warning(f"Qaytariladigan miqdor ({return_quantity}) savdodagi miqdordan ({sale_item.quantity}) ko'p")
+                return_quantity = sale_item.quantity
+            
+            # SaleItem dan miqdorni kamaytirish
+            old_quantity = sale_item.quantity
+            sale_item.quantity -= return_quantity
+            
+            # Qaytariladigan summa (bu sale_item narxida)
+            returned_usd = sale_item.unit_price * Decimal(str(return_quantity))
+            total_returned_usd += returned_usd
+            
+            # Agar miqdor 0 bo'lsa, SaleItem ni o'chirish
+            if sale_item.quantity <= 0:
+                logger.info(f"SaleItem #{sale_item.id} o'chirildi (miqdor 0 bo'ldi)")
+                db.session.delete(sale_item)
+            else:
+                # Total price ni yangilash
+                sale_item.total_price = sale_item.unit_price * Decimal(str(sale_item.quantity))
             
             # Stock ga qaytarish
             if location_type == 'store':
@@ -2722,6 +2756,7 @@ def api_return_product():
                 
                 if stock:
                     stock.quantity += return_quantity
+                    logger.info(f"Do'kon stock yangilandi: {product.name} +{return_quantity} = {stock.quantity}")
                 else:
                     # Agar stock yo'q bo'lsa, yangi yaratish
                     new_stock = StoreStock(
@@ -2730,6 +2765,7 @@ def api_return_product():
                         quantity=return_quantity
                     )
                     db.session.add(new_stock)
+                    logger.info(f"Yangi do'kon stock yaratildi: {product.name} = {return_quantity}")
                     
             elif location_type == 'warehouse':
                 stock = WarehouseStock.query.filter_by(
@@ -2739,6 +2775,7 @@ def api_return_product():
                 
                 if stock:
                     stock.quantity += return_quantity
+                    logger.info(f"Ombor stock yangilandi: {product.name} +{return_quantity} = {stock.quantity}")
                 else:
                     # Agar stock yo'q bo'lsa, yangi yaratish
                     new_stock = WarehouseStock(
@@ -2747,13 +2784,17 @@ def api_return_product():
                         quantity=return_quantity
                     )
                     db.session.add(new_stock)
+                    logger.info(f"Yangi ombor stock yaratildi: {product.name} = {return_quantity}")
             
             returned_items.append({
                 'product_name': product.name,
-                'quantity': return_quantity
+                'quantity': return_quantity,
+                'old_quantity': old_quantity,
+                'new_quantity': sale_item.quantity if sale_item.quantity > 0 else 0,
+                'returned_usd': float(returned_usd)
             })
             
-            # Amaliyotlar tarixiga yozish
+            # Amaliyotlar tarixiga yozish (har bir mahsulot uchun)
             location_name = None
             if location_type == 'store':
                 store = Store.query.get(location_id)
@@ -2769,18 +2810,36 @@ def api_return_product():
                 user_id=session.get('user_id'),
                 username=session.get('username'),
                 description=f"Qaytarildi: {product.name} - {return_quantity} dona (Savdo #{sale_id})",
+                old_data={
+                    'quantity': old_quantity,
+                    'total_price': float(sale_item.unit_price * Decimal(str(old_quantity)))
+                },
                 new_data={
                     'product_id': product_id,
                     'product_name': product.name,
-                    'quantity': return_quantity,
+                    'quantity': sale_item.quantity if sale_item.quantity > 0 else 0,
+                    'returned_quantity': return_quantity,
                     'sale_id': sale_id
                 },
                 ip_address=request.remote_addr,
                 location_id=location_id,
                 location_type=location_type,
-                location_name=location_name
+                location_name=location_name,
+                amount=returned_usd
             )
             db.session.add(operation)
+        
+        # Sale jami summasini yangilash
+        if total_returned_usd > 0:
+            sale.total_usd -= total_returned_usd
+            sale.total_uzs = sale.total_usd * sale.exchange_rate
+            logger.info(f"Savdo #{sale_id} jami summasi yangilandi: -{total_returned_usd} USD")
+        
+        # Agar sale'da mahsulot qolmasa, savdoni bekor qilish
+        remaining_items = SaleItem.query.filter_by(sale_id=sale_id).count()
+        if remaining_items == 0:
+            logger.info(f"Savdo #{sale_id} butunlay qaytarildi, payment_status='cancelled' qilindi")
+            sale.payment_status = 'cancelled'
         
         db.session.commit()
         
