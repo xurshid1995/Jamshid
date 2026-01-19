@@ -2784,10 +2784,15 @@ def api_return_product():
 def api_sales_by_product(product_id):
     """Mahsulot bo'yicha savdolarni topish"""
     try:
+        logger.info(f"Mahsulot bo'yicha savdolar qidirilmoqda: {product_id}")
+        
         # Mahsulotni tekshirish
         product = Product.query.get(product_id)
         if not product:
+            logger.warning(f"Mahsulot topilmadi: {product_id}")
             return jsonify({'success': False, 'error': 'Mahsulot topilmadi'}), 404
+        
+        logger.info(f"Mahsulot topildi: {product.name}")
         
         # Bu mahsulot bor savdolarni topish (oxirgi 50 ta)
         sales = db.session.query(Sale).join(SaleItem).filter(
@@ -2795,26 +2800,42 @@ def api_sales_by_product(product_id):
             Sale.payment_status.in_(['paid', 'partial', 'debt'])  # Faqat to'langan yoki qarzda savdolar
         ).order_by(Sale.created_at.desc()).limit(50).all()
         
+        logger.info(f"Topilgan savdolar soni: {len(sales)}")
+        
         sales_list = []
         for sale in sales:
-            # Bu savdodagi shu mahsulotni topish
-            sale_item = SaleItem.query.filter_by(
-                sale_id=sale.id,
-                product_id=product_id
-            ).first()
-            
-            if sale_item:
-                sales_list.append({
-                    'id': sale.id,
-                    'customer_name': sale.customer.full_name if sale.customer else 'Noma\'lum',
-                    'created_at': sale.created_at.isoformat() if sale.created_at else None,
-                    'payment_status': sale.payment_status,
-                    'location_id': sale.location_id,
-                    'location_type': sale.location_type,
-                    'product_quantity': sale_item.quantity,
-                    'product_price': float(sale_item.unit_price),
-                    'total_usd': float(sale_item.total_price)
-                })
+            try:
+                # Bu savdodagi shu mahsulotni topish
+                sale_item = SaleItem.query.filter_by(
+                    sale_id=sale.id,
+                    product_id=product_id
+                ).first()
+                
+                if sale_item:
+                    # Customer name'ni xavfsiz olish
+                    customer_name = 'Noma\'lum'
+                    try:
+                        if sale.customer:
+                            customer_name = sale.customer.name
+                    except Exception as ce:
+                        logger.warning(f"Customer ma'lumotini olishda xatolik: {str(ce)}")
+                    
+                    sales_list.append({
+                        'id': sale.id,
+                        'customer_name': customer_name,
+                        'created_at': sale.created_at.isoformat() if sale.created_at else None,
+                        'payment_status': sale.payment_status,
+                        'location_id': sale.location_id,
+                        'location_type': sale.location_type,
+                        'product_quantity': sale_item.quantity,
+                        'product_price': float(sale_item.unit_price),
+                        'total_usd': float(sale_item.total_price)
+                    })
+            except Exception as se:
+                logger.error(f"Savdo {sale.id} ni qayta ishlashda xatolik: {str(se)}")
+                continue
+        
+        logger.info(f"Qaytariladigan savdolar soni: {len(sales_list)}")
         
         return jsonify({
             'success': True,
@@ -2827,7 +2848,9 @@ def api_sales_by_product(product_id):
         })
         
     except Exception as e:
+        import traceback
         logger.error(f"Mahsulot bo'yicha savdolarni topishda xatolik: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
