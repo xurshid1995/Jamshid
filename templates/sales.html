@@ -2993,7 +2993,7 @@
         const item = cart[index];
         
         // Tasdiqlash so'rovi
-        const confirmMessage = `"${item.name}" mahsulotini savatdan o'chirmoqchimisiz?\n\nMiqdor: ${item.quantity} dona\nNarx: $${item.price.toFixed(2)}`;
+        const confirmMessage = `"${item.name}" mahsulotini savatdan o'chirmoqchimisiz?\n\nMiqdor: ${item.quantity} dona\nNarx: $${item.priceUSD.toFixed(2)}`;
         if (!confirm(confirmMessage)) {
             console.log('❌ Foydalanuvchi o\'chirishni bekor qildi');
             return;
@@ -3240,7 +3240,7 @@
         const item = cart[index];
         
         // Tasdiqlash so'rovi
-        const confirmMessage = `"${item.name}" mahsulotini tahrirlashni xohlaysizmi?\n\nHozirgi miqdor: ${item.quantity} dona\nHozirgi narx: $${item.price.toFixed(2)}`;
+        const confirmMessage = `"${item.name}" mahsulotini tahrirlashni xohlaysizmi?\n\nHozirgi miqdor: ${item.quantity} dona\nHozirgi narx: $${item.priceUSD.toFixed(2)}`;
         if (!confirm(confirmMessage)) {
             console.log('❌ Foydalanuvchi tahrirlashni bekor qildi');
             return;
