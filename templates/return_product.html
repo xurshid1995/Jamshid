@@ -4,10 +4,18 @@
 
 {% block content %}
 <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
-    <div class="page-header" style="margin-bottom: 30px;">
-        <h1 style="color: #333; font-size: 28px; margin: 0;">
-            <span style="font-size: 32px;">↩️</span> Mahsulotni Qaytarish
-        </h1>
+    <div class="page-header" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h1 style="color: #333; font-size: 28px; margin: 0;">
+                <span style="font-size: 32px;">↩️</span> Mahsulotni Qaytarish
+            </h1>
+        </div>
+        <div style="min-width: 300px;">
+            <label style="display: block; margin-bottom: 5px; color: #666; font-weight: 500; font-size: 14px;">📍 Qaytarish joyi:</label>
+            <select id="returnLocationSelect" onchange="handleLocationChange()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; background: white; cursor: pointer;">
+                <option value="">Joylashuvni tanlang...</option>
+            </select>
+        </div>
     </div>
 
     <!-- Mahsulot qidirish -->
@@ -182,9 +190,75 @@
 </style>
 
 <script>
+    let currentSale = null;
+    let returnItems = [];
     let selectedProduct = null;
     let productsCache = [];
     let searchTimeout = null;
+    let returnLocationId = null;
+    let returnLocationType = null;
+
+    // Sahifa yuklanganda joylashuvlarni yuklash
+    document.addEventListener('DOMContentLoaded', function() {
+        loadLocations();
+    });
+
+    // Joylashuvlarni yuklash
+    async function loadLocations() {
+        try {
+            const response = await fetch('/api/locations');
+            const data = await response.json();
+
+            if (!data.success) {
+                showMessage('❌ Joylashuvlarni yuklashda xatolik!', 'error');
+                return;
+            }
+
+            const locationSelect = document.getElementById('returnLocationSelect');
+            let html = '<option value="">Joylashuvni tanlang...</option>';
+
+            // Do'konlar
+            if (data.stores && data.stores.length > 0) {
+                html += '<optgroup label="🏬 Do\'konlar">';
+                data.stores.forEach(store => {
+                    html += `<option value="store_${store.id}">🏬 ${store.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            // Omborlar
+            if (data.warehouses && data.warehouses.length > 0) {
+                html += '<optgroup label="🏭 Omborlar">';
+                data.warehouses.forEach(warehouse => {
+                    html += `<option value="warehouse_${warehouse.id}">🏭 ${warehouse.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            locationSelect.innerHTML = html;
+        } catch (error) {
+            console.error('Joylashuvlarni yuklashda xatolik:', error);
+            showMessage('❌ Joylashuvlarni yuklashda xatolik!', 'error');
+        }
+    }
+
+    // Joylashuv o'zgarganda
+    function handleLocationChange() {
+        const locationSelect = document.getElementById('returnLocationSelect');
+        const selectedValue = locationSelect.value;
+
+        if (!selectedValue) {
+            returnLocationId = null;
+            returnLocationType = null;
+            return;
+        }
+
+        const parts = selectedValue.split('_');
+        returnLocationType = parts[0];
+        returnLocationId = parseInt(parts[1]);
+
+        console.log('Joylashuv tanlandi:', returnLocationType, returnLocationId);
+    }
 
     // Mahsulotlarni qidirish
     async function searchProducts() {
@@ -538,6 +612,12 @@
     }
 
     async function confirmReturn() {
+        // Joylashuvni tekshirish
+        if (!returnLocationId || !returnLocationType) {
+            showMessage('⚠️ Iltimos, avval qaytarish joyini tanlang!', 'warning');
+            return;
+        }
+
         // Qaytariladigan mahsulotlarni tekshirish
         const itemsToReturn = returnItems.filter(item => item.return_quantity > 0);
         
@@ -560,8 +640,8 @@
                 body: JSON.stringify({
                     sale_id: currentSale.id,
                     items: itemsToReturn,
-                    location_id: currentSale.location_id,
-                    location_type: currentSale.location_type
+                    location_id: returnLocationId,
+                    location_type: returnLocationType
                 })
             });
 
@@ -571,7 +651,7 @@
                 showMessage('✅ Mahsulotlar muvaffaqiyatli qaytarildi!', 'success');
                 // Formani tozalash
                 setTimeout(() => {
-                    document.getElementById('saleIdInput').value = '';
+                    clearProductSelection();
                     document.getElementById('saleDetails').style.display = 'none';
                     currentSale = null;
                     returnItems = [];
