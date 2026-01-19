@@ -1016,7 +1016,7 @@
             
             // Debug: API dan kelgan ma'lumotlarni console'ga chiqarish
             console.log('Sale data:', sale);
-            console.log('Returned products:', sale.returned_products);
+            console.log('Returned products (full):', JSON.stringify(sale.returned_products, null, 2));
             console.log('Payment refunds:', sale.payment_refunds);
             
             // Qaytarilgan mahsulotlar ID larini olish
