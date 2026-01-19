@@ -122,12 +122,13 @@
                         <th style="padding: 12px; text-align: center; font-weight: 600;">Miqdor</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Qaytarilgan joy</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600;">Foydalanuvchi</th>
-                        <th style="padding: 12px; text-align: right; font-weight: 600;">Summa (UZS)</th>
+                        <th style="padding: 12px; text-align: right; font-weight: 600;">Summa</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600;">Amal</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
                     <tr>
-                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                        <td colspan="8" style="padding: 20px; text-align: center; color: #999;">
                             <span style="font-size: 16px;">⏳ Yuklanmoqda...</span>
                         </td>
                     </tr>
@@ -1123,7 +1124,7 @@
         const tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                <td colspan="9" style="padding: 20px; text-align: center; color: #999;">
                     <span style="font-size: 16px;">⏳ Yuklanmoqda...</span>
                 </td>
             </tr>`;
@@ -1149,7 +1150,19 @@
                         <td style="padding: 12px;">${item.location}</td>
                         <td style="padding: 12px;">${item.user}</td>
                         <td style="padding: 12px; text-align: right; font-weight: 600;">
-                            ${item.amount_uzs.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} so'm
+                            <div style="color: #28a745; font-size: 15px; margin-bottom: 3px;">
+                                $${item.amount_usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </div>
+                            <div style="color: #666; font-size: 13px;">
+                                ${item.amount_uzs.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} so'm
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="viewReturnDetails(${item.id})" 
+                                    style="padding: 6px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 13px;"
+                                    title="Ko'rish">
+                                👁️
+                            </button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -1157,7 +1170,7 @@
             } else {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                        <td colspan="8" style="padding: 20px; text-align: center; color: #999;">
                             <span style="font-size: 16px;">📭 Hozircha qaytarilgan mahsulotlar yo'q</span>
                         </td>
                     </tr>`;
@@ -1166,11 +1179,17 @@
             console.error('Tarixni yuklashda xatolik:', error);
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="padding: 20px; text-align: center; color: #dc3545;">
+                    <td colspan="8" style="padding: 20px; text-align: center; color: #dc3545;">
                         <span style="font-size: 16px;">❌ Tarixni yuklashda xatolik yuz berdi</span>
                     </td>
                 </tr>`;
         }
+    }
+
+    // Qaytarish tafsilotlarini ko'rish
+    function viewReturnDetails(returnId) {
+        // Bu funksiya keyinchalik to'ldiriladi
+        showMessage('Ma\'lumot: Tafsilotlar ko\'rish imkoniyati qo\'shilmoqda', 'info');
     }
 
     // Sahifa yuklanganda tarixni yuklash

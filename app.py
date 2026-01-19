@@ -2779,6 +2779,10 @@ def api_returned_products_history():
                 location_type_uz = 'Do\'kon' if op.location_type == 'store' else 'Ombor'
                 location_info = f"{location_type_uz}: {location_info}"
             
+            # USD va UZS summalarini olish
+            amount_usd = float(new_data.get('amount_usd', 0)) if new_data.get('amount_usd') else 0
+            amount_uzs = float(op.amount) if op.amount else 0
+            
             history.append({
                 'id': op.id,
                 'date': op.created_at.strftime('%d/%m/%y %H:%M'),
@@ -2788,7 +2792,8 @@ def api_returned_products_history():
                 'location': location_info,
                 'user': op.username or 'Noma\'lum',
                 'description': op.description,
-                'amount_uzs': float(op.amount) if op.amount else 0
+                'amount_usd': amount_usd,
+                'amount_uzs': amount_uzs
             })
         
         return jsonify({'success': True, 'history': history})
@@ -2959,7 +2964,8 @@ def api_return_product():
                     'product_name': product.name,
                     'quantity': sale_item.quantity if sale_item.quantity > 0 else 0,
                     'returned_quantity': return_quantity,
-                    'sale_id': sale_id
+                    'sale_id': sale_id,
+                    'amount_usd': float(returned_usd)
                 },
                 ip_address=request.remote_addr,
                 location_id=location_id,
