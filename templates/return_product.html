@@ -1014,9 +1014,16 @@
 
             const sale = data.sale;
             
+            // Debug: API dan kelgan ma'lumotlarni console'ga chiqarish
+            console.log('Sale data:', sale);
+            console.log('Returned products:', sale.returned_products);
+            console.log('Payment refunds:', sale.payment_refunds);
+            
             // Qaytarilgan mahsulotlar ID larini olish
             const returnedProducts = sale.returned_products || [];
             const returnedProductIds = returnedProducts.map(rp => rp.product_id);
+            
+            console.log('Returned product IDs:', returnedProductIds);
             
             // Qaytarilgan to'lovlar
             const paymentRefunds = sale.payment_refunds || [];
