@@ -349,8 +349,10 @@ async def handle_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     with app.app_context():
         try:
-            # Mijozni qidirish
+            # Mijozni qidirish - database'dagi telefon raqamlarni tozalash bilan
             customer = None
+            
+            # Birinchi usul: to'g'ridan-to'g'ri qidirish
             for p in possible_phones:
                 logger.info(f"   - Format: '{p}' bilan qidirilmoqda...")
                 customer = Customer.query.filter(
@@ -360,8 +362,22 @@ async def handle_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE
                     )
                 ).first()
                 if customer:
-                    logger.info(f"✅ Mijoz topildi: {customer.name} (ID: {customer.id}, Phone DB: '{customer.phone}')")
+                    logger.info(f"✅ Mijoz topildi (to'g'ridan-to'g'ri): {customer.name} (ID: {customer.id}, Phone DB: '{customer.phone}')")
                     break
+            
+            # Agar topilmasa, barcha mijozlarni sanab chiqib, telefon raqamlarni tozalab qidirish
+            if not customer:
+                logger.info(f"   - Barcha mijozlar ichidan raqamni tozalab qidirilmoqda...")
+                all_customers = Customer.query.all()
+                for cust in all_customers:
+                    if cust.phone:
+                        # Database'dagi telefon raqamdan barcha belgilarni olib tashlash
+                        clean_db_phone = ''.join(filter(str.isdigit, cust.phone))
+                        # Oxirgi 9 raqamni solishtirish
+                        if clean_db_phone[-9:] == phone[-9:]:
+                            customer = cust
+                            logger.info(f"✅ Mijoz topildi (tozalab): {customer.name} (ID: {customer.id}, Phone DB: '{customer.phone}', Clean: '{clean_db_phone}')")
+                            break
             
             if not customer:
                 await update.message.reply_text(
