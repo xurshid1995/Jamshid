@@ -11031,7 +11031,7 @@ except ImportError:
 @app.route('/api/sms/send-debt-reminder', methods=['POST'])
 @role_required('admin', 'kassir')
 def api_send_debt_sms():
-    """Qarzli mijozga SMS eslatmasi yuborish"""
+    """Qarzli mijozga SMS va Telegram eslatmasi yuborish"""
     if not SMS_ENABLED:
         return jsonify({'success': False, 'error': 'SMS xizmati faol emas'}), 503
     
@@ -11053,6 +11053,7 @@ def api_send_debt_sms():
         # Qarz miqdorini va joylashuvni hisoblash
         sale_with_location = db.session.query(
             db.func.sum(Sale.debt_usd).label('total_debt'),
+            db.func.sum(Sale.debt_amount).label('total_debt_uzs'),
             Sale.location_id,
             Sale.location_type
         ).filter(
@@ -11063,7 +11064,8 @@ def api_send_debt_sms():
         if not sale_with_location or not sale_with_location.total_debt:
             return jsonify({'success': False, 'error': 'Mijozda qarz yo\'q'}), 400
         
-        debt_usd = sale_with_location.total_debt
+        debt_usd = float(sale_with_location.total_debt)
+        debt_uzs = float(sale_with_location.total_debt_uzs or 0)
         
         # Joylashuv nomini olish
         location_name = None
@@ -11082,10 +11084,39 @@ def api_send_debt_sms():
         result = eskiz_sms.send_debt_reminder(
             customer.phone,
             customer.name,
-            float(debt_usd),
+            debt_usd,
             exchange_rate,
             location_name
         )
+        
+        # Telegram orqali yuborish (agar telegram_chat_id bo'lsa)
+        telegram_sent = False
+        if customer.telegram_chat_id:
+            try:
+                import asyncio
+                from debt_scheduler import get_scheduler_instance
+                
+                scheduler = get_scheduler_instance(app, db)
+                
+                # Async funksiyani ishga tushirish
+                telegram_result = asyncio.run(
+                    scheduler.bot.send_debt_reminder(
+                        chat_id=customer.telegram_chat_id,
+                        customer_name=customer.name,
+                        debt_usd=debt_usd,
+                        debt_uzs=debt_uzs,
+                        location_name=location_name or "Do'kon"
+                    )
+                )
+                
+                if telegram_result:
+                    telegram_sent = True
+                    logger.info(f"✅ Telegram xabar yuborildi: {customer.name} (Chat ID: {customer.telegram_chat_id})")
+                    result['telegram_sent'] = True
+                    result['message'] = result.get('message', '') + ' va Telegram orqali xabar yuborildi'
+            except Exception as e:
+                logger.warning(f"⚠️ Telegram xabar yuborishda xatolik: {e}")
+                result['telegram_error'] = str(e)
         
         # Log yozish
         if result.get('success'):
@@ -11103,7 +11134,7 @@ def api_send_debt_sms():
 @app.route('/api/sms/send-payment-confirmation', methods=['POST'])
 @role_required('admin', 'kassir')
 def api_send_payment_sms():
-    """To'lov tasdiqlash SMS yuborish"""
+    """To'lov tasdiqlash SMS va Telegram yuborish"""
     if not SMS_ENABLED:
         return jsonify({'success': False, 'error': 'SMS xizmati faol emas'}), 503
     
@@ -11121,8 +11152,15 @@ def api_send_payment_sms():
             return jsonify({'success': False, 'error': 'Telefon raqam topilmadi'}), 400
         
         # Qolgan qarzni hisoblash
-        remaining_debt = db.session.query(
+        remaining_debt_usd = db.session.query(
             db.func.sum(Sale.debt_usd)
+        ).filter(
+            Sale.customer_id == customer_id,
+            Sale.debt_usd > 0
+        ).scalar() or 0
+        
+        remaining_debt_uzs = db.session.query(
+            db.func.sum(Sale.debt_amount)
         ).filter(
             Sale.customer_id == customer_id,
             Sale.debt_usd > 0
@@ -11132,14 +11170,62 @@ def api_send_payment_sms():
         rate = CurrencyRate.query.order_by(CurrencyRate.id.desc()).first()
         exchange_rate = float(rate.rate) if rate else 13000
         
+        paid_amount_uzs = paid_amount_usd * exchange_rate
+        
         # SMS yuborish
         result = eskiz_sms.send_payment_confirmation(
             customer.phone,
             customer.name,
             paid_amount_usd,
-            float(remaining_debt),
+            float(remaining_debt_usd),
             exchange_rate
         )
+        
+        # Telegram orqali yuborish
+        if customer.telegram_chat_id:
+            try:
+                import asyncio
+                from debt_scheduler import get_scheduler_instance
+                
+                # Location nomini olish
+                sale_with_location = db.session.query(
+                    Sale.location_id,
+                    Sale.location_type
+                ).filter(
+                    Sale.customer_id == customer_id,
+                    Sale.debt_usd > 0
+                ).first()
+                
+                location_name = "Do'kon"
+                if sale_with_location:
+                    if sale_with_location.location_type == 'store':
+                        store = Store.query.get(sale_with_location.location_id)
+                        location_name = store.name if store else "Do'kon"
+                    elif sale_with_location.location_type == 'warehouse':
+                        warehouse = Warehouse.query.get(sale_with_location.location_id)
+                        location_name = warehouse.name if warehouse else "Ombor"
+                
+                scheduler = get_scheduler_instance(app, db)
+                
+                telegram_result = asyncio.run(
+                    scheduler.bot.send_payment_confirmation(
+                        chat_id=customer.telegram_chat_id,
+                        customer_name=customer.name,
+                        paid_usd=paid_amount_usd,
+                        paid_uzs=paid_amount_uzs,
+                        remaining_usd=float(remaining_debt_usd),
+                        remaining_uzs=float(remaining_debt_uzs),
+                        location_name=location_name
+                    )
+                )
+                
+                if telegram_result:
+                    logger.info(f"✅ To'lov Telegram xabari yuborildi: {customer.name}")
+                    result['telegram_sent'] = True
+                    result['message'] = result.get('message', '') + ' va Telegram orqali yuborildi'
+            except Exception as e:
+                logger.warning(f"⚠️ Telegram to'lov xabari yuborishda xatolik: {e}")
+                result['telegram_error'] = str(e)
         
         # Log
         if result.get('success'):
