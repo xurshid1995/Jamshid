@@ -195,8 +195,7 @@ class DebtTelegramBot:
                 f"💰 <b>QARZ ESLATMASI</b>\n\n"
                 f"Hurmatli {customer_name}!\n\n"
                 f"📍 Joylashuv: {location_name}\n"
-                f"💰 Qarz: ${debt_usd:,.2f}\n"
-                f"💸 Qarz: {debt_uzs:,.0f} so'm{date_str}\n\n"
+                f" Qarz: {debt_uzs:,.0f} so'm{date_str}\n\n"
                 f"Iltimos, qarzingizni to'lashni unutmang. Qarz bu omonat.\n"
                 f"Rahmat! 🙏"
             )
@@ -261,8 +260,7 @@ class DebtTelegramBot:
                 f"💰 <b>QARZ ESLATMASI</b>\n\n"
                 f"Hurmatli {customer_name}!\n\n"
                 f"📍 Joylashuv: {location_name}\n"
-                f"💎 Qarz: {debt_usd_str}\n"
-                f"💸 Qarz: {debt_uzs_str}{date_str}\n\n"
+                f" Qarz: {debt_uzs_str}{date_str}\n\n"
                 f"Iltimos, qarzingizni to'lashni unutmang. Qarz bu omonat.\n"
                 f"Rahmat! 🙏"
             )
