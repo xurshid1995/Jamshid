@@ -1281,11 +1281,13 @@ class Sale(db.Model):
             'debt_payments': [
                 {
                     'id': dp.id,
-                    'payment_type': dp.payment_type,
-                    'amount_usd': float(dp.amount_usd) if dp.amount_usd is not None else 0.0,
-                    'amount_uzs': float(dp.amount_uzs) if dp.amount_uzs is not None else 0.0,
+                    'cash_usd': float(dp.cash_usd) if dp.cash_usd is not None else 0.0,
+                    'click_usd': float(dp.click_usd) if dp.click_usd is not None else 0.0,
+                    'terminal_usd': float(dp.terminal_usd) if dp.terminal_usd is not None else 0.0,
+                    'total_usd': float(dp.total_usd) if dp.total_usd is not None else 0.0,
                     'payment_date': dp.payment_date.isoformat() if dp.payment_date else None,
-                    'description': dp.description
+                    'received_by': dp.received_by if hasattr(dp, 'received_by') else 'Unknown',
+                    'notes': dp.notes if hasattr(dp, 'notes') else ''
                 } for dp in DebtPayment.query.filter_by(sale_id=self.id).all()
             ]
         }
