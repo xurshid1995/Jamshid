@@ -6,16 +6,20 @@ Mijozlarga qarz haqida avtomatik xabar yuborish
 import os
 import logging
 import requests
+import random
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List, Dict
-from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
+from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from telegram.error import TelegramError
 from dotenv import load_dotenv
 
 load_dotenv()
 logger = logging.getLogger(__name__)
+
+# Tasdiqlash kodlari uchun xotira (production'da Redis yoki DB ishlatish kerak)
+verification_codes = {}
 
 class DebtTelegramBot:
     """Qarz eslatmalari uchun Telegram Bot"""
@@ -361,12 +365,194 @@ class DebtTelegramBot:
 
 # Bot commandlari (agar mijozlar bot bilan interact qilishini hohlasangiz)
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Start command handler"""
+    """Start command handler with phone number button"""
+    # Telefon raqam yuborish tugmasi
+    keyboard = [
+        [KeyboardButton("📱 Telefon raqamni yuborish", request_contact=True)]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+    
     await update.message.reply_text(
         "Assalomu alaykum! 👋\n\n"
-        "Bu qarz eslatmalari botidir.\n"
-        "Qarzingizni tekshirish uchun telefon raqamingizni yuboring."
+        "Bu qarz eslatmalari botidir.\n\n"
+        "Qarzingizni tekshirish uchun pastdagi tugmani bosing:",
+        reply_markup=reply_markup
     )
+
+async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Telefon raqam contact orqali kelganda"""
+    from app import app, db, Customer
+    
+    contact = update.message.contact
+    chat_id = update.effective_chat.id
+    phone_number = contact.phone_number
+    
+    logger.info(f"📱 Contact qabul qilindi: Chat ID {chat_id}, Phone: {phone_number}")
+    
+    # Telefon raqamni tozalash
+    phone = ''.join(filter(str.isdigit, phone_number))
+    
+    with app.app_context():
+        try:
+            # Mijozni qidirish
+            customer = None
+            all_customers = Customer.query.all()
+            
+            for cust in all_customers:
+                if cust.phone:
+                    clean_db_phone = ''.join(filter(str.isdigit, cust.phone))
+                    if clean_db_phone[-9:] == phone[-9:]:
+                        customer = cust
+                        logger.info(f"✅ Mijoz topildi: {customer.name} (ID: {customer.id})")
+                        break
+            
+            if not customer:
+                await update.message.reply_text(
+                    "❌ Sizning raqamingiz tizimda topilmadi.\n\n"
+                    "Iltimos, do'konga murojaat qiling.",
+                    reply_markup=ReplyKeyboardRemove()
+                )
+                return
+            
+            # Tasdiqlash kodini generatsiya qilish
+            verification_code = str(random.randint(100000, 999999))
+            verification_codes[chat_id] = {
+                'code': verification_code,
+                'customer_id': customer.id,
+                'phone': phone_number
+            }
+            
+            logger.info(f"🔐 Tasdiqlash kodi yaratildi: {verification_code} for customer {customer.id}")
+            
+            # Tasdiqlash kodini yuborish
+            await update.message.reply_text(
+                f"✅ Telefon raqam tasdiqlandi!\n\n"
+                f"🔐 Tasdiqlash kodi: <code>{verification_code}</code>\n\n"
+                f"Ushbu kodni kiriting:",
+                parse_mode='HTML',
+                reply_markup=ReplyKeyboardRemove()
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Contact handle qilishda xatolik: {e}")
+            await update.message.reply_text(
+                "❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+
+async def handle_verification_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Tasdiqlash kodini tekshirish"""
+    from app import app, db, Customer, Sale, Store, Warehouse
+    
+    chat_id = update.effective_chat.id
+    code = update.message.text.strip()
+    
+    # Kod formatini tekshirish (6 ta raqam)
+    if not code.isdigit() or len(code) != 6:
+        return
+    
+    # Tasdiqlash kodini tekshirish
+    if chat_id not in verification_codes:
+        await update.message.reply_text(
+            "❌ Avval telefon raqamingizni yuboring.\n\n"
+            "/start ni bosing."
+        )
+        return
+    
+    saved_data = verification_codes[chat_id]
+    
+    if saved_data['code'] != code:
+        await update.message.reply_text(
+            "❌ Noto'g'ri tasdiqlash kodi!\n\n"
+            "Iltimos, to'g'ri kodni kiriting."
+        )
+        return
+    
+    # Tasdiqlash muvaffaqiyatli
+    customer_id = saved_data['customer_id']
+    
+    with app.app_context():
+        try:
+            customer = Customer.query.get(customer_id)
+            if not customer:
+                await update.message.reply_text("❌ Xatolik: Mijoz topilmadi")
+                return
+            
+            # Telegram chat ID ni saqlash
+            customer.telegram_chat_id = chat_id
+            db.session.commit()
+            
+            logger.info(f"✅ Mijoz tasdiqlandi va telegram_chat_id saqlandi: {customer.name} (Chat ID: {chat_id})")
+            
+            # Tasdiqlash kodini o'chirish
+            del verification_codes[chat_id]
+            
+            # Qarzlarni ko'rsatish
+            debts = db.session.query(
+                Sale.location_id,
+                Sale.location_type,
+                db.func.sum(Sale.debt_usd).label('total_debt_usd'),
+                db.func.sum(Sale.debt_amount).label('total_debt_uzs')
+            ).filter(
+                Sale.customer_id == customer.id,
+                Sale.payment_status == 'partial',
+                Sale.debt_usd > 0
+            ).group_by(
+                Sale.location_id,
+                Sale.location_type
+            ).all()
+            
+            if not debts:
+                await update.message.reply_text(
+                    f"✅ Tasdiqlash muvaffaqiyatli!\n\n"
+                    f"Assalomu alaykum, {customer.name}!\n\n"
+                    f"🎉 Sizda qarz yo'q!\n\n"
+                    f"Rahmat! 🙏"
+                )
+                return
+            
+            # Qarzlar haqida xabar
+            total_usd = 0
+            total_uzs = 0
+            debt_details = []
+            
+            for debt in debts:
+                debt_usd = float(debt.total_debt_usd or 0)
+                debt_uzs = float(debt.total_debt_uzs or 0)
+                total_usd += debt_usd
+                total_uzs += debt_uzs
+                
+                location_name = "Do'kon"
+                if debt.location_type == 'store' and debt.location_id:
+                    store = Store.query.get(debt.location_id)
+                    location_name = store.name if store else "Do'kon"
+                elif debt.location_type == 'warehouse' and debt.location_id:
+                    warehouse = Warehouse.query.get(debt.location_id)
+                    location_name = warehouse.name if warehouse else "Ombor"
+                
+                debt_details.append(
+                    f"📍 {location_name}\n"
+                    f"   💵 ${debt_usd:,.2f}\n"
+                    f"   💸 {debt_uzs:,.0f} so'm"
+                )
+            
+            message = (
+                f"✅ Tasdiqlash muvaffaqiyatli!\n\n"
+                f"Assalomu alaykum, {customer.name}!\n\n"
+                f"💰 <b>Sizning qarzlaringiz:</b>\n\n"
+                f"{chr(10).join(debt_details)}\n\n"
+                f"📊 <b>Jami qarz:</b>\n"
+                f"💵 ${total_usd:,.2f}\n"
+                f"💸 {total_uzs:,.0f} so'm\n\n"
+                f"Iltimos, qarzingizni to'lashni unutmang.\n"
+                f"Rahmat! 🙏"
+            )
+            
+            await update.message.reply_text(message, parse_mode='HTML')
+            
+        except Exception as e:
+            logger.error(f"❌ Tasdiqlashda xatolik: {e}")
+            await update.message.reply_text("❌ Xatolik yuz berdi")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Help command handler"""
@@ -560,11 +746,21 @@ def create_telegram_app():
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("mydebt", my_debt_command))
         
-        # Message handler - telefon raqam uchun
-        from telegram.ext import MessageHandler, filters
+        # Contact handler - telefon raqam tugmasi uchun
+        application.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+        
+        # Tasdiqlash kodi handler - 6 raqamli kod uchun
         application.add_handler(
             MessageHandler(
-                filters.TEXT & ~filters.COMMAND,
+                filters.TEXT & ~filters.COMMAND & filters.Regex(r'^\d{6}$'),
+                handle_verification_code
+            )
+        )
+        
+        # Message handler - oddiy telefon raqam yozib yuborish uchun (eski usul)
+        application.add_handler(
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND & ~filters.Regex(r'^\d{6}$'),
                 handle_phone_number
             )
         )
