@@ -82,7 +82,7 @@ class DebtTelegramBot:
             if not result:
                 return ""
             
-            # To'lov turlarini formatlash
+            # To'lov turlarini formatlash (faqat to'lov turlarini ko'rsatish, qarzni emas)
             payments = []
             if result.total_cash > 0:
                 payments.append(f"💵 Naqd: ${result.total_cash:,.2f}")
@@ -90,8 +90,6 @@ class DebtTelegramBot:
                 payments.append(f"📱 Click: ${result.total_click:,.2f}")
             if result.total_terminal > 0:
                 payments.append(f"💳 Terminal: ${result.total_terminal:,.2f}")
-            if result.total_debt > 0:
-                payments.append(f"📝 Qarz: ${result.total_debt:,.2f}")
             
             if payments:
                 return "\n\n<b>📊 To'lov turlari:</b>\n" + "\n".join(payments)
@@ -151,10 +149,10 @@ class DebtTelegramBot:
                 f"💰 <b>QARZ ESLATMASI</b>\n\n"
                 f"Hurmatli {customer_name}!\n\n"
                 f"📍 Joylashuv: {location_name}\n"
-                f"💵 Qarz: {debt_usd_str}\n"
-                f"💸 Qarz: {debt_uzs_str}{date_str}\n"
-                f"{payment_details}\n"
-                f"Iltimos, qarzingizni to'lashni unutmang.Qarz bu omonat.\n"
+                f"� Qarz: ${debt_usd:,.2f}\n"
+                f"💸 Qarz: {debt_uzs:,.0f} so'm{date_str}"
+                f"{payment_details}\n\n"
+                f"Iltimos, qarzingizni to'lashni unutmang. Qarz bu omonat.\n"
                 f"Rahmat! 🙏"
             )
             
@@ -210,11 +208,16 @@ class DebtTelegramBot:
             if sale_date:
                 date_str = f"\n📅 Savdo sanasi: {sale_date.strftime('%d.%m.%Y')}"
             
+            # Qarz miqdorini formatlash
+            debt_usd_str = f"${debt_usd:,.2f}"
+            debt_uzs_str = f"{debt_uzs:,.0f} so'm"
+            
             # Xabar matni
             message = (
                 f"💰 <b>QARZ ESLATMASI</b>\n\n"
                 f"Hurmatli {customer_name}!\n\n"
                 f"📍 Joylashuv: {location_name}\n"
+                f"💎 Qarz: {debt_usd_str}\n"
                 f"💸 Qarz: {debt_uzs_str}{date_str}\n\n"
                 f"Iltimos, qarzingizni to'lashni unutmang. Qarz bu omonat.\n"
                 f"Rahmat! 🙏"
