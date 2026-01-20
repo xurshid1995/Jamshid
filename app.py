@@ -5626,7 +5626,8 @@ def api_debt_payment():
                     paid_usd=float(payment_usd - remaining_payment),
                     paid_uzs=paid_uzs,
                     remaining_usd=float(total_remaining_debt),
-                    remaining_uzs=remaining_debt_uzs
+                    remaining_uzs=remaining_debt_uzs,
+                    customer_id=customer_id  # Customer ID qo'shamiz
                 )
                 
                 if telegram_result:
@@ -11240,7 +11241,8 @@ def api_send_payment_sms():
                     paid_uzs=paid_amount_uzs,
                     remaining_usd=float(remaining_debt_usd),
                     remaining_uzs=float(remaining_debt_uzs),
-                    location_name=location_name
+                    location_name=location_name,
+                    customer_id=customer_id  # Customer ID qo'shamiz
                 )
             )
             
