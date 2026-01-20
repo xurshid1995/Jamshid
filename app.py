@@ -8694,13 +8694,13 @@ def create_sale():
             # Savdo summasini hisoblash
             total_amount_usd = unit_price_usd * quantity  # USD da
             
-            # Foyda hisoblash uchun UZS ga o'tkazish
-            unit_price_uzs = unit_price_usd * float(current_rate)
-            total_amount_uzs = unit_price_uzs * quantity
+            # Cost price ni USD ga aylantirish (mahsulot tan narxi UZS da saqlanadi)
+            unit_cost_price_uzs = float(product.cost_price)  # Tan narxi (UZS)
+            unit_cost_price_usd = unit_cost_price_uzs / float(current_rate)  # USD ga o'tkazish
+            total_cost_price_usd = unit_cost_price_usd * quantity  # Jami tan narx (USD)
             
-            unit_cost_price = float(product.cost_price)  # Birlik tan narxi (UZS)
-            total_cost_price = unit_cost_price * quantity  # Jami tan narx (UZS)
-            profit = total_amount_uzs - total_cost_price
+            # Foyda USD da hisoblash
+            profit_usd = total_amount_usd - total_cost_price_usd  # USD da
 
             # Location ma'lumotini yaratish
             if item_location_type == 'warehouse':
@@ -8717,22 +8717,22 @@ def create_sale():
                 quantity=quantity,
                 unit_price=Decimal(str(unit_price_usd)),  # USD da saqlanadi
                 total_price=Decimal(str(unit_price_usd * quantity)),  # USD da
-                cost_price=Decimal(str(unit_cost_price)),  # UZS da
-                profit=Decimal(str(profit)),  # UZS da
+                cost_price=Decimal(str(unit_cost_price_usd)),  # USD da
+                profit=Decimal(str(profit_usd)),  # USD da
                 source_type=item_location_type,
                 source_id=item_location_id,
                 notes=f'{product.name} | {location_info}'
             )
 
             db.session.add(sale_item)
-            total_profit += profit
+            total_profit += profit_usd
             total_revenue += total_amount_usd  # USD da
-            total_cost += total_cost_price
+            total_cost += total_cost_price_usd
 
         # Savdo jami summasini yangilash (ham yangi, ham tahrirlash uchun)
         current_sale.total_amount = Decimal(str(total_revenue))  # USD da
-        current_sale.total_cost = Decimal(str(total_cost))
-        current_sale.total_profit = Decimal(str(total_profit))
+        current_sale.total_cost = Decimal(str(total_cost))  # USD da
+        current_sale.total_profit = Decimal(str(total_profit))  # USD da
 
         # Ma'lumotlar bazasiga saqlash
         db.session.commit()
@@ -8926,8 +8926,13 @@ def update_sale(sale_id):
                     continue
 
                 quantity = int(item_data['quantity'])
-                unit_price = Decimal(str(item_data['unit_price']))
-                cost_price = product.cost_price or Decimal('0')
+                unit_price_usd = Decimal(str(item_data['unit_price']))
+                
+                # Cost price ni USD ga aylantirish
+                current_rate = get_current_currency_rate()
+                cost_price_uzs = product.cost_price or Decimal('0')
+                cost_price_usd = cost_price_uzs / Decimal(str(current_rate))
+                
                 location_id = item_data.get('location_id')
                 location_type = item_data.get('location_type', 'store')
 
@@ -8937,23 +8942,27 @@ def update_sale(sale_id):
                 # Yangi SaleItem yaratish
                 loc_name = 'Ombor' if location_type == 'warehouse' else "Do'kon"
                 source_name = f"{loc_name} (ID: {location_id})"
+                
+                # Foyda USD da hisoblash
+                profit_usd = (unit_price_usd - cost_price_usd) * quantity
+                
                 sale_item = SaleItem(
                     sale_id=sale.id,
                     product_id=product.id,
                     quantity=quantity,
-                    unit_price=unit_price,
-                    total_price=quantity * unit_price,
-                    cost_price=cost_price,
-                    profit=(unit_price - cost_price) * quantity,
+                    unit_price=unit_price_usd,  # USD da
+                    total_price=quantity * unit_price_usd,  # USD da
+                    cost_price=cost_price_usd,  # USD da
+                    profit=profit_usd,  # USD da
                     source_type=location_type,
                     source_id=location_id,
                     notes=f"{product.name} | {source_name}"
                 )
                 db.session.add(sale_item)
 
-                # Jami hisoblar
+                # Jami hisoblar (USD da)
                 total_amount += sale_item.total_price
-                total_cost += cost_price * quantity
+                total_cost += cost_price_usd * quantity
                 total_profit += sale_item.profit
 
             # Stock boshqaruvi real-time API'lar orqali amalga oshiriladi
