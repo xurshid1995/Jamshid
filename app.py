@@ -11075,20 +11075,17 @@ def api_send_debt_sms():
         
         # Telegram orqali yuborish
         try:
-            import asyncio
             from debt_scheduler import get_scheduler_instance
             
             scheduler = get_scheduler_instance(app, db)
             
-            # Async funksiyani ishga tushirish
-            telegram_result = asyncio.run(
-                scheduler.bot.send_debt_reminder(
-                    chat_id=customer.telegram_chat_id,
-                    customer_name=customer.name,
-                    debt_usd=debt_usd,
-                    debt_uzs=debt_uzs,
-                    location_name=location_name
-                )
+            # Sync funksiyadan foydalanish (Flask uchun)
+            telegram_result = scheduler.bot.send_debt_reminder_sync(
+                chat_id=customer.telegram_chat_id,
+                customer_name=customer.name,
+                debt_usd=debt_usd,
+                debt_uzs=debt_uzs,
+                location_name=location_name
             )
             
             if telegram_result:

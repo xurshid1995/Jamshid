@@ -5,6 +5,7 @@ Mijozlarga qarz haqida avtomatik xabar yuborish
 """
 import os
 import logging
+import requests
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List, Dict
@@ -105,6 +106,75 @@ class DebtTelegramBot:
         except TelegramError as e:
             logger.error(f"❌ Telegram xatosi ({customer_name}): {e}")
             return False
+        except Exception as e:
+            logger.error(f"❌ Xatolik ({customer_name}): {e}")
+            return False
+    
+    def send_debt_reminder_sync(
+        self,
+        chat_id: int,
+        customer_name: str,
+        debt_usd: float,
+        debt_uzs: float,
+        location_name: str,
+        sale_date: Optional[datetime] = None
+    ) -> bool:
+        """
+        Mijozga qarz eslatmasi yuborish (sync versiya - Flask uchun)
+        
+        Args:
+            chat_id: Telegram chat ID
+            customer_name: Mijoz ismi
+            debt_usd: Qarz miqdori (USD)
+            debt_uzs: Qarz miqdori (UZS)
+            location_name: Do'kon/ombor nomi
+            sale_date: Savdo sanasi
+            
+        Returns:
+            bool: Yuborildi/yuborilmadi
+        """
+        if not self.token:
+            logger.error("Bot token yo'q")
+            return False
+        
+        try:
+            # Qarz miqdorini formatlash
+            debt_usd_str = f"${debt_usd:,.2f}"
+            debt_uzs_str = f"{debt_uzs:,.0f} so'm"
+            
+            # Sana formatlash
+            date_str = ""
+            if sale_date:
+                date_str = f"\n📅 Savdo sanasi: {sale_date.strftime('%d.%m.%Y')}"
+            
+            # Xabar matni
+            message = (
+                f"💰 <b>QARZ ESLATMASI</b>\n\n"
+                f"Hurmatli {customer_name}!\n\n"
+                f"📍 Joylashuv: {location_name}\n"
+                f"💵 Qarz: {debt_usd_str}\n"
+                f"💸 Qarz: {debt_uzs_str}{date_str}\n\n"
+                f"Iltimos, qarzingizni to'lashni unutmang.\n"
+                f"Rahmat! 🙏"
+            )
+            
+            # HTTP API orqali yuborish
+            url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+            payload = {
+                'chat_id': chat_id,
+                'text': message,
+                'parse_mode': 'HTML'
+            }
+            
+            response = requests.post(url, json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Qarz eslatmasi yuborildi: {customer_name} (Chat ID: {chat_id})")
+                return True
+            else:
+                logger.error(f"❌ Telegram API xatosi ({customer_name}): {response.status_code} - {response.text}")
+                return False
+            
         except Exception as e:
             logger.error(f"❌ Xatolik ({customer_name}): {e}")
             return False
