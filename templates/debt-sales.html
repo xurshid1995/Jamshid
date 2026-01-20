@@ -2620,8 +2620,9 @@ function generatePaymentDetailsHTML(sale) {
         };
         
         sale.payment_refunds.forEach(refund => {
-            const icon = paymentTypeIcons[refund.payment_type] || '💰';
-            const typeName = paymentTypeNames[refund.payment_type] || refund.payment_type.toUpperCase();
+            const paymentType = refund.payment_type || 'cash';
+            const icon = paymentTypeIcons[paymentType] || '💰';
+            const typeName = paymentTypeNames[paymentType] || (paymentType ? paymentType.toUpperCase() : 'NOMA\'LUM');
             const amountUSD = parseFloat(refund.refund_amount_usd || 0);
             const amountUZS = parseFloat(refund.refund_amount_uzs || 0);
             
