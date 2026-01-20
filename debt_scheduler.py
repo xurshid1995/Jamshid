@@ -220,6 +220,52 @@ class DebtScheduler:
                 logger.error(f"❌ Instant reminder yuborishda xatolik: {e}")
                 return False
     
+    def send_telegram_debt_reminder_sync(
+        self,
+        chat_id: int,
+        customer_name: str,
+        debt_usd: float,
+        debt_uzs: float,
+        location_name: str,
+        sale_date: Optional[datetime] = None
+    ) -> bool:
+        """
+        Sinxron telegram xabar yuborish (Flask route'lar uchun)
+        
+        Args:
+            chat_id: Telegram chat ID
+            customer_name: Mijoz ismi
+            debt_usd: Qarz (USD)
+            debt_uzs: Qarz (UZS)
+            location_name: Do'kon/ombor nomi
+            sale_date: Savdo sanasi
+            
+        Returns:
+            bool: Yuborildi/yuborilmadi
+        """
+        try:
+            # Asyncio eventloop ichida bajariladi
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            result = loop.run_until_complete(
+                self.bot.send_debt_reminder(
+                    chat_id=chat_id,
+                    customer_name=customer_name,
+                    debt_usd=debt_usd,
+                    debt_uzs=debt_uzs,
+                    location_name=location_name,
+                    sale_date=sale_date
+                )
+            )
+            
+            loop.close()
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Sync telegram xatolik: {e}")
+            return False
+    
     async def send_payment_notification(
         self,
         customer_id: int,
