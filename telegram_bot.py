@@ -517,8 +517,6 @@ async def handle_verification_code(update: Update, context: ContextTypes.DEFAULT
                     reply_markup=reply_markup
                 )
                 return
-                )
-                return
             
             # Qarzlar haqida xabar
             total_usd = 0
