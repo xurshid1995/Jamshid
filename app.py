@@ -722,6 +722,7 @@ class Customer(db.Model):
     email = db.Column(db.String(120))
     address = db.Column(db.Text)
     store_id = db.Column(db.Integer, db.ForeignKey('stores.id'), nullable=True)
+    telegram_chat_id = db.Column(db.BigInteger, nullable=True)
     last_debt_payment_usd = db.Column(db.Numeric(10, 2), default=0)
     last_debt_payment_date = db.Column(db.DateTime, nullable=True)
     last_debt_payment_rate = db.Column(db.Numeric(10, 2), default=13000)
@@ -758,6 +759,7 @@ class Customer(db.Model):
             'address': self.address,
             'store_id': self.store_id,
             'store_name': store_name,
+            'telegram_chat_id': self.telegram_chat_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None}
 
@@ -11247,5 +11249,14 @@ def api_send_bulk_sms():
 
 
 if __name__ == '__main__':
+    # Telegram bot scheduler ni ishga tushirish
+    try:
+        from debt_scheduler import init_debt_scheduler
+        logger.info("🤖 Telegram bot scheduler ishga tushirilmoqda...")
+        init_debt_scheduler(app, db)
+        logger.info("✅ Telegram bot scheduler ishga tushdi")
+    except Exception as e:
+        logger.warning(f"⚠️ Telegram bot scheduler ishga tushmadi: {e}")
+    
     # Development rejimi uchun debug=True (avtomatik qayta yuklash)
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1,0 +1,358 @@
+# -*- coding: utf-8 -*-
+"""
+Qarz Scheduler - Avtomatik qarz eslatmalari
+Kunlik, haftalik va real-time qarz eslatmalarini yuborish
+"""
+import os
+import logging
+import asyncio
+from datetime import datetime, time, timedelta
+from decimal import Decimal
+from typing import List, Dict, Optional
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from dotenv import load_dotenv
+
+# Flask app va modellarni import qilish
+import sys
+sys.path.append(os.path.dirname(__file__))
+
+from telegram_bot import get_bot_instance
+
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+
+class DebtScheduler:
+    """Qarz eslatmalarini boshqarish tizimi"""
+    
+    def __init__(self, app=None, db=None):
+        """
+        Args:
+            app: Flask application
+            db: SQLAlchemy database instance
+        """
+        self.app = app
+        self.db = db
+        self.bot = get_bot_instance()
+        self.scheduler = AsyncIOScheduler()
+        
+        # Sozlamalar
+        self.daily_reminder_time = os.getenv('DEBT_REMINDER_TIME', '10:00')
+        self.weekly_report_day = int(os.getenv('WEEKLY_REPORT_DAY', '1'))  # 1 = Dushanba
+        self.minimum_debt_amount = float(os.getenv('MINIMUM_DEBT_AMOUNT', '1'))  # USD
+        
+        logger.info("✅ DebtScheduler initialized")
+    
+    def _get_customers_with_debt(self) -> List[Dict]:
+        """
+        Qarzli mijozlar ro'yxatini olish
+        
+        Returns:
+            List[Dict]: Qarzli mijozlar ma'lumotlari
+        """
+        if not self.app or not self.db:
+            logger.error("❌ Flask app yoki DB mavjud emas")
+            return []
+        
+        with self.app.app_context():
+            try:
+                from app import Customer, Sale, Store, Warehouse
+                
+                # Qarzli savdolarni olish
+                debts = self.db.session.query(
+                    Sale.customer_id,
+                    Sale.location_id,
+                    Sale.location_type,
+                    Sale.sale_date,
+                    self.db.func.sum(Sale.debt_usd).label('total_debt_usd'),
+                    self.db.func.sum(Sale.debt_amount).label('total_debt_uzs')
+                ).filter(
+                    Sale.payment_status == 'partial',
+                    Sale.debt_usd > self.minimum_debt_amount
+                ).group_by(
+                    Sale.customer_id,
+                    Sale.location_id,
+                    Sale.location_type,
+                    Sale.sale_date
+                ).all()
+                
+                result = []
+                for debt in debts:
+                    if not debt.customer_id:
+                        continue
+                    
+                    customer = Customer.query.get(debt.customer_id)
+                    if not customer or not customer.telegram_chat_id:
+                        continue
+                    
+                    # Location nomini olish
+                    location_name = "Noma'lum"
+                    if debt.location_type == 'store' and debt.location_id:
+                        store = Store.query.get(debt.location_id)
+                        location_name = store.name if store else "Do'kon"
+                    elif debt.location_type == 'warehouse' and debt.location_id:
+                        warehouse = Warehouse.query.get(debt.location_id)
+                        location_name = warehouse.name if warehouse else "Ombor"
+                    
+                    result.append({
+                        'customer_id': customer.id,
+                        'customer_name': customer.name,
+                        'phone': customer.phone,
+                        'telegram_chat_id': customer.telegram_chat_id,
+                        'debt_usd': float(debt.total_debt_usd or 0),
+                        'debt_uzs': float(debt.total_debt_uzs or 0),
+                        'location_name': location_name,
+                        'sale_date': debt.sale_date
+                    })
+                
+                logger.info(f"📊 {len(result)} ta qarzli mijoz topildi")
+                return result
+                
+            except Exception as e:
+                logger.error(f"❌ Qarzli mijozlarni olishda xatolik: {e}")
+                return []
+    
+    async def send_daily_reminders(self):
+        """Kunlik qarz eslatmalarini yuborish"""
+        logger.info("📅 Kunlik qarz eslatmalari yuborilmoqda...")
+        
+        debts = self._get_customers_with_debt()
+        
+        if not debts:
+            logger.info("✅ Qarzli mijozlar yo'q")
+            return
+        
+        success_count = 0
+        failed_count = 0
+        
+        for debt in debts:
+            try:
+                success = await self.bot.send_debt_reminder(
+                    chat_id=debt['telegram_chat_id'],
+                    customer_name=debt['customer_name'],
+                    debt_usd=debt['debt_usd'],
+                    debt_uzs=debt['debt_uzs'],
+                    location_name=debt['location_name'],
+                    sale_date=debt.get('sale_date')
+                )
+                
+                if success:
+                    success_count += 1
+                else:
+                    failed_count += 1
+                
+                # Rate limiting (sekundiga 1 ta xabar)
+                await asyncio.sleep(1)
+                
+            except Exception as e:
+                logger.error(f"❌ {debt['customer_name']} ga xabar yuborishda xatolik: {e}")
+                failed_count += 1
+        
+        logger.info(
+            f"✅ Kunlik eslatmalar: {success_count} yuborildi, "
+            f"{failed_count} xatolik"
+        )
+        
+        # Adminlarga hisobot
+        await self.bot.send_daily_summary(
+            total_debts=len(debts),
+            total_amount_usd=sum(d['debt_usd'] for d in debts),
+            total_amount_uzs=sum(d['debt_uzs'] for d in debts),
+            new_debts=0,  # TODO: Bugungi yangi qarzlarni hisoblash
+            paid_today=0   # TODO: Bugun to'langanlarni hisoblash
+        )
+    
+    async def send_weekly_report(self):
+        """Haftalik hisobot yuborish"""
+        logger.info("📊 Haftalik hisobot yuborilmoqda...")
+        
+        debts = self._get_customers_with_debt()
+        await self.bot.send_debt_list_to_admin(debts)
+        
+        logger.info("✅ Haftalik hisobot yuborildi")
+    
+    async def send_instant_reminder(
+        self,
+        customer_id: int,
+        debt_usd: float,
+        debt_uzs: float,
+        location_name: str,
+        sale_date: Optional[datetime] = None
+    ) -> bool:
+        """
+        Darhol qarz eslatmasi yuborish (savdodan keyin)
+        
+        Args:
+            customer_id: Mijoz ID
+            debt_usd: Qarz (USD)
+            debt_uzs: Qarz (UZS)
+            location_name: Do'kon/ombor nomi
+            sale_date: Savdo sanasi
+            
+        Returns:
+            bool: Yuborildi/yuborilmadi
+        """
+        if not self.app or not self.db:
+            return False
+        
+        with self.app.app_context():
+            try:
+                from app import Customer
+                
+                customer = Customer.query.get(customer_id)
+                if not customer or not customer.telegram_chat_id:
+                    logger.warning(
+                        f"⚠️ Mijoz {customer_id} uchun telegram_chat_id yo'q"
+                    )
+                    return False
+                
+                return await self.bot.send_debt_reminder(
+                    chat_id=customer.telegram_chat_id,
+                    customer_name=customer.name,
+                    debt_usd=debt_usd,
+                    debt_uzs=debt_uzs,
+                    location_name=location_name,
+                    sale_date=sale_date
+                )
+                
+            except Exception as e:
+                logger.error(f"❌ Instant reminder yuborishda xatolik: {e}")
+                return False
+    
+    async def send_payment_notification(
+        self,
+        customer_id: int,
+        paid_usd: float,
+        paid_uzs: float,
+        remaining_usd: float,
+        remaining_uzs: float,
+        location_name: str
+    ) -> bool:
+        """
+        To'lov tasdiqlash xabarini yuborish
+        
+        Args:
+            customer_id: Mijoz ID
+            paid_usd: To'langan (USD)
+            paid_uzs: To'langan (UZS)
+            remaining_usd: Qolgan qarz (USD)
+            remaining_uzs: Qolgan qarz (UZS)
+            location_name: Do'kon/ombor nomi
+            
+        Returns:
+            bool: Yuborildi/yuborilmadi
+        """
+        if not self.app or not self.db:
+            return False
+        
+        with self.app.app_context():
+            try:
+                from app import Customer
+                
+                customer = Customer.query.get(customer_id)
+                if not customer or not customer.telegram_chat_id:
+                    return False
+                
+                return await self.bot.send_payment_confirmation(
+                    chat_id=customer.telegram_chat_id,
+                    customer_name=customer.name,
+                    paid_usd=paid_usd,
+                    paid_uzs=paid_uzs,
+                    remaining_usd=remaining_usd,
+                    remaining_uzs=remaining_uzs,
+                    location_name=location_name
+                )
+                
+            except Exception as e:
+                logger.error(f"❌ Payment notification yuborishda xatolik: {e}")
+                return False
+    
+    def start(self):
+        """Schedulerni ishga tushirish"""
+        try:
+            # Kunlik eslatmalar (har kuni soat 10:00 da)
+            hour, minute = map(int, self.daily_reminder_time.split(':'))
+            self.scheduler.add_job(
+                self.send_daily_reminders,
+                CronTrigger(hour=hour, minute=minute),
+                id='daily_reminders',
+                name='Kunlik qarz eslatmalari',
+                replace_existing=True
+            )
+            logger.info(f"✅ Kunlik eslatmalar: har kuni {self.daily_reminder_time} da")
+            
+            # Haftalik hisobot (har dushanba soat 09:00 da)
+            self.scheduler.add_job(
+                self.send_weekly_report,
+                CronTrigger(day_of_week=self.weekly_report_day, hour=9, minute=0),
+                id='weekly_report',
+                name='Haftalik hisobot',
+                replace_existing=True
+            )
+            logger.info("✅ Haftalik hisobot: har dushanba 09:00 da")
+            
+            # Schedulerni boshlash
+            self.scheduler.start()
+            logger.info("✅ Scheduler ishga tushdi")
+            
+        except Exception as e:
+            logger.error(f"❌ Scheduler ishga tushirishda xatolik: {e}")
+    
+    def stop(self):
+        """Schedulerni to'xtatish"""
+        if self.scheduler.running:
+            self.scheduler.shutdown()
+            logger.info("🛑 Scheduler to'xtatildi")
+
+
+# Singleton instance
+_scheduler_instance = None
+
+def get_scheduler_instance(app=None, db=None) -> DebtScheduler:
+    """Scheduler instanceni olish"""
+    global _scheduler_instance
+    if _scheduler_instance is None:
+        _scheduler_instance = DebtScheduler(app=app, db=db)
+    return _scheduler_instance
+
+
+# Flask app integration
+def init_debt_scheduler(app, db):
+    """
+    Flask app bilan integratsiya
+    
+    Usage:
+        from debt_scheduler import init_debt_scheduler
+        init_debt_scheduler(app, db)
+    """
+    scheduler = get_scheduler_instance(app=app, db=db)
+    scheduler.start()
+    
+    # Cleanup on shutdown
+    import atexit
+    atexit.register(lambda: scheduler.stop())
+    
+    logger.info("✅ Debt Scheduler Flask app bilan integratsiya qilindi")
+    return scheduler
+
+
+if __name__ == "__main__":
+    # Test
+    print("🧪 Debt Scheduler test")
+    print("⚠️ Flask app bilan ishlatish kerak")
+    
+    # Test uchun:
+    # from app import app, db
+    # scheduler = init_debt_scheduler(app, db)
+    # 
+    # # Test - darhol eslatma yuborish
+    # import asyncio
+    # asyncio.run(
+    #     scheduler.send_instant_reminder(
+    #         customer_id=1,
+    #         debt_usd=100,
+    #         debt_uzs=1300000,
+    #         location_name="Test Do'kon"
+    #     )
+    # )
