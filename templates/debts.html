@@ -509,8 +509,8 @@
                 </button>
                 {% endif %}
             </div>
-            <button onclick="sendBulkDebtSMS()" class="btn-sms" style="padding: 10px 20px; border-radius: 8px; font-weight: 500;">
-                📱 Barchaga SMS yuborish
+            <button onclick="sendBulkDebtTelegram()" class="btn-sms" style="padding: 10px 20px; border-radius: 8px; font-weight: 500;">
+                📱 Barchaga Telegram yuborish
             </button>
             <a href="/paid-debts-history" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; font-weight: 500; text-decoration: none; color: white;">
                 <i class="fas fa-history"></i> Mijozlarni qarz to'lash tarixi
@@ -1255,9 +1255,9 @@
         }
     }
 
-    // SMS yuborish funksiyasi
+    // Telegram yuborish funksiyasi
     async function sendDebtSMS(customerId, customerName, debtAmount) {
-        if (!confirm(`${customerName}ga qarz eslatmasi SMS yuborilsinmi?\n\nQarz: $${debtAmount.toFixed(2)}`)) {
+        if (!confirm(`${customerName}ga qarz eslatmasi Telegram orqali yuborilsinmi?\n\nQarz: $${debtAmount.toFixed(2)}`)) {
             return;
         }
 
@@ -1267,7 +1267,7 @@
         button.innerHTML = '⏳ Yuborilmoqda...';
 
         try {
-            const response = await fetch('/api/sms/send-debt-reminder', {
+            const response = await fetch('/api/telegram/send-debt-reminder', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({customer_id: customerId})
@@ -1276,35 +1276,35 @@
             const result = await response.json();
 
             if (result.success) {
-                alert(`✅ SMS muvaffaqiyatli yuborildi!\n\n📱 Telefon: ${result.phone}\n🆔 Message ID: ${result.message_id || 'N/A'}`);
+                alert(`✅ Telegram xabari muvaffaqiyatli yuborildi!\n\n👤 Mijoz: ${customerName}\n💰 Qarz: $${debtAmount.toFixed(2)}`);
             } else {
-                alert(`❌ SMS yuborishda xatolik:\n${result.error}`);
+                alert(`❌ Telegram yuborishda xatolik:\n${result.error}`);
             }
         } catch (error) {
-            console.error('SMS xatolik:', error);
-            alert(`❌ SMS yuborishda xatolik yuz berdi:\n${error.message}`);
+            console.error('Telegram xatolik:', error);
+            alert(`❌ Telegram yuborishda xatolik yuz berdi:\n${error.message}`);
         } finally {
             button.disabled = false;
             button.innerHTML = originalText;
         }
     }
 
-    // Barcha qarzlilarga SMS yuborish
-    async function sendBulkDebtSMS() {
+    // Barcha qarzlilarga Telegram yuborish
+    async function sendBulkDebtTelegram() {
         const minDebt = prompt('Minimal qarz miqdorini kiriting (USD):', '10');
         if (!minDebt || isNaN(minDebt)) return;
 
-        if (!confirm(`$${minDebt} dan ortiq qarzli barcha mijozlarga SMS yuborilsinmi?`)) {
+        if (!confirm(`$${minDebt} dan ortiq qarzli barcha mijozlarga Telegram xabari yuborilsinmi?`)) {
             return;
         }
 
         const loadingDiv = document.createElement('div');
         loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px;border-radius:15px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:10000;text-align:center;min-width:300px;';
-        loadingDiv.innerHTML = '<div style="font-size:48px;margin-bottom:15px;">📱</div><div style="font-size:18px;color:#333;margin-bottom:10px;">SMS yuborilmoqda...</div><div style="font-size:14px;color:#666;">Iltimos kuting</div>';
+        loadingDiv.innerHTML = '<div style="font-size:48px;margin-bottom:15px;">📱</div><div style="font-size:18px;color:#333;margin-bottom:10px;">Telegram yuborilmoqda...</div><div style="font-size:14px;color:#666;">Iltimos kuting</div>';
         document.body.appendChild(loadingDiv);
 
         try {
-            const response = await fetch('/api/sms/send-bulk-reminders', {
+            const response = await fetch('/api/telegram/send-bulk-reminders', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({min_debt: parseFloat(minDebt)})
@@ -1313,7 +1313,7 @@
             const result = await response.json();
 
             if (result.success) {
-                let message = `✅ SMS yuborish yakunlandi!\n\n`;
+                let message = `✅ Telegram xabarlari yuborish yakunlandi!\n\n`;
                 message += `📊 Statistika:\n`;
                 message += `✔️  Yuborildi: ${result.sent}\n`;
                 message += `❌ Xatolik: ${result.failed}\n`;
@@ -1334,8 +1334,8 @@
                 alert(`❌ Xatolik:\n${result.error}`);
             }
         } catch (error) {
-            console.error('Bulk SMS xatolik:', error);
-            alert(`❌ SMS yuborishda xatolik:\n${error.message}`);
+            console.error('Bulk Telegram xatolik:', error);
+            alert(`❌ Telegram yuborishda xatolik:\n${error.message}`);
         } finally {
             document.body.removeChild(loadingDiv);
         }

@@ -11359,6 +11359,92 @@ def api_send_bulk_sms():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# === Telegram Bulk Reminders ===
+
+@app.route('/api/telegram/send-bulk-reminders', methods=['POST'])
+@role_required('admin')
+def api_send_bulk_telegram():
+    """Barcha qarzli mijozlarga Telegram yuborish"""
+    try:
+        data = request.get_json()
+        min_debt = float(data.get('min_debt', 10))  # Minimal qarz (USD)
+        
+        # Kurs
+        rate = CurrencyRate.query.order_by(CurrencyRate.id.desc()).first()
+        exchange_rate = float(rate.rate) if rate else 13000
+        
+        # Qarzli mijozlarni olish (faqat Telegram ID bor mijozlar)
+        query = text("""
+            SELECT 
+                c.id, c.name, c.phone, c.telegram_chat_id,
+                COALESCE(SUM(s.debt_usd), 0) as total_debt_usd,
+                COALESCE(SUM(s.debt_amount), 0) as total_debt_uzs
+            FROM customers c
+            LEFT JOIN sales s ON c.id = s.customer_id AND s.debt_usd > 0
+            WHERE c.telegram_chat_id IS NOT NULL
+            GROUP BY c.id, c.name, c.phone, c.telegram_chat_id
+            HAVING COALESCE(SUM(s.debt_usd), 0) >= :min_debt
+            ORDER BY total_debt_usd DESC
+        """)
+        
+        results = db.session.execute(query, {'min_debt': min_debt})
+        
+        sent_count = 0
+        failed_count = 0
+        errors = []
+        
+        # Telegram bot instance'ni olish
+        from debt_scheduler import get_scheduler_instance
+        scheduler = get_scheduler_instance(app, db)
+        
+        for row in results:
+            try:
+                debt_usd = float(row.total_debt_usd)
+                debt_uzs = float(row.total_debt_uzs) if row.total_debt_uzs else debt_usd * exchange_rate
+                
+                # Telegram xabari yuborish
+                success = scheduler.send_telegram_debt_reminder_sync(
+                    chat_id=row.telegram_chat_id,
+                    customer_name=row.name,
+                    debt_usd=debt_usd,
+                    debt_uzs=debt_uzs,
+                    location_name="Do'kon"
+                )
+                
+                if success:
+                    sent_count += 1
+                else:
+                    failed_count += 1
+                    errors.append({
+                        'customer': row.name,
+                        'error': 'Telegram xabari yuborilmadi'
+                    })
+                
+                # Rate limiting
+                import time
+                time.sleep(1)  # Telegram limitga tushmaslik uchun
+                
+            except Exception as e:
+                failed_count += 1
+                errors.append({
+                    'customer': row.name,
+                    'error': str(e)
+                })
+        
+        logger.info(f"📊 Bulk Telegram: {sent_count} yuborildi, {failed_count} xatolik")
+        
+        return jsonify({
+            'success': True,
+            'sent': sent_count,
+            'failed': failed_count,
+            'errors': errors
+        })
+        
+    except Exception as e:
+        logger.error(f"Bulk Telegram xatolik: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     # Telegram bot scheduler ni ishga tushirish
     try:
