@@ -721,9 +721,18 @@ async def handle_verification_code(update: Update, context: ContextTypes.DEFAULT
             total_usd = 0
             total_uzs = 0
             
+            # Kurs olish
+            from app import get_current_currency_rate
+            rate = get_current_currency_rate()
+            
             for debt in debts:
                 debt_usd = float(debt.total_debt_usd or 0)
                 debt_uzs = float(debt.total_debt_uzs or 0)
+                
+                # Agar debt_uzs 0 yoki juda kichik bo'lsa (USD saqlanib qolgan), kursga ko'paytiramiz
+                if debt_uzs == 0 or debt_uzs < debt_usd * 100:
+                    debt_uzs = debt_usd * rate
+                
                 total_usd += debt_usd
                 total_uzs += debt_uzs
             
@@ -800,9 +809,18 @@ async def check_debt_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             total_usd = 0
             total_uzs = 0
             
+            # Kurs olish
+            from app import get_current_currency_rate
+            rate = get_current_currency_rate()
+            
             for debt in debts:
                 debt_usd = float(debt.total_debt_usd or 0)
                 debt_uzs = float(debt.total_debt_uzs or 0)
+                
+                # Agar debt_uzs 0 yoki juda kichik bo'lsa (USD saqlanib qolgan), kursga ko'paytiramiz
+                if debt_uzs == 0 or debt_uzs < debt_usd * 100:
+                    debt_uzs = debt_usd * rate
+                
                 total_usd += debt_usd
                 total_uzs += debt_uzs
             
