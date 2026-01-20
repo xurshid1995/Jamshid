@@ -7661,8 +7661,12 @@ def api_sales_history():
             logger.info(f"📋 Filter: completed savdolar")
         elif payment_status and payment_status == 'partial':
             # Faqat qisman to'langan savdolar (QARZ SAVDOLAR)
-            query = Sale.query.filter(Sale.payment_status == 'partial')
-            logger.info(f"💳 Filter: QARZ SAVDOLAR (partial)")
+            # MUHIM: debt_usd > 0 sharti - haqiqatdan qarz bor bo'lsa
+            query = Sale.query.filter(
+                Sale.payment_status == 'partial',
+                Sale.debt_usd > 0
+            )
+            logger.info(f"💳 Filter: QARZ SAVDOLAR (partial + debt_usd > 0)")
         elif payment_status and payment_status != 'all':
             # Belgilangan status bo'yicha filtrlash
             query = Sale.query.filter(Sale.payment_status == payment_status)
