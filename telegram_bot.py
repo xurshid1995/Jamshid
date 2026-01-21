@@ -1098,6 +1098,19 @@ async def handle_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE
                 "❌ Xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring."
             )
 
+async def handle_unknown_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Noma'lum xabarlarga javob berish - faqat tugmalardan foydalanishni tavsiya qilish"""
+    keyboard = [
+        [KeyboardButton("💰 Qarzni tekshirish")],
+        [KeyboardButton("📜 To'lov tarixi")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+    await update.message.reply_text(
+        "⚠️ Iltimos, quyidagi tugmalardan foydalaning:",
+        reply_markup=reply_markup
+    )
+
 
 def create_telegram_app():
     """Telegram Application yaratish"""
@@ -1142,11 +1155,11 @@ def create_telegram_app():
             )
         )
         
-        # Message handler - oddiy telefon raqam yozib yuborish uchun (eski usul)
+        # Message handler - oddiy xabarlarni rad etish (faqat tugmalardan foydalanish)
         application.add_handler(
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & ~filters.Regex(r'^\d{6}$') & ~filters.Regex(r'^💰 Qarzni tekshirish$') & ~filters.Regex(r'^📜 To\'lov tarixi$'),
-                handle_phone_number
+                handle_unknown_message
             )
         )
         
