@@ -891,22 +891,16 @@ async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_T
                 payment_usd = float(payment.total_usd or 0)
                 payment_uzs = payment_usd * float(payment.currency_rate or 13000)
                 
-                # To'lov turlarini ko'rsatish
-                payment_methods = []
+                message += f"<b>{idx}.</b> {payment_datetime}\n"
+                message += f"💰 {payment_uzs:,.0f} so'm\n"
+                
+                # To'lov turlarini alohida qatorlarda ko'rsatish
                 if float(payment.cash_usd or 0) > 0:
-                    payment_methods.append(f"Naqd: ${float(payment.cash_usd):,.2f}")
+                    message += f"   💵 Naqd: ${float(payment.cash_usd):,.2f}\n"
                 if float(payment.click_usd or 0) > 0:
-                    payment_methods.append(f"Click: ${float(payment.click_usd):,.2f}")
+                    message += f"   📱 Click: ${float(payment.click_usd):,.2f}\n"
                 if float(payment.terminal_usd or 0) > 0:
-                    payment_methods.append(f"Terminal: ${float(payment.terminal_usd):,.2f}")
-                
-                methods_str = " | ".join(payment_methods) if payment_methods else "Noma'lum"
-                
-                message += (
-                    f"<b>{idx}.</b> {payment_datetime}\n"
-                    f"💵 {payment_uzs:,.0f} so'm\n"
-                    f"📊 {methods_str}\n"
-                )
+                    message += f"   💳 Terminal: ${float(payment.terminal_usd):,.2f}\n"
                 
                 if payment.notes:
                     message += f"📝 {payment.notes}\n"
