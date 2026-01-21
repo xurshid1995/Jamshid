@@ -446,6 +446,7 @@ class DebtTelegramBot:
                             message += f"<b>📋 OLDINGI QARZ: {previous_debt_uzs:,.0f} so'm</b>\n"
                         if total_debt_uzs > 0:
                             message += f"<b>💳 JAMI QARZ: {total_debt_uzs:,.0f} so'm</b>\n"
+                            message += "Qarzingizni vaqtida to'lashni unutmang Qarz bu sizga omonat\n"
             except Exception as db_error:
                 logger.warning(f"⚠️ Jami qarzni olishda xatolik: {db_error}")
             
