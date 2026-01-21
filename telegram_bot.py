@@ -361,6 +361,7 @@ class DebtTelegramBot:
         self,
         chat_id: int,
         customer_name: str,
+        customer_id: int,
         sale_date: datetime,
         location_name: str,
         total_amount_uzs: float,
@@ -376,6 +377,7 @@ class DebtTelegramBot:
         Args:
             chat_id: Telegram chat ID
             customer_name: Mijoz ismi
+            customer_id: Mijoz ID (jami qarzni hisoblash uchun)
             sale_date: Savdo sanasi
             location_name: Do'kon/ombor nomi
             total_amount_uzs: Jami summa (UZS)
@@ -417,6 +419,27 @@ class DebtTelegramBot:
             # Qarz ma'lumoti
             if debt_uzs > 0:
                 message += f"⚠️ Qarz: {debt_uzs:,.0f} so'm\n"
+            
+            # Jami qarzni hisoblash (database'dan)
+            try:
+                if self.db and customer_id:
+                    total_debt_result = self.db.session.execute(
+                        text("""
+                            SELECT COALESCE(SUM(debt_amount), 0) as total_debt
+                            FROM sales
+                            WHERE customer_id = :customer_id 
+                            AND payment_status = 'partial'
+                            AND debt_amount > 0
+                        """),
+                        {"customer_id": customer_id}
+                    ).fetchone()
+                    
+                    total_debt_uzs = float(total_debt_result[0] or 0) if total_debt_result else 0
+                    
+                    if total_debt_uzs > 0:
+                        message += f"\n<b>💳 JAMI QARZ: {total_debt_uzs:,.0f} so'm</b>\n"
+            except Exception as db_error:
+                logger.warning(f"⚠️ Jami qarzni olishda xatolik: {db_error}")
             
             message += "\nRahmat! 🙏"
             

@@ -8112,6 +8112,7 @@ def finalize_sale(sale_id):
                     bot.send_sale_notification_sync(
                         chat_id=customer.telegram_chat_id,
                         customer_name=customer.name,
+                        customer_id=customer.id,
                         sale_date=sale.sale_date,
                         location_name=location_name,
                         total_amount_uzs=total_uzs,
@@ -8810,6 +8811,7 @@ def create_sale():
                     bot.send_sale_notification_sync(
                         chat_id=customer.telegram_chat_id,
                         customer_name=customer.name,
+                        customer_id=customer.id,
                         sale_date=current_sale.sale_date,
                         location_name=location_name,
                         total_amount_uzs=total_uzs,
