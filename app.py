@@ -8748,6 +8748,44 @@ def create_sale():
         action_text = 'tahrirlandi' if is_edit_mode else 'yaratildi'
         print(f"✅ Savdo {action_text}: ID={current_sale.id}, Items={len(items)}, Total=${total_revenue}")
 
+        # Telegram xabar yuborish (faqat yangi savdo yaratilganda va mijoz telegram_chat_id bor bo'lsa)
+        if not is_edit_mode and final_customer_id:
+            try:
+                customer = Customer.query.get(final_customer_id)
+                if customer and customer.telegram_chat_id:
+                    from telegram_bot import get_bot_instance
+                    bot = get_bot_instance(db=db)
+                    
+                    # Joylashuv nomini olish
+                    if sale_location_type == 'warehouse':
+                        warehouse_obj = Warehouse.query.get(sale_location_id)
+                        location_name = warehouse_obj.name if warehouse_obj else "Ombor"
+                    else:
+                        store_obj = Store.query.get(sale_location_id)
+                        location_name = store_obj.name if store_obj else "Do'kon"
+                    
+                    # To'lov summalari (UZS da)
+                    total_uzs = cash_amount + click_amount + terminal_amount + debt_amount
+                    paid_uzs = cash_amount + click_amount + terminal_amount
+                    
+                    # Telegram xabar yuborish
+                    bot.send_sale_notification_sync(
+                        chat_id=customer.telegram_chat_id,
+                        customer_name=customer.name,
+                        sale_date=current_sale.sale_date,
+                        location_name=location_name,
+                        total_amount_uzs=total_uzs,
+                        paid_uzs=paid_uzs,
+                        cash_uzs=cash_amount,
+                        click_uzs=click_amount,
+                        terminal_uzs=terminal_amount,
+                        debt_uzs=debt_amount
+                    )
+                    logger.info(f"✅ Telegram xabar yuborildi: {customer.name}")
+            except Exception as telegram_error:
+                logger.warning(f"⚠️ Telegram xabar yuborishda xatolik: {telegram_error}")
+                # Telegram xatosi savdo yaratishni to'xtatmasin
+
         return jsonify({
             'success': True,
             'message': f'Savdo {action_text} - {len(items)} ta mahsulot',

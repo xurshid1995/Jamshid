@@ -357,6 +357,90 @@ class DebtTelegramBot:
             logger.error(f"❌ To'lov tasdiq xabarida xatolik: {e}")
             return False
     
+    def send_sale_notification_sync(
+        self,
+        chat_id: int,
+        customer_name: str,
+        sale_date: datetime,
+        location_name: str,
+        total_amount_uzs: float,
+        paid_uzs: float,
+        cash_uzs: float = 0,
+        click_uzs: float = 0,
+        terminal_uzs: float = 0,
+        debt_uzs: float = 0
+    ) -> bool:
+        """
+        Savdo yakunlanganda mijozga xabar yuborish (sync versiya - Flask uchun)
+        
+        Args:
+            chat_id: Telegram chat ID
+            customer_name: Mijoz ismi
+            sale_date: Savdo sanasi
+            location_name: Do'kon/ombor nomi
+            total_amount_uzs: Jami summa (UZS)
+            paid_uzs: To'langan summa (UZS)
+            cash_uzs: Naqd to'lov (UZS)
+            click_uzs: Click to'lov (UZS)
+            terminal_uzs: Terminal to'lov (UZS)
+            debt_uzs: Qarz (UZS)
+            
+        Returns:
+            bool: Yuborildi/yuborilmadi
+        """
+        if not self.token:
+            logger.error("Bot token yo'q")
+            return False
+        
+        try:
+            # Savdo xabari
+            message = (
+                f"📅 {sale_date.strftime('%d.%m.%Y %H:%M')}\n"
+                f"📍 Do'kon: {location_name}dan\n"
+                f"Savdo qildingiz\n\n"
+                f"━━━━━━━━━━━━━━━━━━━\n"
+                f"💰 Jami: {total_amount_uzs:,.0f} so'm\n"
+            )
+            
+            # To'lov ma'lumotlari
+            if paid_uzs > 0:
+                message += f"✅ To'langan: {paid_uzs:,.0f} so'm\n"
+                
+                # To'lov turlarini ko'rsatish
+                if cash_uzs > 0:
+                    message += f"   💵 Naqd: {cash_uzs:,.0f} so'm\n"
+                if click_uzs > 0:
+                    message += f"   📱 Click: {click_uzs:,.0f} so'm\n"
+                if terminal_uzs > 0:
+                    message += f"   💳 Terminal: {terminal_uzs:,.0f} so'm\n"
+            
+            # Qarz ma'lumoti
+            if debt_uzs > 0:
+                message += f"⚠️ Qarz: {debt_uzs:,.0f} so'm\n"
+            
+            message += "\nRahmat! 🙏"
+            
+            # HTTP API orqali yuborish
+            url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+            payload = {
+                'chat_id': chat_id,
+                'text': message,
+                'parse_mode': 'HTML'
+            }
+            
+            response = requests.post(url, json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Savdo xabari yuborildi: {customer_name} (Chat ID: {chat_id})")
+                return True
+            else:
+                logger.error(f"❌ Telegram API xatosi ({customer_name}): {response.status_code} - {response.text}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"❌ Savdo xabarida xatolik ({customer_name}): {e}")
+            return False
+    
     def send_payment_confirmation_sync(
         self,
         chat_id: int,
