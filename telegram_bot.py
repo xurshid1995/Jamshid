@@ -890,17 +890,21 @@ async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_T
                 payment_datetime = payment.payment_date.strftime('%d.%m.%Y %H:%M')
                 payment_usd = float(payment.total_usd or 0)
                 payment_uzs = payment_usd * float(payment.currency_rate or 13000)
+                currency_rate = float(payment.currency_rate or 13000)
                 
                 message += f"<b>{idx}.</b> {payment_datetime}\n"
                 message += f"💰 {payment_uzs:,.0f} so'm\n"
                 
-                # To'lov turlarini alohida qatorlarda ko'rsatish
+                # To'lov turlarini so'mda alohida qatorlarda ko'rsatish
                 if float(payment.cash_usd or 0) > 0:
-                    message += f"   💵 Naqd: ${float(payment.cash_usd):,.2f}\n"
+                    cash_uzs = float(payment.cash_usd) * currency_rate
+                    message += f"   💵 Naqd: {cash_uzs:,.0f} so'm\n"
                 if float(payment.click_usd or 0) > 0:
-                    message += f"   📱 Click: ${float(payment.click_usd):,.2f}\n"
+                    click_uzs = float(payment.click_usd) * currency_rate
+                    message += f"   📱 Click: {click_uzs:,.0f} so'm\n"
                 if float(payment.terminal_usd or 0) > 0:
-                    message += f"   💳 Terminal: ${float(payment.terminal_usd):,.2f}\n"
+                    terminal_uzs = float(payment.terminal_usd) * currency_rate
+                    message += f"   💳 Terminal: {terminal_uzs:,.0f} so'm\n"
                 
                 if payment.notes:
                     message += f"📝 {payment.notes}\n"
