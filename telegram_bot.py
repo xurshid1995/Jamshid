@@ -886,12 +886,10 @@ async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_T
                 f"Mijoz: {customer.name}\n\n"
             )
             
-            total_paid = 0
             for idx, payment in enumerate(payments, 1):
-                payment_date = payment.payment_date.strftime('%d.%m.%Y')
+                payment_datetime = payment.payment_date.strftime('%d.%m.%Y %H:%M')
                 payment_usd = float(payment.total_usd or 0)
                 payment_uzs = payment_usd * float(payment.currency_rate or 13000)
-                total_paid += payment_usd
                 
                 # To'lov turlarini ko'rsatish
                 payment_methods = []
@@ -905,7 +903,7 @@ async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_T
                 methods_str = " | ".join(payment_methods) if payment_methods else "Noma'lum"
                 
                 message += (
-                    f"<b>{idx}.</b> {payment_date}\n"
+                    f"<b>{idx}.</b> {payment_datetime}\n"
                     f"💵 {payment_uzs:,.0f} so'm\n"
                     f"📊 {methods_str}\n"
                 )
@@ -915,8 +913,6 @@ async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_T
                 
                 message += "\n"
             
-            # Jami to'lovni qo'shish
-            message += f"\n<b>💰 Jami to'langan:</b>\n${total_paid:,.2f}\n\n"
             message += "Rahmat! 🙏"
             
             await update.message.reply_text(message, parse_mode='HTML')
