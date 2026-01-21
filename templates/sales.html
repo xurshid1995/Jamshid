@@ -492,7 +492,7 @@
             
             <div style="display: flex; gap: 10px;">
                 <button onclick="closePaymentModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Bekor qilish</button>
-                <button id="confirmPaymentBtn" onclick="confirmPayment(event)" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">✅ Tasdiqlash</button>
+                <button onclick="confirmPayment()" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">✅ Tasdiqlash</button>
             </div>
         </div>
     </div>
@@ -4494,40 +4494,6 @@
             });
         }
         
-        // Enter tugmasi bosilganda formni submit qilmaslik
-        const paymentInputs = [
-            getActiveTabElement('paymentCashUSD'),
-            getActiveTabElement('paymentCashUZS'),
-            getActiveTabElement('paymentClickUSD'),
-            getActiveTabElement('paymentClickUZS'),
-            getActiveTabElement('paymentTerminalUSD'),
-            getActiveTabElement('paymentTerminalUZS'),
-            getActiveTabElement('paymentDebtUSD'),
-            getActiveTabElement('paymentDebtUZS')
-        ];
-        
-        paymentInputs.forEach(input => {
-            if (input) {
-                // Eski listener'ni olib tashlash uchun clone qilish
-                const newInput = input.cloneNode(true);
-                input.parentNode.replaceChild(newInput, input);
-                
-                // Yangi listener qo'shish
-                newInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // Keyingi inputga o'tish
-                        const inputs = Array.from(document.querySelectorAll('#paymentCashUSD, #paymentCashUZS, #paymentClickUSD, #paymentClickUZS, #paymentTerminalUSD, #paymentTerminalUZS, #paymentDebtUSD, #paymentDebtUZS'));
-                        const currentIndex = inputs.indexOf(newInput);
-                        if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
-                            inputs[currentIndex + 1].focus();
-                        }
-                    }
-                });
-            }
-        });
-        
         // Fokusni Naxt so'm maydoniga berish
         setTimeout(() => {
             const cashUZS = getActiveTabElement('paymentCashUZS');
@@ -4536,18 +4502,6 @@
                 cashUZS.select();
             }
         }, 100);
-        
-        // Processing flagni tiklash (yangi modal ochilganda)
-        isProcessingPayment = false;
-        
-        // Tasdiqlash tugmasini tiklash
-        const confirmBtn = getActiveTabElement('confirmPaymentBtn');
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = '✅ Tasdiqlash';
-            confirmBtn.style.opacity = '1';
-            confirmBtn.style.cursor = 'pointer';
-        }
         
         console.log('💳 To\'lov modali ochildi');
     }
@@ -4562,18 +4516,6 @@
         if (paymentWarning) {
             paymentWarning.style.display = 'none';
             paymentWarning.textContent = '';
-        }
-        
-        // Processing flagni tiklash
-        isProcessingPayment = false;
-        
-        // Tasdiqlash tugmasini tiklash
-        const confirmBtn = getActiveTabElement('confirmPaymentBtn');
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = '✅ Tasdiqlash';
-            confirmBtn.style.opacity = '1';
-            confirmBtn.style.cursor = 'pointer';
         }
     }
     
@@ -4653,7 +4595,7 @@
     let isProcessingPayment = false;
     
     // To'lovni tasdiqlash
-    async function confirmPayment(evt) {
+    async function confirmPayment() {
         // Double-click oldini olish
         if (isProcessingPayment) {
             console.log('⚠️ To\'lov allaqachon jarayonda');
@@ -4663,7 +4605,7 @@
         isProcessingPayment = true;
         
         // Tasdiqlash tugmasini topish va o'chirish
-        const confirmBtn = evt && evt.target ? evt.target : getActiveTabElement('confirmPaymentBtn');
+        const confirmBtn = event.target;
         const originalText = confirmBtn ? confirmBtn.textContent : '';
         if (confirmBtn) {
             confirmBtn.disabled = true;
@@ -5043,8 +4985,6 @@
                 confirmBtn.style.opacity = '1';
                 confirmBtn.style.cursor = 'pointer';
             }
-            // Flagni darhol tiklash
-            isProcessingPayment = false;
         } finally {
             // 3 sekunddan keyin qayta bosish imkonini berish
             setTimeout(() => {
