@@ -703,7 +703,8 @@ async def handle_verification_code(update: Update, context: ContextTypes.DEFAULT
             
             # Doimiy tugmalarni tayyorlash
             keyboard = [
-                [KeyboardButton("💰 Qarzni tekshirish")]
+                [KeyboardButton("💰 Qarzni tekshirish")],
+                [KeyboardButton("📜 To'lov tarixi")]
             ]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
             
@@ -747,7 +748,8 @@ async def handle_verification_code(update: Update, context: ContextTypes.DEFAULT
             
             # Doimiy tugmalarni ko'rsatish
             keyboard = [
-                [KeyboardButton("💰 Qarzni tekshirish")]
+                [KeyboardButton("💰 Qarzni tekshirish")],
+                [KeyboardButton("📜 To'lov tarixi")]
             ]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
             
@@ -836,6 +838,91 @@ async def check_debt_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         except Exception as e:
             logger.error(f"❌ Qarzni tekshirishda xatolik: {e}")
+            await update.message.reply_text("❌ Xatolik yuz berdi")
+
+async def payment_history_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """To'lov tarixi tugmasi bosilganda"""
+    from app import app, db, Customer, DebtPayment
+    
+    chat_id = update.effective_chat.id
+    
+    with app.app_context():
+        try:
+            # Mijozni telegram_chat_id bo'yicha topish
+            customer = Customer.query.filter_by(telegram_chat_id=chat_id).first()
+            
+            if not customer:
+                # Telefon raqam tugmasini ko'rsatish
+                keyboard = [
+                    [KeyboardButton("📱 Telefon raqamni yuborish", request_contact=True)]
+                ]
+                reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+                
+                await update.message.reply_text(
+                    "❌ Siz hali ro'yxatdan o'tmagansiz.\n\n"
+                    "Iltimos, telefon raqamingizni yuboring:",
+                    reply_markup=reply_markup
+                )
+                return
+            
+            # To'lov tarixini olish (oxirgi 10 ta)
+            payments = DebtPayment.query.filter_by(
+                customer_id=customer.id
+            ).order_by(
+                DebtPayment.payment_date.desc()
+            ).limit(10).all()
+            
+            if not payments:
+                await update.message.reply_text(
+                    f"Assalomu alaykum, {customer.name}!\n\n"
+                    f"📜 To'lov tarixingiz topilmadi.\n\n"
+                    f"Siz hali qarz to'lamagan yoki to'lovlar qayd qilinmagan."
+                )
+                return
+            
+            # To'lov tarixini formatlash
+            message = (
+                f"📜 <b>To'lov tarixi</b>\n"
+                f"Mijoz: {customer.name}\n\n"
+            )
+            
+            total_paid = 0
+            for idx, payment in enumerate(payments, 1):
+                payment_date = payment.payment_date.strftime('%d.%m.%Y')
+                payment_usd = float(payment.total_usd or 0)
+                payment_uzs = payment_usd * float(payment.currency_rate or 13000)
+                total_paid += payment_usd
+                
+                # To'lov turlarini ko'rsatish
+                payment_methods = []
+                if float(payment.cash_usd or 0) > 0:
+                    payment_methods.append(f"Naqd: ${float(payment.cash_usd):,.2f}")
+                if float(payment.click_usd or 0) > 0:
+                    payment_methods.append(f"Click: ${float(payment.click_usd):,.2f}")
+                if float(payment.terminal_usd or 0) > 0:
+                    payment_methods.append(f"Terminal: ${float(payment.terminal_usd):,.2f}")
+                
+                methods_str = " | ".join(payment_methods) if payment_methods else "Noma'lum"
+                
+                message += (
+                    f"<b>{idx}.</b> {payment_date}\n"
+                    f"💵 {payment_uzs:,.0f} so'm\n"
+                    f"📊 {methods_str}\n"
+                )
+                
+                if payment.notes:
+                    message += f"📝 {payment.notes}\n"
+                
+                message += "\n"
+            
+            # Jami to'lovni qo'shish
+            message += f"\n<b>💰 Jami to'langan:</b>\n${total_paid:,.2f}\n\n"
+            message += "Rahmat! 🙏"
+            
+            await update.message.reply_text(message, parse_mode='HTML')
+            
+        except Exception as e:
+            logger.error(f"❌ To'lov tarixini olishda xatolik: {e}")
             await update.message.reply_text("❌ Xatolik yuz berdi")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1039,6 +1126,14 @@ def create_telegram_app():
             )
         )
         
+        # "To'lov tarixi" tugmasi handler
+        application.add_handler(
+            MessageHandler(
+                filters.TEXT & filters.Regex(r'^📜 To\'lov tarixi$'),
+                payment_history_button
+            )
+        )
+        
         # Tasdiqlash kodi handler - 6 raqamli kod uchun
         application.add_handler(
             MessageHandler(
@@ -1050,7 +1145,7 @@ def create_telegram_app():
         # Message handler - oddiy telefon raqam yozib yuborish uchun (eski usul)
         application.add_handler(
             MessageHandler(
-                filters.TEXT & ~filters.COMMAND & ~filters.Regex(r'^\d{6}$') & ~filters.Regex(r'^💰 Qarzni tekshirish$'),
+                filters.TEXT & ~filters.COMMAND & ~filters.Regex(r'^\d{6}$') & ~filters.Regex(r'^💰 Qarzni tekshirish$') & ~filters.Regex(r'^📜 To\'lov tarixi$'),
                 handle_phone_number
             )
         )
