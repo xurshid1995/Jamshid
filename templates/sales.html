@@ -120,6 +120,21 @@
             font-size: 0.8rem !important;
         }
         
+        /* Mahsulot jadvalidagi Amal ustunini yashirish (mobilda qatorni bosish mumkin) */
+        .sales-product-table th:nth-child(4),
+        .sales-product-table td:nth-child(4) {
+            display: none !important;
+        }
+        
+        /* Mahsulot qatorini bosish mumkin qilish */
+        .sales-product-table tbody tr {
+            cursor: pointer !important;
+        }
+        
+        .sales-product-table tbody tr:hover {
+            background-color: #f0f8ff !important;
+        }
+        
         /* Mahsulot nomi ustunini kichikroq qilish va matnni o'rash */
         .sales-product-table th:first-child,
         .sales-product-table td:first-child,
@@ -2225,6 +2240,39 @@
     // Event delegation handler - mahsulot buttonlari uchun
     function handleProductClick(event) {
         const btn = event.target.closest('.add-to-cart-btn');
+        const row = event.target.closest('tr');
+        
+        // Mobilda butun qatorni bosish (agar tugma bosilmagan bo'lsa)
+        if (!btn && row && row.hasAttribute('data-product-id')) {
+            // Faqat mobil ekranlarda ishlashi kerak (768px dan kichik)
+            if (window.innerWidth <= 768) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const productId = parseInt(row.getAttribute('data-product-id'));
+                const productName = row.querySelector('td:first-child')?.getAttribute('data-original-text') || '';
+                const quantityBadge = row.querySelector('td:nth-child(2) span');
+                const quantity = quantityBadge ? parseInt(quantityBadge.textContent.trim()) : 0;
+                
+                // Narxni olish - span ichidagi matnni parse qilish
+                const priceSpan = row.querySelector('td:nth-child(3) span:first-child');
+                let price = 0;
+                if (priceSpan) {
+                    const priceText = priceSpan.textContent.replace(/[^0-9.]/g, '');
+                    price = parseFloat(priceText) || 0;
+                }
+                
+                const costPrice = parseFloat(row.getAttribute('data-cost-price')) || 0;
+                
+                // Agar miqdor 0 dan katta bo'lsa, qo'shish
+                if (quantity > 0) {
+                    addToCart(productId, productName, quantity, price, costPrice);
+                }
+                return;
+            }
+        }
+        
+        // Desktop yoki tugma bosilgan holda
         if (!btn || btn.disabled) return;
         
         event.preventDefault();
