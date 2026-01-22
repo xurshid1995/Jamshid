@@ -310,42 +310,44 @@
     /* Mobil filtrlarni bir qatorda qilish */
     #timeFilters {
         display: flex;
-        flex-wrap: nowrap;
-        gap: 4px;
-        justify-content: flex-start;
-        overflow-x: auto;
+        flex-wrap: wrap;
+        gap: 3px;
+        justify-content: center;
+        overflow-x: visible;
         -webkit-overflow-scrolling: touch;
         padding: 2px;
     }
     
     #timeFilters .time-btn {
-        flex-shrink: 0;
-        font-size: 0.65rem !important;
-        padding: 0.2rem 0.25rem !important;
+        flex-shrink: 1;
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.2rem !important;
         white-space: nowrap;
         min-width: auto;
-        line-height: 1.1;
+        line-height: 1;
         height: auto;
+        border-width: 1px !important;
     }
     
     #locationButtons {
         display: flex;
-        flex-wrap: nowrap;
-        gap: 4px;
-        justify-content: flex-start;
-        overflow-x: auto;
+        flex-wrap: wrap;
+        gap: 3px;
+        justify-content: center;
+        overflow-x: visible;
         -webkit-overflow-scrolling: touch;
         padding: 2px;
     }
     
     #locationButtons .location-btn {
-        flex-shrink: 0;
-        font-size: 0.65rem !important;
-        padding: 0.2rem 0.25rem !important;
+        flex-shrink: 1;
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.2rem !important;
         white-space: nowrap;
         min-width: auto;
-        line-height: 1.1;
+        line-height: 1;
         height: auto;
+        border-width: 1px !important;
     }
 }
 </style>
