@@ -1693,15 +1693,8 @@
     function startBarcodeScanner() {
         console.log('📷 Camera scan funksiyasi boshlandi');
         
-        // Mobile qurilmada native camera ishlatish (to'liq ekran native app)
-        if (isMobileDevice()) {
-            console.log('📱 Mobile - native camera ochilmoqda...');
-            startNativeCameraScanner();
-            return;
-        }
-        
-        // Desktop'da web camera modal
-        console.log('🖥️ Desktop - web camera ochilmoqda...');
+        // Barcha qurilmalarda web camera modal ishlatish (facingMode: environment bilan)
+        console.log('📷 Web camera modal ochilmoqda (orqa kamera)...');
         startWebCameraScanner();
     }
     
