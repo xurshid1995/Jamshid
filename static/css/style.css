@@ -1310,7 +1310,7 @@ footer {
         position: fixed;
         top: 10px;
         left: 10px;
-        z-index: 1250;
+        z-index: 1300; /* Sidebar'dan ham yuqori */
         background: #2c3e50;
         color: white;
         border: none;
@@ -1416,24 +1416,24 @@ footer {
         width: 100%;
     }
     
-    /* Mobile sidebar - Compact va user-friendly */
+    /* Mobile sidebar - To'liq ekranni qoplash */
     .sidebar {
         position: fixed;
         left: -100% !important;
-        top: 60px !important; /* Top header balandligi */
-        height: calc(100vh - 60px) !important;
+        top: 0 !important; /* Ekranning eng tepasidan boshlanadi */
+        height: 100vh !important; /* To'liq ekran balandligi */
         width: 280px !important;
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease !important;
-        z-index: 1160 !important;
+        z-index: 1250 !important; /* Mobile toggle'dan yuqoriroq */
         background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%) !important;
         box-shadow: none !important;
-        border-top-right-radius: 10px;
-        border-bottom-right-radius: 10px;
+        border-radius: 0; /* To'liq ekran uchun border radius yo'q */
         overflow-y: auto !important; /* Scroll yoqish */
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch;
         display: flex !important;
         flex-direction: column;
+        padding-top: 70px; /* Tepada joy qoldirish */
     }
     
     /* Hover effekti mobilda o'chiriladi */
