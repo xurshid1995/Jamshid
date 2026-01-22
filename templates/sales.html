@@ -250,31 +250,45 @@
         }
         
         /* To'lov modal mobil uchun */
-        #paymentModal > div {
-            width: 95% !important;
-            max-width: 95% !important;
-            max-height: 90vh !important;
+        #paymentModal {
+            padding: 0 !important;
             overflow-y: auto !important;
-            padding: 15px !important;
+        }
+        
+        #paymentModal > div {
+            width: calc(100% - 20px) !important;
+            max-width: calc(100% - 20px) !important;
+            max-height: 95vh !important;
+            overflow-y: auto !important;
+            padding: 12px !important;
             margin: 10px !important;
+            box-sizing: border-box !important;
         }
         
         #paymentModal h3 {
-            font-size: 16px !important;
+            font-size: 15px !important;
+            margin-bottom: 10px !important;
         }
         
-        #paymentModal input[type="number"] {
-            padding: 6px !important;
-            font-size: 13px !important;
+        #paymentModal .grid,
+        #paymentModal > div > div:nth-child(3) {
+            gap: 8px !important;
         }
         
-        #paymentModal button {
-            padding: 8px 10px !important;
+        #paymentModal input[type="number"],
+        #paymentModal input[type="checkbox"] {
+            padding: 6px 4px !important;
             font-size: 12px !important;
         }
         
+        #paymentModal button {
+            padding: 8px 6px !important;
+            font-size: 11px !important;
+            white-space: nowrap !important;
+        }
+        
         #paymentModal label {
-            font-size: 13px !important;
+            font-size: 12px !important;
         }
     }
     
