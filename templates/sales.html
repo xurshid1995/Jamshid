@@ -514,7 +514,7 @@
                     <input type="file" 
                            id="nativeCameraInput" 
                            accept="image/*" 
-                           capture="environment" 
+                           capture="environment"
                            style="display: none;">
                     <button id="cameraScanBtn" type="button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #28a745; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 18px; color: white; transition: background 0.3s;" onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'" title="Kamerada barcode skaner qilish">
                         📷
@@ -1714,14 +1714,23 @@
             return;
         }
         
-        // Event listener qo'shish
-        if (!nativeCameraInput.dataset.listenerAdded) {
-            nativeCameraInput.addEventListener('change', handleNativeCameraImage);
-            nativeCameraInput.dataset.listenerAdded = 'true';
-        }
+        // Orqa kamerani majburlash (ba'zi brauzerlarda ishlaydi)
+        // Har safar yangi input yaratish - ba'zi telefonlarda cache muammosi yechiladi
+        const newInput = document.createElement('input');
+        newInput.type = 'file';
+        newInput.accept = 'image/*';
+        newInput.capture = 'environment'; // Orqa kamera
+        newInput.style.display = 'none';
         
-        // Native camera app'ni ochish (to'liq ekran)
-        nativeCameraInput.click();
+        // Event listener qo'shish
+        newInput.addEventListener('change', handleNativeCameraImage);
+        
+        // Eski inputni almashtirish
+        nativeCameraInput.parentNode.replaceChild(newInput, nativeCameraInput);
+        newInput.id = nativeCameraInput.id;
+        
+        // Kamerani ochish
+        newInput.click();
     }
     
     // Native camera'dan olingan rasmni decode qilish
