@@ -85,13 +85,24 @@
         
         .table-wrapper {
             width: 100% !important;
+            overflow-x: auto !important;
         }
         
         .sales-product-table,
         .cart-table {
             width: 100% !important;
-            min-width: 100% !important;
+            min-width: 600px !important;
+            font-size: 0.85rem !important;
         }
+        
+        .sales-product-table th,
+        .sales-product-table td,
+        .cart-table th,
+        .cart-table td {
+            padding: 8px 4px !important;
+            font-size: 0.8rem !important;
+        }
+        
         .sales-container {
             padding: 10px;
         }
@@ -99,7 +110,7 @@
         .sales-grid {
             grid-template-columns: 1fr !important;
             padding: 10px !important;
-            gap: 15px !important;
+            gap: 10px !important;
         }
         
         .sales-grid > div {
@@ -110,6 +121,25 @@
         .page-header h1 {
             font-size: 20px;
         }
+        
+        /* Input maydonlar */
+        input[type="text"],
+        input[type="number"],
+        select {
+            font-size: 14px !important;
+            padding: 10px !important;
+        }
+        
+        /* Tugmalar */
+        button {
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+        }
+        
+        .btn-new-sale {
+            width: 100%;
+            margin-bottom: 10px;
+        }
     }
     
     @media (max-width: 480px) {
@@ -118,7 +148,21 @@
         }
         
         .page-header h1 {
-            font-size: 18px;
+            font-size: 16px;
+        }
+        
+        .sales-product-table,
+        .cart-table {
+            min-width: 500px !important;
+            font-size: 0.75rem !important;
+        }
+        
+        .sales-product-table th,
+        .sales-product-table td,
+        .cart-table th,
+        .cart-table td {
+            padding: 6px 3px !important;
+            font-size: 0.7rem !important;
         }
     }
     
