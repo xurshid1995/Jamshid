@@ -257,81 +257,97 @@
         }
         
         .payment-modal-content {
-            width: calc(100vw - 10px) !important;
-            max-width: calc(100vw - 10px) !important;
-            max-height: 96vh !important;
+            width: calc(100vw - 8px) !important;
+            max-width: calc(100vw - 8px) !important;
+            max-height: 97vh !important;
             overflow-y: visible !important;
-            padding: 6px !important;
-            margin: 2vh 5px !important;
+            padding: 5px !important;
+            margin: 1.5vh 4px !important;
             box-sizing: border-box !important;
             border-radius: 4px !important;
         }
         
         .payment-modal-content > div {
-            margin-bottom: 4px !important;
-            gap: 3px !important;
-            padding: 4px !important;
+            margin-bottom: 3px !important;
+            gap: 2px !important;
+            padding: 3px !important;
         }
         
         .payment-modal-content h3 {
-            font-size: 12px !important;
-            margin: 0 0 4px 0 !important;
+            font-size: 11px !important;
+            margin: 0 0 3px 0 !important;
+        }
+        
+        /* To'lov input qatorlari */
+        .payment-modal-content > div:nth-child(3) > div {
+            gap: 2px !important;
         }
         
         .payment-modal-content input[type="number"] {
-            padding: 3px 2px !important;
-            font-size: 10px !important;
-            min-width: 50px !important;
+            padding: 2px 1px !important;
+            font-size: 9px !important;
+            min-width: 45px !important;
+            max-width: 70px !important;
+            flex: 0 1 auto !important;
         }
         
         .payment-modal-content button {
-            padding: 3px 4px !important;
-            font-size: 9px !important;
+            padding: 2px 3px !important;
+            font-size: 8px !important;
             white-space: nowrap !important;
+            flex-shrink: 0 !important;
         }
         
         .payment-modal-content label {
-            font-size: 9px !important;
-            min-width: 45px !important;
+            font-size: 8px !important;
+            min-width: 35px !important;
+            max-width: 40px !important;
+            flex-shrink: 0 !important;
         }
         
         .payment-modal-content label span {
-            font-size: 9px !important;
+            font-size: 8px !important;
         }
         
         .payment-modal-content input[type="checkbox"] {
-            width: 11px !important;
-            height: 11px !important;
+            width: 10px !important;
+            height: 10px !important;
         }
         
         .payment-modal-content #paymentModalTotal {
-            font-size: 9px !important;
+            font-size: 8px !important;
         }
         
         .payment-modal-content #paymentModalTotal > div {
-            font-size: 8px !important;
+            font-size: 7px !important;
             margin-bottom: 1px !important;
         }
         
         .payment-modal-content #paymentModalTotal span {
-            font-size: 10px !important;
+            font-size: 9px !important;
         }
         
         .payment-modal-content > div:last-child {
-            gap: 4px !important;
-            margin-top: 4px !important;
+            gap: 3px !important;
+            margin-top: 3px !important;
         }
         
         .payment-modal-content > div:last-child button {
             flex: 1 !important;
-            padding: 6px 3px !important;
-            font-size: 10px !important;
+            padding: 5px 2px !important;
+            font-size: 9px !important;
         }
         
         /* Chek checkbox container */
         .payment-modal-content > div:nth-child(2) {
             flex-wrap: wrap !important;
-            gap: 6px !important;
+            gap: 4px !important;
+        }
+        
+        /* Warning div */
+        .payment-modal-content > div:nth-child(4) {
+            padding: 4px !important;
+            font-size: 8px !important;
         }
     }
     }
