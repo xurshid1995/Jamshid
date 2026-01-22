@@ -62,26 +62,7 @@
         position: relative;
     }
     
-    /* Scroll indicator */
-    .table-wrapper::after {
-        content: '← Suring →';
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        background: rgba(0, 123, 255, 0.9);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 10px;
-        pointer-events: none;
-        display: none;
-    }
-    
-    @media (max-width: 768px) {
-        .table-wrapper::after {
-            display: block;
-        }
-    }
+    /* Scroll indicator removed for better mobile UX */
     
     /* Responsive - kichik ekranlar uchun vertikal layout */
     @media (max-width: 1200px) {
@@ -109,28 +90,30 @@
             width: 100% !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
-            border: 2px solid #007bff;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
+            margin: 0 !important;
         }
         
         .table-wrapper::-webkit-scrollbar {
-            height: 8px;
+            height: 6px;
         }
         
         .table-wrapper::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+            background: transparent;
         }
         
         .table-wrapper::-webkit-scrollbar-thumb {
-            background: #007bff;
+            background: #cbd5e0;
             border-radius: 10px;
         }
         
         .sales-product-table,
         .cart-table {
-            width: auto !important;
-            min-width: 100% !important;
+            width: 100% !important;
+            min-width: auto !important;
+            max-width: 100% !important;
+            table-layout: auto !important;
             font-size: 0.8rem !important;
         }
         
@@ -147,8 +130,9 @@
         .sales-product-table td:first-child,
         .cart-table th:first-child,
         .cart-table td:first-child {
-            max-width: 120px !important;
-            min-width: 100px !important;
+            width: auto !important;
+            max-width: 140px !important;
+            min-width: 90px !important;
             white-space: normal !important;
             word-wrap: break-word !important;
             word-break: break-word !important;
@@ -160,20 +144,27 @@
         .sales-product-table td:nth-child(2) {
             white-space: nowrap;
             text-align: center;
-            min-width: 60px;
+            width: auto !important;
         }
         
         .sales-product-table th:nth-child(3),
         .sales-product-table td:nth-child(3) {
             white-space: nowrap;
-            min-width: 80px;
+            width: auto !important;
+        }
+        
+        .sales-product-table th:nth-child(4),
+        .sales-product-table td:nth-child(4) {
+            white-space: nowrap;
+            text-align: center;
+            width: auto !important;
         }
         
         .cart-table th:nth-child(2),
         .cart-table td:nth-child(2) {
             white-space: nowrap;
             text-align: center;
-            min-width: 70px;
+            width: auto !important;
         }
         
         .cart-table th:nth-child(3),
@@ -181,7 +172,12 @@
         .cart-table th:nth-child(4),
         .cart-table td:nth-child(4) {
             white-space: nowrap;
-            min-width: 75px;
+            width: auto !important;
+        }
+        
+        .cart-table th:nth-child(5),
+        .cart-table td:nth-child(5) {
+            width: auto !important;
         }
         
         .sales-product-table th:first-child,
