@@ -696,10 +696,6 @@ input[name="price"] {
 }
 
 @media (max-width: 768px) {
-    .sidebar {
-        width: 200px;
-    }
-    
     .top-header {
         padding: 0 1rem;
     }
@@ -717,9 +713,9 @@ input[name="price"] {
     }
     
     .main-content {
-        margin-left: 200px;
-        width: calc(100vw - 200px);
-        max-width: calc(100vw - 200px);
+        margin-left: 0;
+        width: 100vw;
+        max-width: 100vw;
     }
     
     .product-grid {
@@ -739,28 +735,18 @@ input[name="price"] {
 @media (max-width: 480px) {
     body {
         flex-direction: column;
-        overflow-x: auto; /* Gorizontal scroll ta'minlash */
-        min-width: 320px; /* Kichikroq minimal kenglik */
-    }
-    
-    .sidebar {
-        width: 100%;
-        position: relative;
-        height: auto;
-        max-height: 40vh;
-        overflow-y: auto;
-        overflow-x: auto; /* Sidebar ham scroll qila olsin */
-        min-width: 100%; /* Sidebar to'liq kenglik */
+        overflow-x: auto;
+        min-width: 320px;
     }
     
     .main-content {
         margin-left: 0;
         width: 100vw;
         max-width: 100vw;
-        min-width: 320px; /* Minimal kenglik telefon uchun */
-        overflow-x: auto !important; /* Content scroll qila olsin - kuchliroq */
-        -webkit-overflow-scrolling: touch !important; /* iOS uchun smooth scroll */
-        padding: 10px; /* Kichik padding */
+        min-width: 320px;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 10px;
         box-sizing: border-box;
     }
     
