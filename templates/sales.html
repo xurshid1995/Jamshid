@@ -4893,6 +4893,23 @@
             }
         }, 100);
         
+        // Enter key'ni bloklash - modal ichidagi barcha input'larda
+        const paymentInputs = document.querySelectorAll('#paymentModal input[type="number"]');
+        paymentInputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Keyingi input'ga o'tish
+                    const inputs = Array.from(paymentInputs);
+                    const currentIndex = inputs.indexOf(this);
+                    if (currentIndex < inputs.length - 1) {
+                        inputs[currentIndex + 1].focus();
+                    }
+                }
+            });
+        });
+        
         console.log('💳 To\'lov modali ochildi');
     }
     
