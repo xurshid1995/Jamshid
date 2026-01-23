@@ -2855,7 +2855,17 @@ def api_return_product():
             # Frontend'dan 'quantity' yoki 'return_quantity' kelishi mumkin
             return_quantity = item.get('return_quantity') or item.get('quantity', 0)
             
+            logger.info(f"📦 Item: product_id={product_id}, return_quantity={return_quantity}, type={type(return_quantity)}")
+            
+            # Decimal ga o'tkazish
+            try:
+                return_quantity = Decimal(str(return_quantity))
+            except:
+                logger.error(f"❌ return_quantity Decimal'ga aylantirib bo'lmadi: {return_quantity}")
+                continue
+            
             if return_quantity <= 0:
+                logger.warning(f"⚠️ return_quantity <= 0: {return_quantity}, o'tkazib yuborildi")
                 continue
             
             # Mahsulotni topish
