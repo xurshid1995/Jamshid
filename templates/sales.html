@@ -2789,7 +2789,14 @@
         }
         
         modalProductName.textContent = productName;
-        modalAvailable.value = quantity;
+        
+        // Mavjud miqdorni unit type bilan ko'rsatish
+        const unitText = unitType === 'litr' ? 'L' : 'dona';
+        const formattedQuantity = unitType === 'litr' 
+            ? `${parseFloat(quantity).toFixed(2)} ${unitText}`
+            : (quantity % 1 === 0 ? `${Math.floor(quantity)} ${unitText}` : `${parseFloat(quantity).toFixed(1)} ${unitText}`);
+        modalAvailable.value = formattedQuantity;
+        
         modalQuantity.value = 1;
         modalQuantity.max = quantity;
         
