@@ -764,7 +764,7 @@
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">🔢 Miqdor:</label>
-                    <input type="number" id="modalQuantity" min="1" value="0" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <input type="number" id="modalQuantity" min="0.01" step="0.01" value="0" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
@@ -2382,11 +2382,12 @@
         
         const productId = parseInt(btn.dataset.productId);
         const productName = btn.dataset.productName;
-        const quantity = parseInt(btn.dataset.quantity);
+        const quantity = parseFloat(btn.dataset.quantity);
         const price = parseFloat(btn.dataset.price);
         const costPrice = parseFloat(btn.dataset.costPrice);
+        const unitType = btn.dataset.unitType || 'dona';
         
-        addToCart(productId, productName, quantity, price, costPrice);
+        addToCart(productId, productName, quantity, price, costPrice, unitType);
     }
     
     // Mahsulotlarni yuklash
@@ -2695,8 +2696,8 @@
     }
     
     // Modal ochish
-    function addToCart(productId, productName, quantity, price, costPrice) {
-        console.log('🛒 addToCart() chaqirildi:', { productId, productName, quantity, price, costPrice });
+    function addToCart(productId, productName, quantity, price, costPrice, unitType = 'dona') {
+        console.log('🛒 addToCart() chaqirildi:', { productId, productName, quantity, price, costPrice, unitType });
         
         // Miqdori 0 bo'lsa xabar chiqarish
         if (quantity <= 0) {
@@ -2704,7 +2705,7 @@
             return;
         }
         
-        currentProduct = { id: productId, name: productName, available: quantity, price: price, costPrice: costPrice };
+        currentProduct = { id: productId, name: productName, available: quantity, price: price, costPrice: costPrice, unitType: unitType };
         console.log('📦 currentProduct:', currentProduct);
         
         // Tab-aware modal elementlarini topish
@@ -2821,13 +2822,15 @@
             return;
         }
         
-        const quantity = parseInt(modalQuantity.value) || 0;
-        const available = currentProduct.available || 0;
+        const quantity = parseFloat(modalQuantity.value) || 0;
+        const available = parseFloat(currentProduct.available) || 0;
+        const unitType = currentProduct.unitType || 'dona';
+        const unitText = unitType === 'litr' ? 'litr' : 'dona';
         
         // Miqdor mavjud miqdordan oshib ketsa yoki 0 dan kichik bo'lsa
         if (quantity > available) {
             warningDiv.style.display = 'block';
-            warningText.textContent = `Stokda faqat ${available} dona mavjud!`;
+            warningText.textContent = `Stokda faqat ${available.toFixed(2)} ${unitText} mavjud!`;
             modalQuantity.style.borderColor = '#dc3545';
             modalQuantity.style.backgroundColor = '#ffe6e6';
         } else if (quantity <= 0) {
@@ -2955,7 +2958,7 @@
             return;
         }
         
-        const quantity = parseInt(modalQuantity.value);
+        const quantity = parseFloat(modalQuantity.value);
         const priceUSD = parseFloat(modalPriceUSD.value);
         const priceUZS = parseFloat(modalPriceUZS.value);
         
