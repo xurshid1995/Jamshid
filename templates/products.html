@@ -1147,7 +1147,9 @@
         if (product.stocks) {
             product.stocks.forEach(stock => {
                 const qty = stock.quantity || 0;
-                const qtyDisplay = unitType === 'litr' ? qty.toFixed(2) : Math.floor(qty);
+                const qtyDisplay = unitType === 'litr' 
+                    ? qty.toFixed(2) 
+                    : (qty % 1 === 0 ? Math.floor(qty) : parseFloat(qty).toFixed(1));
                 
                 // Agar "Barcha joylar" tanlangan bo'lsa - hammasi ko'rsatilsin
                 if (locationFilter === 'all') {

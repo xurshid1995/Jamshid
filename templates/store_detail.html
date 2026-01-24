@@ -384,7 +384,7 @@
             const quantity = item.stock.quantity;
             const quantityDisplay = unitType === 'litr' 
                 ? `${parseFloat(quantity).toFixed(2)} litr`
-                : `${Math.floor(quantity)} dona`;
+                : (quantity % 1 === 0 ? `${Math.floor(quantity)} dona` : `${parseFloat(quantity).toFixed(1)} dona`);
             
             return `
             <tr class="stock-row" data-status="${item.status}" style="border-bottom: 1px solid #dee2e6;">
