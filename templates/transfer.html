@@ -240,6 +240,19 @@
         opacity: 0.5;
     }
 
+    /* Table thead styles */
+    .transfer-product-table thead,
+    .transfer-list-table thead,
+    .transfer-history-table thead {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+    }
+
+    .transfer-product-table thead th,
+    .transfer-list-table thead th,
+    .transfer-history-table thead th {
+        color: white;
+    }
+
     /* Search input */
     .search-input {
         width: 100%;
@@ -639,12 +652,12 @@
 
             <div class="products-table-container">
                 <table class="products-table transfer-product-table">
-                    <thead style="background: linear-gradient(135deg, #007bff, #0056b3);">
+                    <thead>
                         <tr>
-                            <th style="width: 365px; color: white;">Mahsulot</th>
-                            <th style="width: 100px; text-align: center; color: white;">Narx</th>
-                            <th style="width: 85px; text-align: center; color: white;">Mavjud</th>
-                            <th style="width: 75px; text-align: center; color: white;">Amal</th>
+                            <th style="width: 365px;">Mahsulot</th>
+                            <th style="width: 100px; text-align: center;">Narx</th>
+                            <th style="width: 85px; text-align: center;">Mavjud</th>
+                            <th style="width: 75px; text-align: center;">Amal</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
@@ -689,12 +702,12 @@
 
             <div class="products-table-container">
                 <table class="products-table transfer-product-table" id="transferListTable">
-                    <thead style="background: linear-gradient(135deg, #007bff, #0056b3);">
+                    <thead>
                         <tr>
-                            <th style="width: 365px; color: white;">Mahsulot</th>
-                            <th style="width: 100px; text-align: center; color: white;">Narx</th>
-                            <th style="width: 85px; text-align: center; color: white;">Miqdor</th>
-                            <th style="width: 75px; text-align: center; color: white;">Amal</th>
+                            <th style="width: 365px;">Mahsulot</th>
+                            <th style="width: 100px; text-align: center;">Narx</th>
+                            <th style="width: 85px; text-align: center;">Miqdor</th>
+                            <th style="width: 75px; text-align: center;">Amal</th>
                         </tr>
                     </thead>
                     <tbody id="transferList">
