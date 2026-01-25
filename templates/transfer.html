@@ -2172,6 +2172,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadLocations();
         loadTransferHistory(); // Transfer tarixini yuklash
+        loadPendingTransfer(); // Tasdiqlanmagan transferni yuklash
         
         const productSearch = document.getElementById('productSearch');
         const fromLocation = document.getElementById('fromLocation');
@@ -2203,5 +2204,42 @@
         
         console.log('✅ Transfer sahifasi tayyor (barcode scanner yoqilgan)');
     });
+    
+    // Tasdiqlanmagan transferni yuklash
+    async function loadPendingTransfer() {
+        try {
+            const response = await fetch('/api/pending-transfer');
+            const data = await response.json();
+            
+            if (data.pending_transfer) {
+                const pending = data.pending_transfer;
+                
+                // Joylashuvlarni to'ldirish
+                const fromLocation = `${pending.from_location_type}_${pending.from_location_id}`;
+                const toLocation = `${pending.to_location_type}_${pending.to_location_id}`;
+                
+                document.getElementById('fromLocation').value = fromLocation;
+                document.getElementById('toLocation').value = toLocation;
+                
+                // Mahsulotlarni yuklash
+                await loadProducts();
+                
+                // Transfer ro'yxatini tiklash
+                transferList = pending.items.map(item => ({
+                    id: item.product_id,
+                    name: item.name,
+                    price: item.price || 0,
+                    quantity: item.quantity,
+                    available: item.available || 0,
+                    unitType: item.unitType || 'dona'
+                }));
+                
+                updateTransferListDisplay();
+                console.log('✅ Tasdiqlanmagan transfer tiklandi:', transferList.length, 'ta mahsulot');
+            }
+        } catch (error) {
+            console.error('❌ Tasdiqlanmagan transferni yuklashda xatolik:', error);
+        }
+    }
 </script>
 {% endblock %}
