@@ -2222,19 +2222,12 @@
             // Yangi transfer boshlash - ID'ni o'chirish
             currentPendingTransferId = null;
             console.log('✅ Yangi transfer boshlandi');
-        } else if (pendingId) {
-            // Mavjud pending transferni yuklash
-            await loadPendingTransfer();
-        }
-        
-        // URL'ni tozalash - ?new=true parametrini o'chirish
-        if (isNewTransfer) {
+            // URL'ni tozalash - ?new=true parametrini o'chirish
             const newUrl = new URL(window.location);
             newUrl.searchParams.delete('new');
             window.history.replaceState({}, '', newUrl);
-        }
-        } else {
-            // Oddiy ochilgan - pending transferni yuklash
+        } else if (pendingId) {
+            // Mavjud pending transferni yuklash
             await loadPendingTransfer();
         }
         
