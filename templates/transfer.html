@@ -2188,10 +2188,10 @@
     }
 
     // Sahifa yuklanganda
-    document.addEventListener('DOMContentLoaded', function() {
-        loadLocations();
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadLocations(); // Joylashuvlarni avval yuklash
         loadTransferHistory(); // Transfer tarixini yuklash
-        loadPendingTransfer(); // Tasdiqlanmagan transferni yuklash
+        await loadPendingTransfer(); // Tasdiqlanmagan transferni yuklash
         
         const productSearch = document.getElementById('productSearch');
         const fromLocation = document.getElementById('fromLocation');
