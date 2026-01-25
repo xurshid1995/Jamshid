@@ -256,6 +256,65 @@
         background: #f8f9fa;
     }
 
+    /* Action tugmalari uchun uslublar */
+    .btn-action {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 3px 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        margin: 1px;
+        font-size: 10px;
+        transition: all 0.2s;
+        display: block;
+        width: 24px;
+        height: 20px;
+        text-align: center;
+        line-height: 12px;
+    }
+
+    .btn-edit {
+        color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-edit:hover {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-delete {
+        color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-view {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .btn-view:hover {
+        background: #28a745;
+        color: white;
+    }
+
+    .group-actions .btn-action {
+        display: block;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 4px;
+        text-align: center;
+    }
+
+    .group-actions .btn-action:last-child {
+        margin-bottom: 0;
+    }
+
     /* Savdo gruppa uslublari */
     .sale-group-start, .sale-group-item {
         background-color: rgba(0, 123, 255, 0.02);
@@ -799,11 +858,21 @@ function displayOrders(orders) {
     
     orders.forEach(sale => {
         const items = sale.items || [];
-        if (items.length === 0) return;
+        
+        // Agar items bo'sh bo'lsa, default item yaratamiz
+        if (items.length === 0) {
+            items.push({
+                product_name: 'Items mavjud emas',
+                quantity: '-',
+                unit_price: 0,
+                total_price: sale.total_amount || 0,
+                location_name: 'Noma\'lum'
+            });
+        }
         
         const totalAmount = parseFloat(sale.total_amount) || 0;
         const totalProfit = parseFloat(sale.total_profit) || 0;
-        const profitClass = totalProfit > 0 ? 'profit-positive' : totalProfit < 0 ? 'profit-negative' : 'profit-zero';
+        const profitClass = totalProfit > 0 ? 'profit-positive' : totalProfit < 0 ? 'profit-negative' : '';
         
         // Sana va vaqtni formatlash
         const saleDate = new Date(sale.sale_date);
@@ -817,67 +886,65 @@ function displayOrders(orders) {
             minute: '2-digit'
         });
         
-        // Markaziy elementni hisoblash (o'rtadagi qator)
-        const middleIndex = Math.floor(items.length / 2);
+        // Birinchi item (grupning boshlanishi)
+        const firstItem = items[0];
+        const isOnlyItem = items.length === 1;
         
-        // Barcha itemlarni qo'shish
-        for (let i = 0; i < items.length; i++) {
+        let firstRowClasses = ['sale-group-start'];
+        if (isOnlyItem) firstRowClasses.push('sale-group-end');
+        
+        html += '<tr class="' + firstRowClasses.join(' ') + '">';
+        html += '<td rowspan="' + items.length + '" class="group-cell group-datetime">';
+        html += '<div class="datetime-info">';
+        html += '<div class="sale-date">' + formattedDate + '</div>';
+        html += '<div class="sale-time">' + formattedTime + '</div>';
+        html += '</div></td>';
+        
+        html += '<td rowspan="' + items.length + '" class="group-cell group-customer">';
+        html += '<div class="customer-info">';
+        html += '<div class="customer-name">' + (sale.customer_name || 'Noma\'lum') + '</div>';
+        html += '<div class="customer-phone">' + (sale.customer_phone || '+998 XX XXX XX XX') + '</div>';
+        html += '</div></td>';
+        
+        html += '<td class="group-cell group-location">' + getLocationName(firstItem) + '</td>';
+        html += '<td class="product-cell">' + (firstItem.product_name || 'Noma\'lum') + '</td>';
+        html += '<td>' + firstItem.quantity + '</td>';
+        html += '<td>$' + parseFloat(firstItem.unit_price || 0).toFixed(2) + '</td>';
+        html += '<td>$' + parseFloat(firstItem.total_price || 0).toFixed(2) + '</td>';
+        
+        html += '<td rowspan="' + items.length + '" class="group-cell group-total">$' + totalAmount.toFixed(2) + '</td>';
+        
+        if (userRole === 'admin' || userRole === 'manager') {
+            html += '<td rowspan="' + items.length + '" class="group-cell group-profit ' + profitClass + '">$' + totalProfit.toFixed(2) + '</td>';
+        }
+        
+        html += '<td rowspan="' + items.length + '" class="group-cell group-actions">';
+        html += '<button class="btn-action btn-view" onclick="viewSaleDetails(' + sale.id + ')" title="Ko\'rish">';
+        html += '<i class="fas fa-eye"></i>';
+        html += '</button>';
+        html += '<button class="btn-action btn-edit" onclick="editSaleGroup(' + sale.id + ')" title="Tahrirlash">';
+        html += '<i class="fas fa-edit"></i>';
+        html += '</button>';
+        html += '<button class="btn-action btn-delete" onclick="deleteSale(' + sale.id + ')" title="O\'chirish">';
+        html += '<i class="fas fa-trash"></i>';
+        html += '</button>';
+        html += '</td>';
+        html += '</tr>';
+        
+        // Qolgan itemlar
+        for (let i = 1; i < items.length; i++) {
             const item = items[i];
-            const isFirst = i === 0;
             const isLast = i === items.length - 1;
-            const isMiddle = i === middleIndex;
             
-            let rowClasses = [];
-            if (isFirst) rowClasses.push('sale-group-start');
-            else rowClasses.push('sale-group-item');
+            let rowClasses = ['sale-group-item'];
             if (isLast) rowClasses.push('sale-group-end');
             
             html += '<tr class="' + rowClasses.join(' ') + '">';
-            
-            // Sana/vaqt faqat birinchi qatorda
-            if (isFirst) {
-                html += '<td rowspan="' + items.length + '" class="group-cell group-datetime">';
-                html += '<div class="datetime-info">';
-                html += '<div class="sale-date">' + formattedDate + '</div>';
-                html += '<div class="sale-time">' + formattedTime + '</div>';
-                html += '</div></td>';
-            }
-            
-            // Mijoz ma'lumotlari faqat birinchi qatorda
-            if (isFirst) {
-                html += '<td rowspan="' + items.length + '" class="group-cell group-customer">';
-                html += '<div class="customer-info">';
-                html += '<div class="customer-name">' + (sale.customer_name || 'Noma\'lum') + '</div>';
-                html += '<div class="customer-phone">' + (sale.customer_phone || '+998 XX XXX XX XX') + '</div>';
-                html += '</div></td>';
-            }
-            
             html += '<td class="group-cell group-location">' + getLocationName(item) + '</td>';
-            html += '<td>' + (item.product_name || 'Noma\'lum') + '</td>';
+            html += '<td class="product-cell">' + (item.product_name || 'Noma\'lum') + '</td>';
             html += '<td>' + item.quantity + '</td>';
             html += '<td>$' + parseFloat(item.unit_price || 0).toFixed(2) + '</td>';
             html += '<td>$' + parseFloat(item.total_price || 0).toFixed(2) + '</td>';
-            
-            // Jami summa faqat birinchi qatorda
-            if (isFirst) {
-                html += '<td rowspan="' + items.length + '" class="group-cell group-total">$' + totalAmount.toFixed(2) + '</td>';
-            }
-            
-            // Foyda faqat birinchi qatorda va faqat admin/manager uchun
-            if (isFirst && (userRole === 'admin' || userRole === 'manager')) {
-                html += '<td rowspan="' + items.length + '" class="group-cell group-profit ' + profitClass + '">$' + totalProfit.toFixed(2) + '</td>';
-            }
-            
-            // Amallar faqat birinchi qatorda
-            if (isFirst) {
-                html += '<td rowspan="' + items.length + '" class="group-cell group-actions">';
-                html += '<div class="action-buttons">';
-                html += '<button class="btn btn-view" onclick="viewSaleDetails(' + sale.id + ')" title="Ko\'rish">👁️</button>';
-                html += '<button class="btn btn-edit" onclick="editSaleGroup(' + sale.id + ')" title="Tahrirlash">✏️</button>';
-                html += '<button class="btn btn-delete" onclick="deleteSale(' + sale.id + ')" title="O\'chirish">🗑️</button>';
-                html += '</div></td>';
-            }
-            
             html += '</tr>';
         }
     });
