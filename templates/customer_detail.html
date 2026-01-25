@@ -661,13 +661,33 @@ function displayOrders(orders) {
         html += '<td class="group-cell group-location">' + getLocationName(firstItem) + '</td>';
         html += '<td class="product-cell">' + (firstItem.product_name || 'Noma\'lum') + '</td>';
         html += '<td>' + firstItem.quantity + '</td>';
-        html += '<td>$' + parseFloat(firstItem.unit_price || 0).toFixed(2) + '</td>';
-        html += '<td>$' + parseFloat(firstItem.total_price || 0).toFixed(2) + '</td>';
+        html += '<td>';
+        html += '<div style="font-weight: 600;">$' + parseFloat(firstItem.unit_price || 0).toFixed(2) + '</div>';
+        if (sale.currency_rate) {
+            html += '<div style="font-size: 11px; color: #6c757d;">' + (parseFloat(firstItem.unit_price || 0) * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+        }
+        html += '</td>';
+        html += '<td>';
+        html += '<div style="font-weight: 600;">$' + parseFloat(firstItem.total_price || 0).toFixed(2) + '</div>';
+        if (sale.currency_rate) {
+            html += '<div style="font-size: 11px; color: #6c757d;">' + (parseFloat(firstItem.total_price || 0) * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+        }
+        html += '</td>';
         
-        html += '<td rowspan="' + items.length + '" class="group-cell group-total">$' + totalAmount.toFixed(2) + '</td>';
+        html += '<td rowspan="' + items.length + '" class="group-cell group-total">';
+        html += '<div style="font-weight: 600;">$' + totalAmount.toFixed(2) + '</div>';
+        if (sale.currency_rate) {
+            html += '<div style="font-size: 11px; color: #6c757d;">' + (totalAmount * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+        }
+        html += '</td>';
         
         if (userRole === 'admin' || userRole === 'manager') {
-            html += '<td rowspan="' + items.length + '" class="group-cell group-profit ' + profitClass + '">$' + totalProfit.toFixed(2) + '</td>';
+            html += '<td rowspan="' + items.length + '" class="group-cell group-profit ' + profitClass + '">';
+            html += '<div style="font-weight: 600;">$' + totalProfit.toFixed(2) + '</div>';
+            if (sale.currency_rate) {
+                html += '<div style="font-size: 11px; color: #6c757d;">' + (totalProfit * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+            }
+            html += '</td>';
         }
         
         html += '<td rowspan="' + items.length + '" class="group-cell group-actions">';
@@ -695,8 +715,18 @@ function displayOrders(orders) {
             html += '<td class="group-cell group-location">' + getLocationName(item) + '</td>';
             html += '<td class="product-cell">' + (item.product_name || 'Noma\'lum') + '</td>';
             html += '<td>' + item.quantity + '</td>';
-            html += '<td>$' + parseFloat(item.unit_price || 0).toFixed(2) + '</td>';
-            html += '<td>$' + parseFloat(item.total_price || 0).toFixed(2) + '</td>';
+            html += '<td>';
+            html += '<div style="font-weight: 600;">$' + parseFloat(item.unit_price || 0).toFixed(2) + '</div>';
+            if (sale.currency_rate) {
+                html += '<div style="font-size: 11px; color: #6c757d;">' + (parseFloat(item.unit_price || 0) * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+            }
+            html += '</td>';
+            html += '<td>';
+            html += '<div style="font-weight: 600;">$' + parseFloat(item.total_price || 0).toFixed(2) + '</div>';
+            if (sale.currency_rate) {
+                html += '<div style="font-size: 11px; color: #6c757d;">' + (parseFloat(item.total_price || 0) * sale.currency_rate).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' so\'m</div>';
+            }
+            html += '</td>';
             html += '</tr>';
         }
     });
