@@ -1383,7 +1383,13 @@ footer {
     }
     
     .top-header .edit-rate-btn {
-        display: none; /* Mobilda edit tugmasini yashirish */
+        display: inline-flex !important;
+        padding: 0.15rem;
+        font-size: 0.7rem;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
     }
     
     .top-header .user-info {
