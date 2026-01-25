@@ -5876,6 +5876,35 @@ def api_debt_payment():
         db.session.add(debt_payment)
 
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='debt_payment',
+                table_name='debt_payments',
+                record_id=debt_payment.id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"{customer.name if customer else 'Mijoz'} qarziga to'lov: ${float(payment_usd - remaining_payment):.2f}",
+                old_data={'previous_debt': str(previous_total_debt)},
+                new_data={
+                    'payment_usd': str(payment_usd - remaining_payment),
+                    'cash_usd': str(cash_usd),
+                    'click_usd': str(click_usd),
+                    'terminal_usd': str(terminal_usd),
+                    'remaining_debt': str(total_remaining_debt),
+                    'updated_sales': updated_sales
+                },
+                ip_address=request.remote_addr,
+                location_id=None,
+                location_type=None,
+                location_name=None,
+                amount=float(payment_usd - remaining_payment)
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
         
         # Telegram orqali mijozga xabar yuborish
         if customer and customer.telegram_chat_id:
