@@ -2256,6 +2256,15 @@
         
         // Focus hodisasi - status xabarni yashirish
         productSearch.addEventListener('focus', function() {
+            document.getElementById('searchStatus').style.display = 'none';
+        });
+        
+        console.log('✅ Transfer sahifasi tayyor (barcode scanner yoqilgan)');
+    });
+    
+    // Tasdiqlanmagan transferni yuklash
+    async function loadPendingTransfer() {
+        try {
             // URL'dan ID olish
             const urlParams = new URLSearchParams(window.location.search);
             const pendingId = urlParams.get('id');
@@ -2292,15 +2301,6 @@
                     updateTransferListDisplay();
                     console.log('✅ Tasdiqlanmagan transfer tiklandi:', transferList.length, 'ta mahsulot');
                 }
-                    name: item.name,
-                    price: item.price || 0,
-                    quantity: item.quantity,
-                    available: item.available || 0,
-                    unitType: item.unitType || 'dona'
-                }));
-                
-                updateTransferListDisplay();
-                console.log('✅ Tasdiqlanmagan transfer tiklandi:', transferList.length, 'ta mahsulot');
             }
         } catch (error) {
             console.error('❌ Tasdiqlanmagan transferni yuklashda xatolik:', error);
