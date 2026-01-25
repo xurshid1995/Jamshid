@@ -107,12 +107,12 @@
             <table class="table transfer-list-table" id="pendingTransfersTable">
                 <thead>
                     <tr>
-                        <th style="color: white; background: #007bff;">Sana</th>
                         <th style="color: white; background: #007bff;">Qayerdan</th>
                         <th style="color: white; background: #007bff;">Qayerga</th>
-                        <th style="color: white; background: #007bff;">Mahsulotlar</th>
+                        <th style="color: white; background: #007bff;">Yaratilgan vaqti</th>
+                        <th style="color: white; background: #007bff;">Nechta mahsulot</th>
                         <th style="color: white; background: #007bff;">Foydalanuvchi</th>
-                        <th style="color: white; background: #007bff;">Amal</th>
+                        <th style="color: white; background: #007bff;">Amallar</th>
                     </tr>
                 </thead>
                 <tbody id="pendingTransfersBody">
@@ -173,20 +173,26 @@
             
             if (data.pending_transfers && data.pending_transfers.length > 0) {
                 tbody.innerHTML = data.pending_transfers.map(pending => {
-                    const products = pending.items.map(item => 
-                        `${item.name} (${item.quantity})`
-                    ).join('<br>');
+                    const createdDate = new Date(pending.created_at);
+                    const formattedDate = createdDate.toLocaleString('uz-UZ', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
                     
-                    const total = pending.items.reduce((sum, item) => 
-                        sum + (item.quantity * (item.price || 0)), 0
-                    );
+                    const productCount = pending.items.length;
                     
                     return `
                         <tr>
                             <td>${pending.from_location}</td>
                             <td>${pending.to_location}</td>
-                            <td>${products}</td>
-                            <td>${total.toLocaleString()} so'm</td>
+                            <td style="white-space: nowrap;">${formattedDate}</td>
+                            <td style="text-align: center;">
+                                <span style="background: #007bff; color: white; padding: 4px 12px; border-radius: 12px; font-weight: 600;">${productCount}</span>
+                            </td>
+                            <td>${pending.user_name}</td>
                             <td>
                                 <a href="${pending.user_name === '{{ session.get("username") }}' ? '/transfer_old' : '#'}" 
                                    class="btn-sm btn-success-sm" 
@@ -200,7 +206,7 @@
             } else {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
                             📭 Tasdiqlanmagan transferlar yo'q
                         </td>
                     </tr>
