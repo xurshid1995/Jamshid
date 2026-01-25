@@ -666,12 +666,11 @@ function displayOrders(orders) {
         html += '</div></td>';
         
         html += '<td rowspan="' + items.length + '" class="group-cell group-seller">';
-        html += '<div style="line-height: 1.4;">';
         html += '<div style="font-size: 14px; font-weight: 600; color: #495057;">' + (sale.seller_name || 'Admin') + '</div>';
         if (sale.seller_phone) {
             html += '<div style="font-size: 12px; color: #6c757d; font-style: italic;">' + sale.seller_phone + '</div>';
         }
-        html += '</div></td>';
+        html += '</td>';
         
         html += '<td class="group-cell group-location">' + getLocationName(firstItem) + '</td>';
         html += '<td class="product-cell">' + (firstItem.product_name || 'Noma\'lum') + '</td>';
