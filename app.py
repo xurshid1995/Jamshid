@@ -4299,6 +4299,28 @@ def add_store():
             db.session.add(new_store)
             db.session.commit()
 
+            # OperationHistory logini yozish
+            try:
+                history = OperationHistory(
+                    operation_type='create_store',
+                    table_name='stores',
+                    record_id=new_store.id,
+                    user_id=session.get('user_id'),
+                    username=session.get('username', 'Unknown'),
+                    description=f"Yangi dokon yaratildi: {name}",
+                    old_data=None,
+                    new_data={'name': name, 'address': address, 'manager': manager_name, 'phone': phone},
+                    ip_address=request.remote_addr,
+                    location_id=new_store.id,
+                    location_type='store',
+                    location_name=name,
+                    amount=None
+                )
+                db.session.add(history)
+                db.session.commit()
+            except Exception as log_error:
+                logger.error(f"OperationHistory log xatoligi: {log_error}")
+
             return redirect(url_for('stores'))
 
         except Exception as e:
@@ -4498,12 +4520,41 @@ def edit_store(store_id):
 
     if request.method == 'POST':
         try:
+            old_data = {
+                'name': store.name,
+                'address': store.address,
+                'manager': store.manager_name,
+                'phone': store.phone
+            }
+            
             store.name = request.form['name']
             store.address = request.form['address']
             store.manager_name = request.form['manager_name']
             store.phone = request.form.get('phone', '')
 
             db.session.commit()
+
+            # OperationHistory logini yozish
+            try:
+                history = OperationHistory(
+                    operation_type='edit_store',
+                    table_name='stores',
+                    record_id=store.id,
+                    user_id=session.get('user_id'),
+                    username=session.get('username', 'Unknown'),
+                    description=f"Dokon tahrirlandi: {store.name}",
+                    old_data=old_data,
+                    new_data={'name': store.name, 'address': store.address, 'manager': store.manager_name, 'phone': store.phone},
+                    ip_address=request.remote_addr,
+                    location_id=store.id,
+                    location_type='store',
+                    location_name=store.name,
+                    amount=None
+                )
+                db.session.add(history)
+                db.session.commit()
+            except Exception as log_error:
+                logger.error(f"OperationHistory log xatoligi: {log_error}")
 
             return redirect(url_for('stores'))
 
@@ -4566,8 +4617,31 @@ def api_delete_store(store_id):
 
         # Store ni o'chirish (Savdo tarixi saqlanadi, chunki Sale jadvalida store_id saqlanadi)
         store_name = store.name
+        store_address = store.address
         db.session.delete(store)
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='delete_store',
+                table_name='stores',
+                record_id=store_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Dokon o'chirildi: {store_name} ({deleted_stocks_count} ta stock, {deleted_products_count} ta mahsulot)",
+                old_data={'name': store_name, 'address': store_address, 'stocks_count': deleted_stocks_count},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=store_id,
+                location_type='store',
+                location_name=store_name,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         message = f'Do\'kon "{store_name}" muvaffaqiyatli o\'chirildi'
         if sales_count > 0:
@@ -4746,6 +4820,28 @@ def add_warehouse():
             db.session.add(new_warehouse)
             db.session.commit()
 
+            # OperationHistory logini yozish
+            try:
+                history = OperationHistory(
+                    operation_type='create_warehouse',
+                    table_name='warehouses',
+                    record_id=new_warehouse.id,
+                    user_id=session.get('user_id'),
+                    username=session.get('username', 'Unknown'),
+                    description=f"Yangi ombor yaratildi: {name}",
+                    old_data=None,
+                    new_data={'name': name, 'address': address, 'manager': manager_name, 'phone': phone},
+                    ip_address=request.remote_addr,
+                    location_id=new_warehouse.id,
+                    location_type='warehouse',
+                    location_name=name,
+                    amount=None
+                )
+                db.session.add(history)
+                db.session.commit()
+            except Exception as log_error:
+                logger.error(f"OperationHistory log xatoligi: {log_error}")
+
             return redirect(url_for('warehouses'))
 
         except Exception as e:
@@ -4761,12 +4857,41 @@ def edit_warehouse(warehouse_id):
 
     if request.method == 'POST':
         try:
+            old_data = {
+                'name': warehouse.name,
+                'address': warehouse.address,
+                'manager': warehouse.manager_name,
+                'phone': warehouse.phone
+            }
+            
             warehouse.name = request.form['name']
             warehouse.address = request.form['address']
             warehouse.manager_name = request.form['manager_name']
             warehouse.phone = request.form.get('phone', '')
 
             db.session.commit()
+
+            # OperationHistory logini yozish
+            try:
+                history = OperationHistory(
+                    operation_type='edit_warehouse',
+                    table_name='warehouses',
+                    record_id=warehouse.id,
+                    user_id=session.get('user_id'),
+                    username=session.get('username', 'Unknown'),
+                    description=f"Ombor tahrirlandi: {warehouse.name}",
+                    old_data=old_data,
+                    new_data={'name': warehouse.name, 'address': warehouse.address, 'manager': warehouse.manager_name, 'phone': warehouse.phone},
+                    ip_address=request.remote_addr,
+                    location_id=warehouse.id,
+                    location_type='warehouse',
+                    location_name=warehouse.name,
+                    amount=None
+                )
+                db.session.add(history)
+                db.session.commit()
+            except Exception as log_error:
+                logger.error(f"OperationHistory log xatoligi: {log_error}")
 
             return redirect(url_for('warehouses'))
 
@@ -5113,10 +5238,33 @@ def api_delete_warehouse(warehouse_id):
 
         # Ombor nomini saqlash (log uchun)
         warehouse_name = warehouse.name
+        warehouse_address = warehouse.address
 
         # Omborni o'chirish
         db.session.delete(warehouse)
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='delete_warehouse',
+                table_name='warehouses',
+                record_id=warehouse_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Ombor o'chirildi: {warehouse_name} ({deleted_stocks_count} ta stock, {deleted_products_count} ta mahsulot)",
+                old_data={'name': warehouse_name, 'address': warehouse_address, 'stocks_count': deleted_stocks_count},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=warehouse_id,
+                location_type='warehouse',
+                location_name=warehouse_name,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         message = f'"{warehouse_name}" ombori muvaffaqiyatli o\'chirildi'
         if deleted_stocks_count > 0:
@@ -6545,17 +6693,42 @@ def delete_store_stock(store_id, product_id):
         
         # Agar boshqa stoklarda yo'q bo'lsa - product'ni ham o'chirish
         # ON DELETE SET NULL - product_id NULL bo'ladi, lekin notes'da nom saqlanadi
-        if total_other_locations == 0:
+        deleted_completely = (total_other_locations == 0)
+        if deleted_completely:
             db.session.delete(product)
+        
+        db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            store = Store.query.get(store_id)
+            history = OperationHistory(
+                operation_type='delete_stock',
+                table_name='store_stock',
+                record_id=stock.id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"{product_name} o'chirildi" + (" (butunlay)" if deleted_completely else " (faqat dokondan)"),
+                old_data={'product_name': product_name, 'quantity': str(stock.quantity)},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=store_id,
+                location_type='store',
+                location_name=store.name if store else 'Unknown',
+                amount=None
+            )
+            db.session.add(history)
             db.session.commit()
-            
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
+        
+        if deleted_completely:
             return jsonify({
                 'success': True,
                 'message': f'{product_name} mahsuloti butunlay o\'chirildi (tarixda notes bilan saqlanadi)',
                 'deleted_completely': True
             })
         
-        db.session.commit()
         return jsonify({
             'success': True,
             'message': f'{product_name} bu do\'kondan o\'chirildi (boshqa joylarda hali mavjud)',
@@ -6609,13 +6782,39 @@ def delete_warehouse_stock(warehouse_id, product_id):
         total_other_locations = other_warehouse_stocks + store_stocks
 
         # Agar mahsulot faqat shu joyda mavjud bo'lsa - butunlay o'chirish
-        if total_other_locations == 0:
-            # Avval stock ni o'chirish
-            db.session.delete(stock)
+        deleted_completely = (total_other_locations == 0)
+        # Avval stock ni o'chirish
+        db.session.delete(stock)
+        if deleted_completely:
             # Keyin productni ham o'chirish
             db.session.delete(product)
-            db.session.commit()
+        
+        db.session.commit()
 
+        # OperationHistory logini yozish
+        try:
+            warehouse = Warehouse.query.get(warehouse_id)
+            history = OperationHistory(
+                operation_type='delete_stock',
+                table_name='warehouse_stock',
+                record_id=stock.id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"{product_name} o'chirildi" + (" (butunlay)" if deleted_completely else " (faqat ombordan)"),
+                old_data={'product_name': product_name, 'quantity': str(stock.quantity)},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=warehouse_id,
+                location_type='warehouse',
+                location_name=warehouse.name if warehouse else 'Unknown',
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
+
+        if deleted_completely:
             return jsonify({
                 'success': True,
                 'message': f'{product_name} mahsuloti butunlay o\'chirildi (faqat bu joyda mavjud edi)',
@@ -6623,9 +6822,6 @@ def delete_warehouse_stock(warehouse_id, product_id):
             })
         else:
             # Faqat shu joydagi stock ni o'chirish
-            db.session.delete(stock)
-            db.session.commit()
-
             return jsonify({
                 'success': True,
                 'message': f'{product_name} bu ombordan o\'chirildi (boshqa joylarda hali mavjud)',
@@ -7574,6 +7770,29 @@ def api_add_customer():
         db.session.add(customer)
         db.session.commit()
 
+        # OperationHistory logini yozish
+        try:
+            store = Store.query.get(store_id) if store_id else None
+            history = OperationHistory(
+                operation_type='create_customer',
+                table_name='customers',
+                record_id=customer.id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Yangi mijoz qo'shildi: {data['name']}",
+                old_data=None,
+                new_data={'name': data['name'], 'phone': data.get('phone', ''), 'store_id': store_id},
+                ip_address=request.remote_addr,
+                location_id=store_id,
+                location_type='store' if store_id else None,
+                location_name=store.name if store else None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
+
         return jsonify({
             'success': True,
             'message': 'Mijoz muvaffaqiyatli qo\'shildi',
@@ -7630,10 +7849,35 @@ def delete_customer(customer_id):
 
         # Mijoz nomini saqlash
         customer_name = customer.name
+        customer_phone = customer.phone
+        customer_store_id = customer.store_id
 
         # Mijozni o'chirish (Savdo tarixi saqlanadi, chunki Sale jadvalida customer_id nullable)
         db.session.delete(customer)
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            store = Store.query.get(customer_store_id) if customer_store_id else None
+            history = OperationHistory(
+                operation_type='delete_customer',
+                table_name='customers',
+                record_id=customer_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Mijoz o'chirildi: {customer_name} ({sales_count} ta savdo)",
+                old_data={'name': customer_name, 'phone': customer_phone, 'store_id': customer_store_id, 'sales_count': sales_count},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=customer_store_id,
+                location_type='store' if customer_store_id else None,
+                location_name=store.name if store else None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         message = f'Mijoz "{customer_name}" muvaffaqiyatli o\'chirildi'
         if sales_count > 0:
@@ -7671,6 +7915,15 @@ def update_customer(customer_id):
         if not data or not data.get('name'):
             return jsonify({'error': 'Mijoz nomi talab qilinadi'}), 400
 
+        # Eski ma'lumotlarni saqlash
+        old_data = {
+            'name': customer.name,
+            'phone': customer.phone,
+            'email': customer.email,
+            'address': customer.address,
+            'store_id': customer.store_id
+        }
+
         # Ma'lumotlarni yangilash
         customer.name = data['name']
         customer.phone = data.get('phone', '')
@@ -7689,6 +7942,29 @@ def update_customer(customer_id):
             customer.store_id = None
 
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            store = Store.query.get(customer.store_id) if customer.store_id else None
+            history = OperationHistory(
+                operation_type='edit_customer',
+                table_name='customers',
+                record_id=customer_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Mijoz tahrirlandi: {customer.name}",
+                old_data=old_data,
+                new_data={'name': customer.name, 'phone': customer.phone, 'email': customer.email, 'address': customer.address, 'store_id': customer.store_id},
+                ip_address=request.remote_addr,
+                location_id=customer.store_id,
+                location_type='store' if customer.store_id else None,
+                location_name=store.name if store else None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         return jsonify({
             'success': True,
@@ -7793,6 +8069,28 @@ def api_add_user():
         logger.debug(f" Final permissions: {new_user.permissions}")
         logger.debug(f" Final allowed_locations: {new_user.allowed_locations}")
 
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='create_user',
+                table_name='users',
+                record_id=new_user.id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Yangi foydalanuvchi yaratildi: {new_user.username} ({new_user.role})",
+                old_data=None,
+                new_data={'username': new_user.username, 'role': new_user.role, 'email': new_user.email},
+                ip_address=request.remote_addr,
+                location_id=None,
+                location_type=None,
+                location_name=None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
+
         return jsonify({
             'success': True,
             'message': 'Foydalanuvchi muvaffaqiyatli qo\'shildi',
@@ -7810,6 +8108,8 @@ def api_add_user():
 def delete_user(user_id):
     try:
         user = User.query.get_or_404(user_id)
+        username = user.username
+        user_role = user.role
 
         # Foydalanuvchiga tegishli stock check sessions'larini o'chirish
         StockCheckSession.query.filter_by(user_id=user_id).delete()
@@ -7819,6 +8119,28 @@ def delete_user(user_id):
         db.session.commit()
 
         app.logger.info(f"✅ User {user_id} va uning barcha stock check sessions'lari o'chirildi")
+
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='delete_user',
+                table_name='users',
+                record_id=user_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Foydalanuvchi o'chirildi: {username} ({user_role})",
+                old_data={'username': username, 'role': user_role},
+                new_data=None,
+                ip_address=request.remote_addr,
+                location_id=None,
+                location_type=None,
+                location_name=None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         return jsonify({
             'success': True,
@@ -8017,6 +8339,28 @@ def update_user(user_id):
             print("🚫 No primary location set")
 
         db.session.commit()
+
+        # OperationHistory logini yozish
+        try:
+            history = OperationHistory(
+                operation_type='edit_user',
+                table_name='users',
+                record_id=user_id,
+                user_id=session.get('user_id'),
+                username=session.get('username', 'Unknown'),
+                description=f"Foydalanuvchi tahrirlandi: {user.username} ({user.role})",
+                old_data={'username': user.username, 'role': user.role},
+                new_data={'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email, 'role': user.role},
+                ip_address=request.remote_addr,
+                location_id=None,
+                location_type=None,
+                location_name=None,
+                amount=None
+            )
+            db.session.add(history)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"OperationHistory log xatoligi: {log_error}")
 
         return jsonify({
             'success': True,
