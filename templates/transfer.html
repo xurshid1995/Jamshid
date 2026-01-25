@@ -441,10 +441,25 @@
         .transfer-product-table td:nth-child(1),
         .transfer-list-table th:nth-child(1),
         .transfer-list-table td:nth-child(1) {
-            width: 50% !important;
+            width: 55% !important;
             white-space: normal !important;
             word-wrap: break-word !important;
             line-height: 1.3 !important;
+        }
+
+        /* Mahsulotlar jadvalidagi amal ustunini yashirish (mobil) */
+        #productsTableBody tr td:nth-child(4) {
+            display: none !important;
+        }
+
+        /* Mahsulotlar jadvali thead'dagi amal ustunini yashirish */
+        table.transfer-product-table:not(#transferListTable) thead th:nth-child(4) {
+            display: none !important;
+        }
+
+        /* Mahsulot qatorini bosilganda cursor pointer */
+        #productsTableBody tr {
+            cursor: pointer !important;
         }
 
         /* Narx ustuni - kichikroq */
@@ -613,6 +628,15 @@
         .transfer-list-table thead th,
         .transfer-history-table thead th {
             color: white !important;
+        }
+
+        /* Mahsulotlar jadvalidagi amal ustunini yashirish (mobil kichik) */
+        #productsTableBody tr td:nth-child(4) {
+            display: none !important;
+        }
+
+        table.transfer-product-table:not(#transferListTable) thead th:nth-child(4) {
+            display: none !important;
         }
 
         .pagination-btn {
@@ -1095,6 +1119,18 @@
                     </button>
                 </td>
             `;
+            
+            // Mobil uchun: butun qatorga bosish imkoniyati
+            if (!buttonDisabled) {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', function(e) {
+                    // Agar button ustiga bosilsa, ikki marta ishlamaslik uchun
+                    if (e.target.tagName !== 'BUTTON') {
+                        openModalById(${product.id});
+                    }
+                });
+            }
+            
             tbody.appendChild(row);
         });
         
