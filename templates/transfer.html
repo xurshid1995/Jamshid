@@ -437,27 +437,15 @@
             overflow-wrap: break-word;
         }
 
-        /* Mahsulotlar jadvali - amal ustuni yashirilganda ustunlar kengligini qayta taqsimlash */
-        table.transfer-product-table:not(#transferListTable) th:nth-child(1),
-        table.transfer-product-table:not(#transferListTable) td:nth-child(1) {
-            width: 60% !important;
+        /* Mahsulot nomi ustunini kengrok qilish */
+        .transfer-product-table th:nth-child(1),
+        .transfer-product-table td:nth-child(1),
+        .transfer-list-table th:nth-child(1),
+        .transfer-list-table td:nth-child(1) {
+            width: 55% !important;
             white-space: normal !important;
             word-wrap: break-word !important;
             line-height: 1.3 !important;
-        }
-
-        table.transfer-product-table:not(#transferListTable) th:nth-child(2),
-        table.transfer-product-table:not(#transferListTable) td:nth-child(2) {
-            width: 20% !important;
-            text-align: center;
-            white-space: nowrap !important;
-        }
-
-        table.transfer-product-table:not(#transferListTable) th:nth-child(3),
-        table.transfer-product-table:not(#transferListTable) td:nth-child(3) {
-            width: 20% !important;
-            text-align: center;
-            white-space: nowrap !important;
         }
 
         /* Mahsulotlar jadvalidagi amal ustunini yashirish (mobil) */
@@ -475,16 +463,9 @@
             cursor: pointer !important;
         }
 
-        /* Transfer ro'yxati jadvali uchun - barcha ustunlar ko'rsatiladi */
-        .transfer-list-table th:nth-child(1),
-        .transfer-list-table td:nth-child(1) {
-            width: 55% !important;
-            white-space: normal !important;
-            word-wrap: break-word !important;
-            line-height: 1.3 !important;
-        }
-
         /* Narx ustuni - kichikroq */
+        .transfer-product-table th:nth-child(2),
+        .transfer-product-table td:nth-child(2),
         .transfer-list-table th:nth-child(2),
         .transfer-list-table td:nth-child(2) {
             width: 18% !important;
@@ -493,14 +474,18 @@
         }
 
         /* Miqdor ustuni */
+        .transfer-product-table th:nth-child(3),
+        .transfer-product-table td:nth-child(3),
         .transfer-list-table th:nth-child(3),
         .transfer-list-table td:nth-child(3) {
-            width: 17% !important;
+            width: 22% !important;
             text-align: center;
             white-space: nowrap !important;
         }
 
         /* Amal ustuni */
+        .transfer-product-table th:nth-child(4),
+        .transfer-product-table td:nth-child(4),
         .transfer-list-table th:nth-child(4),
         .transfer-list-table td:nth-child(4) {
             width: 10% !important;
