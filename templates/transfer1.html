@@ -185,6 +185,10 @@
                     const productCount = pending.items.length;
                     const isOwnTransfer = pending.user_name === '{{ session.get("username") }}';
                     
+                    const deleteButton = isOwnTransfer 
+                        ? '<button class="btn-sm btn-danger-sm" onclick="deletePendingTransfer(' + pending.id + '); return false;" style="margin-left: 5px;">🗑️ O\'chirish</button>'
+                        : '';
+                    
                     return `
                         <tr>
                             <td>${pending.from_location}</td>
@@ -200,13 +204,7 @@
                                    ${!isOwnTransfer ? 'onclick="alert(\'Faqat o\\\'z transferingizni tahrirlashingiz mumkin\'); return false;"' : ''}>
                                     ✏️ Tahrirlash
                                 </a>
-                                ${isOwnTransfer ? `
-                                <button class="btn-sm btn-danger-sm" 
-                                        onclick="deletePendingTransfer(${pending.id}); return false;"
-                                        style="margin-left: 5px;">
-                                    🗑️ O'chirish
-                                </button>
-                                ` : ''}
+                                ${deleteButton}
                             </td>
                         </tr>
                     `;
