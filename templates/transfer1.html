@@ -9,6 +9,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
     }
     
     .btn-success {
@@ -19,6 +20,71 @@
     .btn-success:hover {
         background-color: #218838;
         border-color: #1e7e34;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .transfer-list-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .transfer-list-table th,
+    .transfer-list-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .transfer-list-table th {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .transfer-list-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    
+    .btn-success-sm {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .btn-danger-sm {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .btn-success-sm:hover {
+        background-color: #218838;
+    }
+    
+    .btn-danger-sm:hover {
+        background-color: #c82333;
+    }
+    
+    @media (max-width: 768px) {
+        .transfer-list-table {
+            font-size: 12px;
+        }
+        
+        .transfer-list-table th,
+        .transfer-list-table td {
+            padding: 8px 4px;
+        }
     }
 </style>
 {% endblock %}
@@ -31,11 +97,146 @@
     </a>
 </div>
 
+<!-- Tasdiqlanmagan Transferlar -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-header" style="background: linear-gradient(135deg, #FFC107 0%, #FF8C00 100%); color: white; padding: 15px; border-radius: 8px 8px 0 0;">
+        <h3 style="margin: 0; font-size: 18px;">⏳ Tasdiqlanmagan Transferlar</h3>
+    </div>
+    <div class="card-body" style="padding: 15px;">
+        <div style="overflow-x: auto;">
+            <table class="table transfer-list-table" id="pendingTransfersTable">
+                <thead>
+                    <tr>
+                        <th style="color: white; background: #007bff;">Sana</th>
+                        <th style="color: white; background: #007bff;">Qayerdan</th>
+                        <th style="color: white; background: #007bff;">Qayerga</th>
+                        <th style="color: white; background: #007bff;">Mahsulotlar</th>
+                        <th style="color: white; background: #007bff;">Foydalanuvchi</th>
+                        <th style="color: white; background: #007bff;">Amal</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingTransfersBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
+                            📭 Tasdiqlanmagan transferlar yo'q
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Tarixi -->
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px 8px 0 0;">
+        <h3 style="margin: 0; font-size: 18px;">📋 Transfer Tarixi</h3>
+    </div>
+    <div class="card-body" style="padding: 15px;">
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="historySearch" class="form-control" placeholder="🔍 Transfer tarixidan qidirish..." style="padding: 10px; border: 2px solid #ddd; border-radius: 4px;">
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="table transfer-list-table" id="transferHistoryTable">
+                <thead>
+                    <tr>
+                        <th style="color: white; background: #007bff;">Sana</th>
+                        <th style="color: white; background: #007bff;">Qayerdan</th>
+                        <th style="color: white; background: #007bff;">Qayerga</th>
+                        <th style="color: white; background: #007bff;">Mahsulotlar</th>
+                        <th style="color: white; background: #007bff;">Foydalanuvchi</th>
+                    </tr>
+                </thead>
+                <tbody id="transferHistoryBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                            ⏳ Yuklanmoqda...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
     // Transfer sahifasi JavaScript kodlari
+    
+    // Transfer tarixini yuklash
+    async function loadTransferHistory() {
+        try {
+            const response = await fetch('/api/transfer-history');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('transferHistoryBody');
+            
+            if (data.transfers && data.transfers.length > 0) {
+                tbody.innerHTML = data.transfers.map(transfer => {
+                    const date = new Date(transfer.created_at);
+                    const formattedDate = date.toLocaleString('uz-UZ', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const products = transfer.products.map(p => 
+                        `${p.name} (${p.quantity})`
+                    ).join('<br>');
+                    
+                    return `
+                        <tr>
+                            <td style="white-space: nowrap;">${formattedDate}</td>
+                            <td>${transfer.from_location}</td>
+                            <td>${transfer.to_location}</td>
+                            <td>${products}</td>
+                            <td>${transfer.user_name}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                            📭 Transfer tarixi bo'sh
+                        </td>
+                    </tr>
+                `;
+            }
+        } catch (error) {
+            console.error('Transfer tarixini yuklashda xatolik:', error);
+            document.getElementById('transferHistoryBody').innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #dc3545;">
+                        ❌ Xatolik yuz berdi
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    // Qidiruv funksiyasi
+    document.getElementById('historySearch')?.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#transferHistoryTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        });
+    });
+    
+    // Sahifa yuklanganda ma'lumotlarni yuklash
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTransferHistory();
+        
+        // Har 30 soniyada yangilab turish
+        setInterval(loadTransferHistory, 30000);
+    });
     
 </script>
 {% endblock %}
