@@ -6128,6 +6128,18 @@ def edit_stock(warehouse_id, product_id):
                                        error='Sotish narxi tan narxidan past '
                                              'bo\'lishi mumkin emas!')
 
+            # Barcode tekshiruvi - agar yangi barcode mavjud bo'lsa
+            if new_barcode:
+                existing_barcode_product = Product.query.filter(
+                    Product.barcode == new_barcode,
+                    Product.id != product_id
+                ).first()
+                if existing_barcode_product:
+                    return render_template('edit_stock.html',
+                                           stock=stock,
+                                           calculations=calculations,
+                                           error=f'Siz {new_barcode} barcode raqamini kirityapsiz, lekin bu barcode allaqachon "{existing_barcode_product.name}" mahsulotida mavjud.')
+
             # Mahsulot ma'lumotlarini yangilash
             stock.product.name = new_product_name
             stock.product.barcode = new_barcode if new_barcode else None  # Barcode yangilash
@@ -6177,6 +6189,17 @@ def edit_stock(warehouse_id, product_id):
                                    f'{str(ve)}')
         except Exception as e:
             db.session.rollback()
+            # Barcode unique constraint error
+            error_msg = str(e)
+            if 'unique_barcode' in error_msg or 'UniqueViolation' in error_msg:
+                # Barcode raqamini topish
+                import re
+                barcode_match = re.search(r'\(barcode\)=\((\d+)\)', error_msg)
+                barcode_num = barcode_match.group(1) if barcode_match else new_barcode
+                return render_template('edit_stock.html',
+                                       stock=stock,
+                                       calculations=calculations,
+                                       error=f'Siz {barcode_num} barcode raqamini kirityapsiz, lekin bu barcode allaqachon boshqa mahsulotda mavjud.')
             return render_template('edit_stock.html',
                                    stock=stock,
                                    calculations=calculations,
@@ -6318,6 +6341,19 @@ def edit_store_stock(store_id, product_id):
                                        error='Sotish narxi tan narxidan past '
                                              'bo\'lishi mumkin emas!')
 
+            # Barcode tekshiruvi - agar yangi barcode mavjud bo'lsa
+            if new_barcode:
+                existing_barcode_product = Product.query.filter(
+                    Product.barcode == new_barcode,
+                    Product.id != product_id
+                ).first()
+                if existing_barcode_product:
+                    return render_template('edit_stock.html',
+                                           stock=stock,
+                                           calculations=calculations,
+                                           store=stock.store,
+                                           error=f'Siz {new_barcode} barcode raqamini kirityapsiz, lekin bu barcode allaqachon "{existing_barcode_product.name}" mahsulotida mavjud.')
+
             # Mahsulot ma'lumotlarini yangilash
             stock.product.name = new_product_name
             stock.product.barcode = new_barcode if new_barcode else None  # Barcode yangilash
@@ -6368,6 +6404,18 @@ def edit_store_stock(store_id, product_id):
                                    f'{str(ve)}')
         except Exception as e:
             db.session.rollback()
+            # Barcode unique constraint error
+            error_msg = str(e)
+            if 'unique_barcode' in error_msg or 'UniqueViolation' in error_msg:
+                # Barcode raqamini topish
+                import re
+                barcode_match = re.search(r'\(barcode\)=\((\d+)\)', error_msg)
+                barcode_num = barcode_match.group(1) if barcode_match else new_barcode
+                return render_template('edit_stock.html',
+                                       stock=stock,
+                                       calculations=calculations,
+                                       store=stock.store,
+                                       error=f'Siz {barcode_num} barcode raqamini kirityapsiz, lekin bu barcode allaqachon boshqa mahsulotda mavjud.')
             return render_template('edit_stock.html',
                                    stock=stock,
                                    calculations=calculations,
