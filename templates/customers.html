@@ -204,6 +204,70 @@
         align-items: center;
     }
 
+    .analysis-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .analysis-btn {
+        background: #667eea;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .analysis-btn:hover {
+        background: #5a6fd8;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background: white;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        z-index: 1000;
+        margin-top: 0.5rem;
+    }
+
+    .dropdown-content.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+        background: #f8f9fa;
+    }
+
+    .dropdown-item.active {
+        background: #e7f3ff;
+        color: #667eea;
+        font-weight: 600;
+    }
+
     .customers-table {
         width: 100%;
         min-width: 800px; /* Mijozlar jadvali uchun minimal kenglik */
@@ -639,6 +703,20 @@
         <!-- Ma'lumot ko'rsatuvchisi -->
         <div class="table-info">
             <span id="resultsInfo">Mijozlar yuklanmoqda...</span>
+            <div class="analysis-dropdown">
+                <button class="analysis-btn" onclick="toggleAnalysisDropdown()">
+                    📊 Savdoni tahlili
+                    <span id="dropdownArrow">▼</span>
+                </button>
+                <div class="dropdown-content" id="analysisDropdown">
+                    <div class="dropdown-item active" onclick="filterByAnalysis('count')">
+                        🔢 Savdo soni
+                    </div>
+                    <div class="dropdown-item" onclick="filterByAnalysis('sum')">
+                        💰 Savdolar summasi
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Loading holati -->
@@ -1006,5 +1084,48 @@
             <p>${message}</p>
         `;
     }
+
+    // Dropdown ni ochish/yopish
+    function toggleAnalysisDropdown() {
+        const dropdown = document.getElementById('analysisDropdown');
+        const arrow = document.getElementById('dropdownArrow');
+        dropdown.classList.toggle('show');
+        arrow.textContent = dropdown.classList.contains('show') ? '▲' : '▼';
+    }
+
+    // Tashqi klik bilan yopish
+    window.addEventListener('click', function(e) {
+        if (!e.target.matches('.analysis-btn') && !e.target.closest('.analysis-dropdown')) {
+            const dropdown = document.getElementById('analysisDropdown');
+            const arrow = document.getElementById('dropdownArrow');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                arrow.textContent = '▼';
+            }
+        }
+    });
+
+    // Savdo tahlili bo'yicha filtr
+    let currentAnalysisFilter = 'count'; // default: savdo soni
+
+    function filterByAnalysis(type) {
+        currentAnalysisFilter = type;
+        
+        // Active class o'zgartirish
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Dropdown yopish
+        const dropdown = document.getElementById('analysisDropdown');
+        const arrow = document.getElementById('dropdownArrow');
+        dropdown.classList.remove('show');
+        arrow.textContent = '▼';
+        
+        // Mijozlarni qayta saralash
+        applyFilters();
+    }
+
 </script>
 {% endblock %}
