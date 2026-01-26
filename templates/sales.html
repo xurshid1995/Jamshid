@@ -2427,7 +2427,13 @@
                 const productId = parseInt(row.getAttribute('data-product-id'));
                 const productName = row.querySelector('td:first-child')?.getAttribute('data-original-text') || '';
                 const quantityBadge = row.querySelector('td:nth-child(2) span');
-                const quantity = quantityBadge ? parseInt(quantityBadge.textContent.trim()) : 0;
+                
+                // Miqdorni olish - unit type bilan birga
+                let quantity = 0;
+                if (quantityBadge) {
+                    const quantityText = quantityBadge.textContent.trim();
+                    quantity = parseFloat(quantityText.replace(/[^0-9.]/g, '')) || 0;
+                }
                 
                 // Narxni olish - span ichidagi matnni parse qilish
                 const priceSpan = row.querySelector('td:nth-child(3) span:first-child');
@@ -2438,10 +2444,11 @@
                 }
                 
                 const costPrice = parseFloat(row.getAttribute('data-cost-price')) || 0;
+                const unitType = row.getAttribute('data-unit-type') || 'dona';
                 
                 // Agar miqdor 0 dan katta bo'lsa, qo'shish
                 if (quantity > 0) {
-                    addToCart(productId, productName, quantity, price, costPrice);
+                    addToCart(productId, productName, quantity, price, costPrice, unitType);
                 }
                 return;
             }
