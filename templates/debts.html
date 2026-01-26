@@ -538,13 +538,36 @@
         }
 
         #locationButtons {
-            max-height: 80px;
-            padding: 0.3rem;
+            max-height: none;
+            padding: 0.5rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        #locationButtons::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        #locationButtons::-webkit-scrollbar-track {
+            background: #e9ecef;
+            border-radius: 2px;
+        }
+
+        #locationButtons::-webkit-scrollbar-thumb {
+            background: #6c757d;
+            border-radius: 2px;
         }
 
         .location-btn {
             font-size: 12px !important;
             padding: 5px 10px !important;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .filters-row {
