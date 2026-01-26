@@ -2372,7 +2372,7 @@ def api_batch_products():
             quantity = float(product_data['quantity'])
             cost_price = Decimal(str(product_data['cost_price']))
             sell_price = Decimal(str(product_data['sell_price']))
-            min_stock = int(product_data['min_stock'])
+            min_stock = int(float(product_data['min_stock']))
             last_batch_cost = Decimal(str(product_data.get('lastBatchCost', cost_price)))
             
             logger.info(f"🔍 Batch mahsulot qo'shilmoqda: {name}")
@@ -6091,12 +6091,12 @@ def edit_stock(warehouse_id, product_id):
     if request.method == 'POST':
         try:
             # Form ma'lumotlarini olish
-            new_quantity = int(request.form['quantity'])
+            new_quantity = int(float(request.form['quantity']))
             new_product_name = request.form['productName'].strip()
             new_barcode = request.form.get('barcode', '').strip()
             new_cost_price = float(request.form['costPrice'])
             new_sell_price = float(request.form['sellPrice'])
-            new_min_stock = int(request.form.get('minStock', 0))
+            new_min_stock = int(float(request.form.get('minStock', 0)))
 
             # Validatsiya
             if new_quantity < 0:
@@ -6277,12 +6277,12 @@ def edit_store_stock(store_id, product_id):
     if request.method == 'POST':
         try:
             # Form ma'lumotlarini olish
-            new_quantity = int(request.form['quantity'])
+            new_quantity = int(float(request.form['quantity']))
             new_product_name = request.form['productName'].strip()
             new_barcode = request.form.get('barcode', '').strip()
             new_cost_price = float(request.form['costPrice'])
             new_sell_price = float(request.form['sellPrice'])
-            new_min_stock = int(request.form.get('minStock', 0))
+            new_min_stock = int(float(request.form.get('minStock', 0)))
 
             # Validatsiya
             if new_quantity < 0:
