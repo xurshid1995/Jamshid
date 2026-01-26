@@ -775,7 +775,7 @@
                     <th><span class="emoji">🏪</span>Dokon</th>
                     <th><span class="emoji">👤</span>Mijoz nomi</th>
                     <th><span class="emoji">📞</span>Telefon</th>
-                    <th><span class="emoji">📧</span>Email</th>
+                    <th><span class="emoji">�</span>Savdoni tahlili</th>
                     <th><span class="emoji">📍</span>Manzil</th>
                     <th><span class="emoji">📅</span>Qo'shilgan sana</th>
                     <th><span class="emoji">⚙️</span>Amallar</th>
@@ -852,7 +852,12 @@
                         <td class="store-name">${customer.store_name || 'Umumiy'}</td>
                         <td class="customer-name">${customer.name || 'Noma\'lum'}</td>
                         <td class="customer-phone">${customer.phone || '-'}</td>
-                        <td class="customer-email">${customer.email || '-'}</td>
+                        <td class="customer-email">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <span style="font-size: 0.85rem;">🔢 Soni: <strong>${customer.total_sales || 0}</strong></span>
+                                <span style="font-size: 0.85rem;">💰 Summa: <strong>$${customer.total_amount ? parseFloat(customer.total_amount).toFixed(2) : '0.00'}</strong></span>
+                            </div>
+                        </td>
                         <td>${customer.address || '-'}</td>
                         <td>${createdDate}</td>
                         <td class="actions">
