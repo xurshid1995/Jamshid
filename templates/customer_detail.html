@@ -762,7 +762,7 @@ function displayOrders(orders) {
             
             html += '<tr class="' + rowClasses.join(' ') + '">';
             html += '<td class="group-cell group-location">' + getLocationName(item) + '</td>';
-            html += '<td class="group-cell product-cell">' + (item.product_name || 'Noma\'lum') + '</td>';
+            html += '<td class="product-cell">' + (item.product_name || 'Noma\'lum') + '</td>';
             html += '<td style="text-align: center; font-weight: 600;">' + item.quantity + '</td>';
             html += '<td>';
             html += '<div style="font-weight: 600; text-align: center;">$' + parseFloat(item.unit_price || 0).toFixed(2) + '</div>';
