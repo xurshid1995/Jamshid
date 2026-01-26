@@ -332,14 +332,18 @@
         }
         
         .payment-modal-content {
-            width: calc(100vw - 10px) !important;
-            max-width: calc(100vw - 10px) !important;
-            max-height: 96vh !important;
-            overflow-y: visible !important;
-            padding: 4px !important;
-            margin: 280px 5px 10px 5px !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: calc(100vw - 20px) !important;
+            max-width: calc(100vw - 20px) !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            padding: 10px !important;
+            margin: 0 !important;
             box-sizing: border-box !important;
-            border-radius: 4px !important;
+            border-radius: 8px !important;
         }
         
         .payment-modal-content > div {
