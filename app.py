@@ -3777,19 +3777,17 @@ def api_check_stock_products():
         if not location_type or not location_id:
             return jsonify({'success': False, 'message': 'Joylashuv parametrlari to\'liq emas'}), 400
 
-        # Joylashuvdagi barcha mahsulotlarni olish (optimizatsiya bilan)
+        # Joylashuvdagi barcha mahsulotlarni olish (qoldiq 0 bo'lganlarni ham)
         if location_type == 'store':
             # JOIN qilib bir marta query - N+1 problem hal qilindi
             stocks = db.session.query(StoreStock, Product)\
                 .join(Product, StoreStock.product_id == Product.id)\
                 .filter(StoreStock.store_id == location_id)\
-                .filter(StoreStock.quantity > 0)\
                 .all()
         else:
             stocks = db.session.query(WarehouseStock, Product)\
                 .join(Product, WarehouseStock.product_id == Product.id)\
                 .filter(WarehouseStock.warehouse_id == location_id)\
-                .filter(WarehouseStock.quantity > 0)\
                 .all()
 
         products_data = []
