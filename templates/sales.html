@@ -767,65 +767,6 @@
         </div>
     </div>
     
-    <!-- To'lov modal oyna -->
-    <div id="paymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div class="payment-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; width: 650px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0; color: #333;">💳 To'lov turlari</h3>
-                <div id="paymentModalTotal" style="text-align: right;">
-                    <div style="font-size: 12px; color: #666;">Jami summa:</div>
-                    <div style="font-weight: 700; color: #28a745; font-size: 16px;"><span id="paymentModalTotalUSD">$0.00</span> / <span id="paymentModalTotalUZS">0 so'm</span></div>
-                </div>
-            </div>
-            
-            <!-- Chek chiqarish opsiyalari -->
-            <div style="display: flex; gap: 20px; padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="printReceiptUSD" style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-weight: 500;">🖨️ USD chek chiqarish</span>
-                </label>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="printReceiptUZS" style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-weight: 500;">🖨️ UZS chek chiqarish</span>
-                </label>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">💵 Naxt:</label>
-                    <input type="number" id="paymentCashUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <input type="number" id="paymentCashUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <button onclick="addRemainingToField('paymentCashUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">📱 Click:</label>
-                    <input type="number" id="paymentClickUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <input type="number" id="paymentClickUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <button onclick="addRemainingToField('paymentClickUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">🏧 Terminal:</label>
-                    <input type="number" id="paymentTerminalUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <input type="number" id="paymentTerminalUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <button onclick="addRemainingToField('paymentTerminalUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">📋 Qarz:</label>
-                    <input type="number" id="paymentDebtUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <input type="number" id="paymentDebtUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
-                    <button onclick="addRemainingToField('paymentDebtUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
-                </div>
-            </div>
-            
-            <div id="paymentWarning" style="display: none; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 15px; color: #856404; font-size: 14px;"></div>
-            
-            <div style="display: flex; gap: 10px;">
-                <button onclick="closePaymentModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Bekor qilish</button>
-                <button onclick="confirmPayment(event)" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">✅ Tasdiqlash</button>
-            </div>
-        </div>
-    </div>
-    
     <!-- Modal oyna -->
     <div id="quantityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; width: 450px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -866,6 +807,65 @@
     </div>
     </div> <!-- End of sales-tab-content -->
 </template> <!-- End of saleTabContentTemplate -->
+
+<!-- To'lov modal oyna - GLOBAL (barcha tablar uchun bitta modal) -->
+<div id="paymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div class="payment-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; width: 650px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #333;">💳 To'lov turlari</h3>
+            <div id="paymentModalTotal" style="text-align: right;">
+                <div style="font-size: 12px; color: #666;">Jami summa:</div>
+                <div style="font-weight: 700; color: #28a745; font-size: 16px;"><span id="paymentModalTotalUSD">$0.00</span> / <span id="paymentModalTotalUZS">0 so'm</span></div>
+            </div>
+        </div>
+        
+        <!-- Chek chiqarish opsiyalari -->
+        <div style="display: flex; gap: 20px; padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="printReceiptUSD" style="width: 18px; height: 18px; cursor: pointer;">
+                <span style="font-weight: 500;">🖨️ USD chek chiqarish</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="printReceiptUZS" style="width: 18px; height: 18px; cursor: pointer;">
+                <span style="font-weight: 500;">🖨️ UZS chek chiqarish</span>
+            </label>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">💵 Naxt:</label>
+                <input type="number" id="paymentCashUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <input type="number" id="paymentCashUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <button onclick="addRemainingToField('paymentCashUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">📱 Click:</label>
+                <input type="number" id="paymentClickUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <input type="number" id="paymentClickUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <button onclick="addRemainingToField('paymentClickUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">🏧 Terminal:</label>
+                <input type="number" id="paymentTerminalUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <input type="number" id="paymentTerminalUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <button onclick="addRemainingToField('paymentTerminalUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 500; white-space: nowrap; min-width: 90px;">📋 Qarz:</label>
+                <input type="number" id="paymentDebtUSD" step="0.01" placeholder="$" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <input type="number" id="paymentDebtUZS" step="1" placeholder="UZS" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                <button onclick="addRemainingToField('paymentDebtUSD')" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; white-space: nowrap;">+ Qolgan</button>
+            </div>
+        </div>
+        
+        <div id="paymentWarning" style="display: none; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 15px; color: #856404; font-size: 14px;"></div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closePaymentModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Bekor qilish</button>
+            <button id="confirmPaymentBtn" onclick="confirmPayment()" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">✅ Tasdiqlash</button>
+        </div>
+    </div>
+</div>
 
 <!-- Barcode Scanner Modal - Global (barcha tablar uchun bitta modal) -->
 <div id="barcodeScannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999;">
@@ -4805,18 +4805,27 @@
         
         const totalUZS = totalUSD * exchangeRate;
         
-        // To'lov modal oynasini ochish
-        const paymentModalTotalUSD = getActiveTabElement('paymentModalTotalUSD');
-        const paymentModalTotalUZS = getActiveTabElement('paymentModalTotalUZS');
-        const paymentCashUSD = getActiveTabElement('paymentCashUSD');
-        const paymentCashUZS = getActiveTabElement('paymentCashUZS');
-        const paymentClickUSD = getActiveTabElement('paymentClickUSD');
-        const paymentClickUZS = getActiveTabElement('paymentClickUZS');
-        const paymentTerminalUSD = getActiveTabElement('paymentTerminalUSD');
-        const paymentTerminalUZS = getActiveTabElement('paymentTerminalUZS');
-        const paymentDebtUSD = getActiveTabElement('paymentDebtUSD');
-        const paymentDebtUZS = getActiveTabElement('paymentDebtUZS');
-        const paymentModal = getActiveTabElement('paymentModal');
+        // To'lov modal oynasini ochish - GLOBAL modal
+        const paymentModalTotalUSD = document.getElementById('paymentModalTotalUSD');
+        const paymentModalTotalUZS = document.getElementById('paymentModalTotalUZS');
+        const paymentCashUSD = document.getElementById('paymentCashUSD');
+        const paymentCashUZS = document.getElementById('paymentCashUZS');
+        const paymentClickUSD = document.getElementById('paymentClickUSD');
+        const paymentClickUZS = document.getElementById('paymentClickUZS');
+        const paymentTerminalUSD = document.getElementById('paymentTerminalUSD');
+        const paymentTerminalUZS = document.getElementById('paymentTerminalUZS');
+        const paymentDebtUSD = document.getElementById('paymentDebtUSD');
+        const paymentDebtUZS = document.getElementById('paymentDebtUZS');
+        const paymentModal = document.getElementById('paymentModal');
+        const confirmBtn = document.getElementById('confirmPaymentBtn');
+        
+        // Tugmani to'liq reset qilish
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '✅ Tasdiqlash';
+            confirmBtn.style.opacity = '1';
+            confirmBtn.style.cursor = 'pointer';
+        }
         
         if (paymentModalTotalUSD) paymentModalTotalUSD.textContent = `$${totalUSD.toFixed(2)}`;
         if (paymentModalTotalUZS) paymentModalTotalUZS.textContent = `${Math.round(totalUZS).toLocaleString('uz-UZ')} so'm`;
@@ -4841,11 +4850,11 @@
             // Yangi listener'lar
             newCashUSD.addEventListener('input', function() {
                 const usdValue = parseFloat(this.value) || 0;
-                const cashUZS = getActiveTabElement('paymentCashUZS');
+                const cashUZS = document.getElementById('paymentCashUZS');
                 if (cashUZS) cashUZS.value = Math.round(usdValue * exchangeRate);
             });
             newCashUZS.addEventListener('input', function() {
-                const cashUSD = getActiveTabElement('paymentCashUSD');
+                const cashUSD = document.getElementById('paymentCashUSD');
                 if (this.value.trim() === '') {
                     if (cashUSD) cashUSD.value = '';
                 } else {
@@ -4863,11 +4872,11 @@
             
             newClickUSD.addEventListener('input', function() {
                 const usdValue = parseFloat(this.value) || 0;
-                const clickUZS = getActiveTabElement('paymentClickUZS');
+                const clickUZS = document.getElementById('paymentClickUZS');
                 if (clickUZS) clickUZS.value = Math.round(usdValue * exchangeRate);
             });
             newClickUZS.addEventListener('input', function() {
-                const clickUSD = getActiveTabElement('paymentClickUSD');
+                const clickUSD = document.getElementById('paymentClickUSD');
                 if (this.value.trim() === '') {
                     if (clickUSD) clickUSD.value = '';
                 } else {
@@ -4885,11 +4894,11 @@
             
             newTerminalUSD.addEventListener('input', function() {
                 const usdValue = parseFloat(this.value) || 0;
-                const terminalUZS = getActiveTabElement('paymentTerminalUZS');
+                const terminalUZS = document.getElementById('paymentTerminalUZS');
                 if (terminalUZS) terminalUZS.value = Math.round(usdValue * exchangeRate);
             });
             newTerminalUZS.addEventListener('input', function() {
-                const terminalUSD = getActiveTabElement('paymentTerminalUSD');
+                const terminalUSD = document.getElementById('paymentTerminalUSD');
                 if (this.value.trim() === '') {
                     if (terminalUSD) terminalUSD.value = '';
                 } else {
@@ -4907,11 +4916,11 @@
             
             newDebtUSD.addEventListener('input', function() {
                 const usdValue = parseFloat(this.value) || 0;
-                const debtUZS = getActiveTabElement('paymentDebtUZS');
+                const debtUZS = document.getElementById('paymentDebtUZS');
                 if (debtUZS) debtUZS.value = Math.round(usdValue * exchangeRate);
             });
             newDebtUZS.addEventListener('input', function() {
-                const debtUSD = getActiveTabElement('paymentDebtUSD');
+                const debtUSD = document.getElementById('paymentDebtUSD');
                 if (this.value.trim() === '') {
                     if (debtUSD) debtUSD.value = '';
                 } else {
@@ -4923,7 +4932,7 @@
         
         // Fokusni Naxt so'm maydoniga berish
         setTimeout(() => {
-            const cashUZS = getActiveTabElement('paymentCashUZS');
+            const cashUZS = document.getElementById('paymentCashUZS');
             if (cashUZS) {
                 cashUZS.focus();
                 cashUZS.select();
@@ -4952,14 +4961,23 @@
     
     // To'lov modal oynasini yopish
     function closePaymentModal() {
-        const paymentModal = getActiveTabElement('paymentModal');
+        const paymentModal = document.getElementById('paymentModal');
         if (paymentModal) paymentModal.style.display = 'none';
         
         // Ogohlantirishni yashirish
-        const paymentWarning = getActiveTabElement('paymentWarning');
+        const paymentWarning = document.getElementById('paymentWarning');
         if (paymentWarning) {
             paymentWarning.style.display = 'none';
             paymentWarning.textContent = '';
+        }
+        
+        // Tugmani reset qilish
+        const confirmBtn = document.getElementById('confirmPaymentBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '✅ Tasdiqlash';
+            confirmBtn.style.opacity = '1';
+            confirmBtn.style.cursor = 'pointer';
         }
     }
     
@@ -4977,10 +4995,10 @@
         console.log('💱 Exchange rate:', exchangeRate);
         
         // Hozirgi to'lovlarni hisoblash (faqat USD qiymatlardan, UZS dan emas)
-        const paymentCashUSD = getActiveTabElement('paymentCashUSD');
-        const paymentClickUSD = getActiveTabElement('paymentClickUSD');
-        const paymentTerminalUSD = getActiveTabElement('paymentTerminalUSD');
-        const paymentDebtUSD = getActiveTabElement('paymentDebtUSD');
+        const paymentCashUSD = document.getElementById('paymentCashUSD');
+        const paymentClickUSD = document.getElementById('paymentClickUSD');
+        const paymentTerminalUSD = document.getElementById('paymentTerminalUSD');
+        const paymentDebtUSD = document.getElementById('paymentDebtUSD');
         
         const cashUSD = paymentCashUSD ? parseFloat(paymentCashUSD.value) || 0 : 0;
         const clickUSD = paymentClickUSD ? parseFloat(paymentClickUSD.value) || 0 : 0;
@@ -4996,7 +5014,7 @@
         console.log('📊 Qolgan:', remaining);
         
         // Aqlli mantiq: kam to'langan yoki ortiq to'langan bo'lsa ham to'g'ri ishlaydi
-        const fieldElement = getActiveTabElement(fieldId);
+        const fieldElement = document.getElementById(fieldId);
         if (!fieldElement) {
             console.error('❌ Field element topilmadi:', fieldId);
             return;
@@ -5025,7 +5043,7 @@
         const uzsFieldId = fieldId.replace('USD', 'UZS');
         console.log('🔄 UZS maydon ID:', uzsFieldId);
         
-        const uzsFieldElement = getActiveTabElement(uzsFieldId);
+        const uzsFieldElement = document.getElementById(uzsFieldId);
         if (uzsFieldElement) {
             const newUZSValue = Math.round(newUSDValue * exchangeRate);
             uzsFieldElement.value = newUZSValue;
@@ -5039,7 +5057,7 @@
     let isProcessingPayment = false;
     
     // To'lovni tasdiqlash
-    async function confirmPayment(event) {
+    async function confirmPayment() {
         // Double-click oldini olish
         if (isProcessingPayment) {
             console.log('⚠️ To\'lov allaqachon jarayonda');
@@ -5048,8 +5066,8 @@
         
         isProcessingPayment = true;
         
-        // Tasdiqlash tugmasini topish va o'chirish
-        const confirmBtn = event ? event.target : null;
+        // Tasdiqlash tugmasini topish va o'chirish - GLOBAL
+        const confirmBtn = document.getElementById('confirmPaymentBtn');
         const originalText = confirmBtn ? confirmBtn.textContent : '';
         if (confirmBtn) {
             confirmBtn.disabled = true;
@@ -5060,20 +5078,20 @@
         
         try {
             // Ogohlantirishni yashirish
-            const paymentWarning = getActiveTabElement('paymentWarning');
+            const paymentWarning = document.getElementById('paymentWarning');
             if (paymentWarning) {
                 paymentWarning.style.display = 'none';
                 paymentWarning.textContent = '';
             }
             
-            const paymentCashUSD = getActiveTabElement('paymentCashUSD');
-            const paymentClickUSD = getActiveTabElement('paymentClickUSD');
-            const paymentTerminalUSD = getActiveTabElement('paymentTerminalUSD');
-            const paymentDebtUSD = getActiveTabElement('paymentDebtUSD');
-            const paymentCashUZS = getActiveTabElement('paymentCashUZS');
-            const paymentClickUZS = getActiveTabElement('paymentClickUZS');
-            const paymentTerminalUZS = getActiveTabElement('paymentTerminalUZS');
-            const paymentDebtUZS = getActiveTabElement('paymentDebtUZS');
+            const paymentCashUSD = document.getElementById('paymentCashUSD');
+            const paymentClickUSD = document.getElementById('paymentClickUSD');
+            const paymentTerminalUSD = document.getElementById('paymentTerminalUSD');
+            const paymentDebtUSD = document.getElementById('paymentDebtUSD');
+            const paymentCashUZS = document.getElementById('paymentCashUZS');
+            const paymentClickUZS = document.getElementById('paymentClickUZS');
+            const paymentTerminalUZS = document.getElementById('paymentTerminalUZS');
+            const paymentDebtUZS = document.getElementById('paymentDebtUZS');
             
             const cashUSD = paymentCashUSD ? parseFloat(paymentCashUSD.value) || 0 : 0;
             const clickUSD = paymentClickUSD ? parseFloat(paymentClickUSD.value) || 0 : 0;
@@ -5236,9 +5254,9 @@
             // Chek chiqarish ma'lumotlarini global o'zgaruvchida saqlash
             let pendingReceiptData = null;
             
-            // Chek chiqarish opsiyalarini tekshirish (tab context'dan)
-            const printUSD = getActiveTabElement('printReceiptUSD');
-            const printUZS = getActiveTabElement('printReceiptUZS');
+            // Chek chiqarish opsiyalarini tekshirish - GLOBAL
+            const printUSD = document.getElementById('printReceiptUSD');
+            const printUZS = document.getElementById('printReceiptUZS');
             
             console.log('🖨️ Chek chiqarish tekshiruvi:');
             console.log('   - printUSD element:', printUSD);
@@ -5430,11 +5448,9 @@
                 confirmBtn.style.cursor = 'pointer';
             }
         } finally {
-            // 3 sekunddan keyin qayta bosish imkonini berish
-            setTimeout(() => {
-                isProcessingPayment = false;
-                console.log('✅ Payment processing flag cleared');
-            }, 3000);
+            // Flag'ni darhol tozalash
+            isProcessingPayment = false;
+            console.log('✅ Payment processing flag cleared');
         }
     }
     
