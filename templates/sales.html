@@ -4,6 +4,42 @@
 
 {% block extra_css %}
 <style>
+    /* ===== MODAL OVERLAY GLOBAL CLASSES ===== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+    }
+    
+    .modal-overlay-fullscreen {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        z-index: 9999;
+    }
+    
+    .modal-overlay-customer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+    }
+    
     .sales-container {
         padding: 15px;
         background: #f8f9fa;
@@ -768,7 +804,7 @@
     </div>
     
     <!-- Modal oyna -->
-    <div id="quantityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div id="quantityModal" class="modal-overlay">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; width: 450px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
             <h3 style="margin: 0 0 20px 0; color: #333;">Mahsulot ma'lumotlari</h3>
             <div style="margin-bottom: 15px;">
@@ -809,7 +845,7 @@
 </template> <!-- End of saleTabContentTemplate -->
 
 <!-- To'lov modal oyna - GLOBAL (barcha tablar uchun bitta modal) -->
-<div id="paymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+<div id="paymentModal" class="modal-overlay">
     <div class="payment-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; width: 650px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0; color: #333;">💳 To'lov turlari</h3>
@@ -868,7 +904,7 @@
 </div>
 
 <!-- Barcode Scanner Modal - Global (barcha tablar uchun bitta modal) -->
-<div id="barcodeScannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999;">
+<div id="barcodeScannerModal" class="modal-overlay-fullscreen">
     <!-- Yopish tugmasi -->
     <button id="closeScannerBtn" type="button" style="position: fixed; top: 15px; right: 15px; background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(5px);" title="Yopish">×</button>
     
@@ -911,7 +947,7 @@
 </style>
 
 <!-- Mijoz qo'shish modal oyna (Global - barcha tablar uchun) -->
-<div id="addCustomerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+<div id="addCustomerModal" class="modal-overlay-customer">
     <div style="background: white; border-radius: 12px; padding: 0; width: 550px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;">
         <div style="background: white; border-bottom: 1px solid #e9ecef; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #2c3e50; font-size: 1.5rem; font-weight: 600;">👤 Yangi mijoz qo'shish</h3>
@@ -969,6 +1005,25 @@
 <script src="{{ url_for('static', filename='js/quagga.min.js') }}"></script>
 
 <script>
+    // ============================================
+    // DEBUG MODE & HELPER FUNCTIONS
+    // ============================================
+    const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    function log(...args) { if (DEBUG) console.log(...args); }
+    function warn(...args) { if (DEBUG) console.warn(...args); }
+    function error(...args) { console.error(...args); } // Xatolar doim ko'rinadi
+    
+    // XSS himoya funksiyasi
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    
     // ============================================
     // TAB MANAGEMENT SYSTEM
     // ============================================
@@ -1277,20 +1332,18 @@
     function switchToTab(tabId) {
         console.log(`🔄 Tabga o'tilmoqda: ${tabId}`);
         
-        // Eski tabning state'ini saqlash
-        if (activeTabId) {
+        // Eski tabning state'ini saqlash (global o'zgaruvchilardan)
+        if (activeTabId && tabStates[activeTabId]) {
             const oldState = tabStates[activeTabId];
-            if (oldState) {
-                // Global o'zgaruvchilardan state'ga ko'chirish
-                oldState.cart = cart;
-                oldState.currentProduct = currentProduct;
-                oldState.selectedLocationId = selectedLocationId;
-                oldState.selectedLocationType = selectedLocationType;
-                oldState.editingSaleId = editingSaleId;
-                oldState.currentPendingSaleId = currentPendingSaleId;
-                
-                console.log(`💾 Tab ${activeTabId} state saqlandi:`, oldState);
-            }
+            // Global o'zgaruvchilardan state'ga ko'chirish
+            oldState.cart = cart.slice(); // Nusxa olish
+            oldState.currentProduct = currentProduct;
+            oldState.selectedLocationId = selectedLocationId;
+            oldState.selectedLocationType = selectedLocationType;
+            oldState.editingSaleId = editingSaleId;
+            oldState.currentPendingSaleId = currentPendingSaleId;
+            
+            console.log(`💾 Tab ${activeTabId} state saqlandi:`, oldState);
         }
         
         // Barcha tablarni deactivate qilish
@@ -1308,11 +1361,15 @@
         if (tabElement && contentElement) {
             tabElement.classList.add('active');
             contentElement.classList.add('active');
+            
+            // MUHIM: Avval activeTabId ni yangilash
             activeTabId = tabId;
             
             // Yangi tabning state'ini yuklash
             const newState = initTabState(tabId);
-            cart = newState.cart || [];
+            
+            // Global o'zgaruvchilarni yangilash (nusxa olish)
+            cart = (newState.cart || []).slice();
             currentProduct = newState.currentProduct || null;
             selectedLocationId = newState.selectedLocationId || null;
             selectedLocationType = newState.selectedLocationType || null;
@@ -2187,8 +2244,81 @@
         return initTabState(activeTabId);
     }
     
-    // Global o'zgaruvchilarni backward compatibility uchun saqlab qolamiz
-    // Lekin ular faqat active tab state'dan olinadi
+    // ============================================
+    // XAVFSIZ GETTER/SETTER FUNKSIYALARI
+    // Global o'zgaruvchilar o'rniga tabStates dan foydalanish
+    // ============================================
+    
+    // Cart getter/setter
+    function getCart() {
+        const state = getTabState();
+        return state ? state.cart : [];
+    }
+    
+    function setCart(value) {
+        const state = getTabState();
+        if (state) state.cart = value;
+    }
+    
+    // CurrentProduct getter/setter
+    function getCurrentProduct() {
+        const state = getTabState();
+        return state ? state.currentProduct : null;
+    }
+    
+    function setCurrentProduct(value) {
+        const state = getTabState();
+        if (state) state.currentProduct = value;
+    }
+    
+    // SelectedLocationId getter/setter
+    function getSelectedLocationId() {
+        const state = getTabState();
+        return state ? state.selectedLocationId : null;
+    }
+    
+    function setSelectedLocationId(value) {
+        const state = getTabState();
+        if (state) state.selectedLocationId = value;
+    }
+    
+    // SelectedLocationType getter/setter
+    function getSelectedLocationType() {
+        const state = getTabState();
+        return state ? state.selectedLocationType : null;
+    }
+    
+    function setSelectedLocationType(value) {
+        const state = getTabState();
+        if (state) state.selectedLocationType = value;
+    }
+    
+    // EditingSaleId getter/setter
+    function getEditingSaleId() {
+        const state = getTabState();
+        return state ? state.editingSaleId : null;
+    }
+    
+    function setEditingSaleId(value) {
+        const state = getTabState();
+        if (state) state.editingSaleId = value;
+    }
+    
+    // CurrentPendingSaleId getter/setter
+    function getCurrentPendingSaleId() {
+        const state = getTabState();
+        return state ? state.currentPendingSaleId : null;
+    }
+    
+    function setCurrentPendingSaleId(value) {
+        const state = getTabState();
+        if (state) state.currentPendingSaleId = value;
+    }
+    
+    // ============================================
+    // BACKWARD COMPATIBILITY - Eski kod bilan ishlash uchun
+    // Bu o'zgaruvchilar keyinroq olib tashlanadi
+    // ============================================
     let cart = [];
     let currentProduct = null;
     let selectedLocationId = null;
@@ -2302,8 +2432,8 @@
             const hoverBg = isSelected ? '#2196F3' : '#f8f9fa';
             const textColor = isSelected ? 'white' : '#333';
             const phoneColor = isSelected ? 'white' : '#6c757d';
-            const safeName = customer.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            const safePhone = (customer.phone || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeName = escapeHtml(customer.name);
+            const safePhone = escapeHtml(customer.phone);
             return `<div class="customer-item" data-customer-id="${customer.id}" data-customer-name="${safeName}" data-customer-phone="${safePhone}" data-index="${index}"
                     style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: all 0.2s; background: ${bgColor};"
                     onmouseover="this.style.background='${hoverBg}'"
@@ -2597,7 +2727,7 @@
                 
                 const productName = product.name || `Mahsulot #${product.id}`;
                 const safeProductName = productName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const htmlSafeProductName = productName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                const htmlSafeProductName = escapeHtml(productName);
                 const costPrice = product.cost_price || 0;
                 
                 const row = document.createElement('tr');
@@ -3106,6 +3236,9 @@
     
     // Savatga qo'shish
     async function confirmAddToCart() {
+        // ⚠️ XAVFSIZLIK: Operatsiya boshidagi tabId ni saqlash
+        const operationTabId = activeTabId;
+        
         const modalQuantity = getActiveTabElement('modalQuantity');
         const modalPriceUSD = getActiveTabElement('modalPriceUSD');
         const modalPriceUZS = getActiveTabElement('modalPriceUZS');
@@ -3118,6 +3251,13 @@
         const quantity = parseFloat(modalQuantity.value);
         const priceUSD = parseFloat(modalPriceUSD.value);
         const priceUZS = parseFloat(modalPriceUZS.value);
+        
+        // ⚠️ XAVFSIZLIK: Tab almashganini tekshirish
+        if (operationTabId !== activeTabId) {
+            console.warn('⚠️ Tab almashgan, operatsiya bekor qilindi');
+            closeModal();
+            return;
+        }
         
         // Narx validatsiyasi - tan narxdan past yoki teng bo'lsa, tasdiqlash
         if (currentProduct && currentProduct.costPrice) {
@@ -3451,12 +3591,23 @@
     
     // Savatdan o'chirish
     async function removeFromCart(index) {
+        // ⚠️ XAVFSIZLIK: Operatsiya boshidagi tabId va ma'lumotlarni saqlash
+        const operationTabId = activeTabId;
+        const operationLocationId = selectedLocationId;
+        const operationLocationType = selectedLocationType;
+        
         const item = cart[index];
         
         // Tasdiqlash so'rovi
         const confirmMessage = `"${item.name}" mahsulotini savatdan o'chirmoqchimisiz?\n\nMiqdor: ${item.quantity} dona\nNarx: $${item.priceUSD.toFixed(2)}`;
         if (!confirm(confirmMessage)) {
             console.log('❌ Foydalanuvchi o\'chirishni bekor qildi');
+            return;
+        }
+        
+        // ⚠️ XAVFSIZLIK: Tab almashganini tekshirish
+        if (operationTabId !== activeTabId) {
+            console.warn('⚠️ Tab almashgan, o\'chirish bekor qilindi');
             return;
         }
         
@@ -3467,7 +3618,7 @@
         console.log(`   Index: ${index}`);
         console.log(`   Product: ${item.name} (ID: ${item.id})`);
         console.log(`   Quantity: ${item.quantity}`);
-        console.log(`   Location: ${selectedLocationId} (${selectedLocationType})`);
+        console.log(`   Location: ${operationLocationId} (${operationLocationType})`);
         console.log(`   Stock returned flag: ${item._stockReturned || false}`);
         console.log(`${'='.repeat(80)}\n`);
         
@@ -3936,7 +4087,7 @@
                 
                 const productName = product.name || `Mahsulot #${product.id}`;
                 const safeProductName = productName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const htmlSafeProductName = productName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                const htmlSafeProductName = escapeHtml(productName);
                 const costPrice = product.cost_price || 0;
                 
                 const row = document.createElement('tr');
