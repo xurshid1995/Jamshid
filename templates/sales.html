@@ -4101,7 +4101,7 @@
                     const escapedWords = searchWords.map(word => escapeRegex(word));
                     const combinedPattern = escapedWords.join('|');
                     const regex = new RegExp(`(${combinedPattern})`, 'gi');
-                    highlightedName = highlightedName.replace(regex, '<span style="background-color: #fff9c4; padding: 2px 4px; border-radius: 2px;">$1</span>');
+                    // highlightedName = highlightedName.replace(regex, '<span style="background-color: #fff9c4; padding: 2px 4px; border-radius: 2px;">$1</span>');
                 }
                 
                 // Miqdori 0 bo'lsa qizil ranglar
