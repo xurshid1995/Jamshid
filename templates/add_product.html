@@ -1452,35 +1452,51 @@
             const resultDiv = document.getElementById('searchResult');
             const suggestionItems = resultDiv.querySelectorAll('.suggestion-item');
             
+            // Agar dropdown ko'rinmasa, faqat Enter va Tab'ni qabul qilish
+            if (resultDiv.style.display === 'none' || suggestionItems.length === 0) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const quantityField = document.getElementById('quantity');
+                    if (quantityField) {
+                        quantityField.focus();
+                    }
+                }
+                return;
+            }
+            
             switch(event.key) {
                 case 'ArrowDown':
                     event.preventDefault();
-                    if (suggestionItems.length > 0) {
+                    // Agar hech narsa tanlanmagan bo'lsa, birinchini tanlash
+                    if (selectedProductIndex === -1) {
+                        selectedProductIndex = 0;
+                    } else {
                         selectedProductIndex = Math.min(selectedProductIndex + 1, suggestionItems.length - 1);
-                        updateSelectedProduct(suggestionItems);
                     }
+                    updateSelectedProduct(suggestionItems);
                     break;
                     
                 case 'ArrowUp':
                     event.preventDefault();
-                    if (suggestionItems.length > 0) {
-                        selectedProductIndex = Math.max(selectedProductIndex - 1, -1);
-                        updateSelectedProduct(suggestionItems);
+                    if (selectedProductIndex <= 0) {
+                        selectedProductIndex = -1;
+                    } else {
+                        selectedProductIndex = Math.max(selectedProductIndex - 1, 0);
                     }
+                    updateSelectedProduct(suggestionItems);
                     break;
                     
                 case 'Enter':
                     event.preventDefault();
-                    if (selectedProductIndex >= 0 && suggestionItems.length > selectedProductIndex) {
-                        // Tanlangan mahsulotni qo'llash
+                    // Agar hech narsa tanlanmagan bo'lsa, birinchi elementni tanlash
+                    if (selectedProductIndex === -1 && suggestionItems.length > 0) {
+                        suggestionItems[0].click();
+                    } else if (selectedProductIndex >= 0 && suggestionItems.length > selectedProductIndex) {
                         suggestionItems[selectedProductIndex].click();
-                    } else {
-                        // Enter bosilganda keyingi maydoniga o'tish
-                        const costPriceField = document.getElementById('cost_price');
-                        if (costPriceField) {
-                            costPriceField.focus();
-                        }
                     }
+                    // Dropdown yopish
+                    resultDiv.style.display = 'none';
+                    selectedProductIndex = -1;
                     break;
                     
                 case 'Escape':
@@ -1490,11 +1506,16 @@
                     break;
                     
                 case 'Tab':
-                    // Tab bosilganda tavsiyalarni yashirish
-                    setTimeout(() => {
-                        resultDiv.style.display = 'none';
-                        selectedProductIndex = -1;
-                    }, 100);
+                    event.preventDefault();
+                    // Tab bosilganda tanlangan yoki birinchi elementni qo'llash
+                    if (selectedProductIndex === -1 && suggestionItems.length > 0) {
+                        suggestionItems[0].click();
+                    } else if (selectedProductIndex >= 0 && suggestionItems.length > selectedProductIndex) {
+                        suggestionItems[selectedProductIndex].click();
+                    }
+                    // Dropdown yopish
+                    resultDiv.style.display = 'none';
+                    selectedProductIndex = -1;
                     break;
             }
         }
