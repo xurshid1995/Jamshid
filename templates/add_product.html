@@ -584,22 +584,30 @@
                         </div>
                     </div>
 
-                    <!-- 2-qator: Mahsulot nomi va Barcode -->
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 2;">
-                            <label for="product_name">📝 Mahsulot nomi:</label>
-                            <div class="product-name-container">
-                                <input type="text" id="product_name" name="product_name" class="form-control" 
-                                       placeholder="Mahsulot nomini kiriting..." 
-                                       oninput="searchProduct(); calculateProfit();"
-                                       onfocus="showSearchResults()"
-                                       onkeydown="handleProductNameKeyDown(event)"
-                                       autocomplete="off">
-                                <!-- Qidiruv natijasi - maydon ostida -->
-                                <div id="searchResult" class="search-result"></div>
-                            </div>
+                    <!-- 2-qator: Mahsulot nomi (to'liq kenglikda) -->
+                    <div class="form-group">
+                        <label for="product_name">📝 Mahsulot nomi:</label>
+                        <div class="product-name-container">
+                            <input type="text" id="product_name" name="product_name" class="form-control" 
+                                   placeholder="Mahsulot nomini kiriting..." 
+                                   oninput="searchProduct(); calculateProfit();"
+                                   onfocus="showSearchResults()"
+                                   onkeydown="handleProductNameKeyDown(event)"
+                                   autocomplete="off">
+                            <!-- Qidiruv natijasi - maydon ostida -->
+                            <div id="searchResult" class="search-result"></div>
                         </div>
-                        <div class="form-group" style="flex: 1;">
+                    </div>
+
+                    <!-- 3-qator: Miqdor va Barcode -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantity">📊 Miqdor:</label>
+                            <input type="number" id="quantity" name="quantity" class="form-control" 
+                                   placeholder="0" min="0" step="any"
+                                   oninput="validateQuantityInput(); calculateProfit();">
+                        </div>
+                        <div class="form-group">
                             <label for="barcode">📷 Barcode:</label>
                             <!-- Barcode xatolik xabari - label dan keyingi qator -->
                             <div id="barcodeErrorContainer" style="margin-top: 4px; margin-bottom: 4px;"></div>
@@ -626,13 +634,12 @@
                         </div>
                     </div>
 
-                    <!-- 3-qator: Miqdor, O'lchov birligi va Minimal qoldiq -->
+                    <!-- 4-qator: Minimal qoldiq va O'lchov birligi -->
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="quantity">📊 Miqdor:</label>
-                            <input type="number" id="quantity" name="quantity" class="form-control" 
-                                   placeholder="0" min="0" step="any"
-                                   oninput="validateQuantityInput(); calculateProfit();">
+                            <label for="min_stock">⚠️ Minimal qoldiq:</label>
+                            <input type="number" id="min_stock" name="min_stock" class="form-control" 
+                                   placeholder="0" min="0">
                         </div>
                         <div class="form-group">
                             <label for="unit_type">📏 O'lchov birligi:</label>
@@ -642,11 +649,6 @@
                                 <option value="dona" selected>🔢 Dona</option>
                                 <option value="litr">💧 Litr</option>
                             </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="min_stock">⚠️ Minimal qoldiq:</label>
-                            <input type="number" id="min_stock" name="min_stock" class="form-control" 
-                                   placeholder="0" min="0">
                         </div>
                     </div>
 
