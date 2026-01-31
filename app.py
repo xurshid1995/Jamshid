@@ -2121,6 +2121,68 @@ def generate_next_barcode():
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route('/api/migrate-barcodes-to-8-digits', methods=['POST'])
+@login_required
+def migrate_barcodes_to_8_digits():
+    """Mavjud 6 xonalik barcodelarni 8 xonaga o'zgartirish - oldiga 00 qo'shish"""
+    try:
+        # Faqat admin foydalanuvchi bajarishi mumkin
+        if session.get('role') != 'admin':
+            return jsonify({
+                'success': False,
+                'error': 'Faqat admin foydalanuvchi bajarishi mumkin'
+            }), 403
+        
+        # Barcha mahsulotlarni olish
+        products = Product.query.filter(
+            Product.barcode.isnot(None),
+            Product.barcode != ''
+        ).all()
+        
+        updated_count = 0
+        errors = []
+        
+        for product in products:
+            try:
+                barcode = product.barcode.strip()
+                
+                # Faqat raqamli va 6 ta xonalik barcodelarni yangilash
+                if barcode.isdigit() and len(barcode) == 6:
+                    # Oldiga 2 ta 0 qo'shish
+                    new_barcode = '00' + barcode
+                    
+                    # Yangilash
+                    product.barcode = new_barcode
+                    updated_count += 1
+                    
+                    logger.info(f"✅ Barcode yangilandi: {barcode} → {new_barcode} (Mahsulot: {product.name})")
+                    
+            except Exception as e:
+                error_msg = f"Xatolik mahsulot ID {product.id}: {str(e)}"
+                errors.append(error_msg)
+                logger.error(f"❌ {error_msg}")
+        
+        # O'zgarishlarni saqlash
+        if updated_count > 0:
+            db.session.commit()
+            logger.info(f"✅ {updated_count} ta barcode 8 xonaga o'zgartirildi")
+        
+        return jsonify({
+            'success': True,
+            'updated_count': updated_count,
+            'errors': errors,
+            'message': f'{updated_count} ta barcode 6 xonadan 8 xonaga o\'zgartirildi'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"❌ Migration xatosi: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
         logger.error(f"❌ Xato ({duration:.2f}s): {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
