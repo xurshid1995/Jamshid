@@ -2156,7 +2156,15 @@
 
         // Formani tozalash
         function clearForm() {
+            // Joylashuvni saqlash
+            const currentLocation = document.getElementById('location').value;
+            
+            // Formani tozalash
             document.getElementById('productForm').reset();
+            
+            // Joylashuvni qayta o'rnatish
+            document.getElementById('location').value = currentLocation;
+            
             document.getElementById('searchResult').style.display = 'none';
             document.getElementById('priceComparison').style.display = 'none';
             document.getElementById('profitDisplay').style.display = 'none';
@@ -2165,6 +2173,14 @@
             selectedProductData = null;
             userEnteredCostPrice = null;
             console.log('🧹 Forma va global o\'zgaruvchilar tozalandi');
+            
+            // Fokusni mahsulot nomi maydoniga berish
+            setTimeout(() => {
+                const productNameField = document.getElementById('product_name');
+                if (productNameField) {
+                    productNameField.focus();
+                }
+            }, 100);
         }
 
         // Avtomatik barcode generatsiya qilish
