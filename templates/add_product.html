@@ -133,9 +133,22 @@
         }
         
         .product-dropdown-content {
-            white-space: normal;
-            word-wrap: break-word;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
             line-height: 1.5;
+        }
+        
+        .product-name {
+            display: inline-block;
+            max-width: 100%;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .product-details {
+            white-space: nowrap;
         }
         
         .quantity-badge {
@@ -1661,11 +1674,11 @@
                             html += `
                                 <div class="product-dropdown-item suggestion-item" onclick="selectProduct('${productData.product.name}', ${lastBatchCost}, ${productData.product.sell_price}, ${productData.product.min_stock}, ${lastBatchCost}, '${lastBatchDate}', '${productData.product.barcode || ''}')">
                                     <div class="product-dropdown-content">
-                                        <strong style="color: #2c3e50; font-size: 1.1rem;">${productData.product.name}</strong> | 
-                                        <span style="color: #dc3545; font-weight: 600;">Ortacha: $${productData.product.cost_price.toFixed(2)}</span> | 
-                                        <span style="color: #28a745; font-weight: 600;">Sotish: $${productData.product.sell_price.toFixed(2)}</span> | 
-                                        ${locationQuantity}
-                                        <span style="color: #007bff; float: right; font-size: 1.1rem;">→</span>
+                                        <strong class="product-name" style="color: #2c3e50; font-size: 1.1rem;">${productData.product.name}</strong>
+                                        <span class="product-details" style="color: #dc3545; font-weight: 600;">| Ortacha: $${productData.product.cost_price.toFixed(2)}</span>
+                                        <span class="product-details" style="color: #28a745; font-weight: 600;">| Sotish: $${productData.product.sell_price.toFixed(2)}</span>
+                                        <span class="product-details">| ${locationQuantity}</span>
+                                        <span style="color: #007bff; margin-left: auto; font-size: 1.1rem;">→</span>
                                     </div>
                                 </div>
                             `;
