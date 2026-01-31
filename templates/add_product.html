@@ -1805,6 +1805,15 @@
             
             // Foyda hisoblash
             calculateProfit();
+            
+            // Fokusni miqdor maydoniga berish
+            setTimeout(() => {
+                const quantityField = document.getElementById('quantity');
+                if (quantityField) {
+                    quantityField.focus();
+                    quantityField.select(); // Mavjud qiymatni belgilash (agar bo'lsa)
+                }
+            }, 100);
         }
         
         // Joriy stock miqdorini olish va hisob-kitobni ko'rsatish
