@@ -6,12 +6,13 @@ import os
 bind = os.getenv('BIND', '127.0.0.1:8000')
 backlog = 2048
 
-# Worker processes
-workers = int(os.getenv('WORKERS', multiprocessing.cpu_count() * 2 + 1))
+# Worker processes - 2 CPU uchun optimal: 3 worker
+# Formula: (2 * CPU_count) - 1 yoki 3 (xotira tejash uchun)
+workers = int(os.getenv('WORKERS', 3))  # 2 CPU uchun 3 worker optimal
 worker_class = 'sync'
 worker_connections = 1000
-timeout = int(os.getenv('TIMEOUT', 300))  # 5 minut - API requestlar uchun yetarli
-keepalive = 5  # Keep-alive connection 5 sekund
+timeout = int(os.getenv('TIMEOUT', 120))  # 2 minut - oddiy requestlar uchun yetarli
+keepalive = 2  # Keep-alive connection 2 sekund
 
 # Request size limits (100MB - rasmlar uchun)
 limit_request_line = 8190  # Request line length

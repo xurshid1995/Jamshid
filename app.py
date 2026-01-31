@@ -76,13 +76,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here')
 
-# Database Connection Pool - API timeout muammosini hal qilish
+# Database Connection Pool - Optimizatsiya: 3 worker uchun minimal pool
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 10,          # Maksimal 10 ta active connection
+    'pool_size': 3,           # Minimal 3 ta active connection (har bir worker uchun)
     'pool_recycle': 3600,     # Har 1 soatda connection yangilash
     'pool_pre_ping': True,    # Connection alive ekanini tekshirish (dead connection oldini oladi)
-    'max_overflow': 20,       # Qo'shimcha 20 ta temporary connection
-    'pool_timeout': 30,       # Connection olish uchun 30 sekund timeout
+    'max_overflow': 2,        # Qo'shimcha faqat 2 ta temporary connection (xotira tejash)
+    'pool_timeout': 20,       # Connection olish uchun 20 sekund timeout
     'connect_args': {
         'connect_timeout': 10,  # PostgreSQL connection timeout
         'options': '-c statement_timeout=10000'  # Query timeout: 10 sekund
