@@ -2124,7 +2124,7 @@ def generate_next_barcode():
 
 
 @app.route('/api/migrate-barcodes-to-8-digits', methods=['POST'])
-@login_required
+@role_required('admin')
 def migrate_barcodes_to_8_digits():
     """Mavjud 6 xonalik barcodelarni 8 xonaga o'zgartirish - oldiga 00 qo'shish"""
     try:
