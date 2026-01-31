@@ -2186,39 +2186,33 @@
 
         // Avtomatik barcode generatsiya qilish
         function generateBarcode() {
-            // EAN-13 formatida barcode yaratish (13 raqam)
-            // Birinchi 3 raqam - mamlakat kodi (860 = O'zbekiston)
-            // Keyingi 9 raqam - mahsulot kodi (timestamp asosida)
-            // Oxirgi 1 raqam - checksum
-            
-            const countryCode = '860';
-            const timestamp = Date.now().toString().slice(-9); // 9 raqam
-            
-            // 12 raqamli kod (checksum'siz)
-            const partialCode = countryCode + timestamp;
-            
-            // EAN-13 checksum hisoblash
-            let sum = 0;
-            for (let i = 0; i < 12; i++) {
-                const digit = parseInt(partialCode[i]);
-                sum += (i % 2 === 0) ? digit : digit * 3;
-            }
-            const checksum = (10 - (sum % 10)) % 10;
-            
-            // To'liq barcode
-            const barcode = partialCode + checksum;
-            
-            // Input ga qo'yish
-            document.getElementById('barcode').value = barcode;
-            
-            // Visual feedback
-            const barcodeInput = document.getElementById('barcode');
-            barcodeInput.style.background = '#d4edda';
-            setTimeout(() => {
-                barcodeInput.style.background = 'white';
-            }, 500);
-            
-            console.log('✅ Avtomatik barcode yaratildi:', barcode);
+            // Backend'dan keyingi barcode raqamini olish
+            fetch('/api/generate-barcode')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const barcode = data.barcode;
+                        
+                        // Input ga qo'yish
+                        document.getElementById('barcode').value = barcode;
+                        
+                        // Visual feedback
+                        const barcodeInput = document.getElementById('barcode');
+                        barcodeInput.style.background = '#d4edda';
+                        setTimeout(() => {
+                            barcodeInput.style.background = 'white';
+                        }, 500);
+                        
+                        console.log('✅ Barcode generatsiya qilindi:', barcode);
+                    } else {
+                        console.error('❌ Barcode generatsiya xatosi:', data.error);
+                        alert('Barcode yaratishda xatolik yuz berdi!');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Barcode so\'rovida xatolik:', error);
+                    alert('Barcode yaratishda xatolik yuz berdi!');
+                });
         }
 
         // Barcode chop etish (formadan)

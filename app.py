@@ -2078,6 +2078,49 @@ def check_barcode():
         }), 400
     except Exception as e:
         duration = time.time() - start_time
+
+
+@app.route('/api/generate-barcode', methods=['GET'])
+def generate_next_barcode():
+    """Keyingi barcode raqamini generatsiya qilish - tartib bo'yicha va bo'sh joylarni to'ldirish"""
+    try:
+        # Barcha mavjud barcodelarni olish (faqat raqamli va 8 ta xonalik)
+        products = Product.query.filter(
+            Product.barcode.isnot(None),
+            Product.barcode != ''
+        ).all()
+        
+        # Mavjud raqamli barcodelarni to'plash
+        existing_numbers = set()
+        for product in products:
+            barcode = product.barcode.strip()
+            # Faqat raqamli va 8 ta xonalik barcodelar
+            if barcode.isdigit() and len(barcode) == 8:
+                existing_numbers.add(int(barcode))
+        
+        # Agar hech qanday barcode bo'lmasa, 1 dan boshlash
+        if not existing_numbers:
+            next_barcode = "00000001"
+        else:
+            # Eng kichik bo'sh raqamni topish
+            next_number = 1
+            while next_number in existing_numbers:
+                next_number += 1
+            
+            # 8 ta xonali formatga keltirish
+            next_barcode = str(next_number).zfill(8)
+        
+        return jsonify({
+            'success': True,
+            'barcode': next_barcode
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Barcode generatsiya xatosi: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
         logger.error(f"❌ Xato ({duration:.2f}s): {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
