@@ -818,13 +818,13 @@
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">🔢 Miqdor:</label>
-                    <input type="number" id="modalQuantity" min="0.01" step="0.01" value="0" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <input type="number" id="modalQuantity" min="0.01" step="0.01" value="0" inputmode="decimal" lang="en" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">💵 Sotish narxi ($):</label>
-                    <input type="number" id="modalPriceUSD" step="0.01" value="0.00" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                    <input type="number" id="modalPriceUSD" step="0.01" value="0.00" inputmode="decimal" lang="en" onkeypress="if(event.key === 'Enter') confirmAddToCart()" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">💰 Sotish narxi (UZS):</label>
@@ -2569,12 +2569,11 @@
                     quantity = parseFloat(quantityText.replace(/[^0-9.]/g, '')) || 0;
                 }
                 
-                // Narxni olish - span ichidagi matnni parse qilish
-                const priceSpan = row.querySelector('td:nth-child(3) span:first-child');
+                // Narxni to'g'ridan-to'g'ri button'ning data-price atributidan olish
+                const priceButton = row.querySelector('.add-to-cart-btn');
                 let price = 0;
-                if (priceSpan) {
-                    const priceText = priceSpan.textContent.replace(/[^0-9.]/g, '');
-                    price = parseFloat(priceText) || 0;
+                if (priceButton) {
+                    price = parseFloat(priceButton.getAttribute('data-price')) || 0;
                 }
                 
                 const costPrice = parseFloat(row.getAttribute('data-cost-price')) || 0;
@@ -3001,8 +3000,15 @@
             modalQuantity.min = '0.01';
         }
         
-        modalPriceUSD.value = price.toFixed(2);
-        console.log('💵 modalPriceUSD.value o\'rnatildi:', modalPriceUSD.value);
+        // Narxni to'g'ri formatda o'rnatish (mobile uchun muhim)
+        const priceValue = parseFloat(price);
+        if (!isNaN(priceValue)) {
+            modalPriceUSD.value = priceValue.toFixed(2);
+            console.log('💵 modalPriceUSD.value o\'rnatildi:', modalPriceUSD.value, 'original price:', price);
+        } else {
+            modalPriceUSD.value = '0.00';
+            console.warn('⚠️ Noto\'g\'ri narx qiymati:', price);
+        }
         updateUZSPrice();
         
         // Validatsiyalarni o'rnatish
