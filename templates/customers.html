@@ -753,13 +753,13 @@
                 </div>
                 <span id="resultsInfo">Mijozlar yuklanmoqda...</span>
                 <div class="time-filter-buttons">
-                    <button class="time-filter-btn active" onclick="filterByTime('today')">Bugun</button>
+                    <button class="time-filter-btn" onclick="filterByTime('today')">Bugun</button>
                     <button class="time-filter-btn" onclick="filterByTime('week')">Bu hafta</button>
                     <button class="time-filter-btn" onclick="filterByTime('month')">Bu oy</button>
                     <button class="time-filter-btn" onclick="filterByTime('year')">Bu yil</button>
                 </div>
                 <div class="time-filter-buttons">
-                    <button class="analysis-filter-btn active" onclick="filterByAnalysis('count')">🔢 Savdo soni</button>
+                    <button class="analysis-filter-btn" onclick="filterByAnalysis('count')">🔢 Savdo soni</button>
                     <button class="analysis-filter-btn" onclick="filterByAnalysis('sum')">💰 Savdo summasi</button>
                     {% if session.role != 'sotuvchi' %}
                     <button class="analysis-filter-btn" onclick="filterByAnalysis('profit')">📊 Jami foyda</button>
@@ -1169,8 +1169,8 @@
     }
 
     // Savdo tahlili bo'yicha filtr
-    let currentAnalysisFilter = 'count'; // default: savdo soni
-    let currentTimeFilter = 'today'; // default: bugun
+    let currentAnalysisFilter = ''; // default: hech narsa tanlanmagan
+    let currentTimeFilter = ''; // default: hech narsa tanlanmagan
 
     function filterByAnalysis(type) {
         currentAnalysisFilter = type;
