@@ -2519,10 +2519,11 @@ function generatePaymentDetailsHTML(sale) {
     
     console.log('💰 USD qiymatlar:', { cashUSD, clickUSD, terminalUSD, debtUSD });
     
-    const cashUZS = sale.cash_amount || (cashUSD * rate);
-    const clickUZS = sale.click_amount || (clickUSD * rate);
-    const terminalUZS = sale.terminal_amount || (terminalUSD * rate);
-    const debtUZS = sale.debt_amount || (debtUSD * rate);
+    // UZS qiymatlarni faqat USD dan hisoblash (savdo saqlangan kundagi kurs bilan)
+    const cashUZS = Math.round(cashUSD * rate);
+    const clickUZS = Math.round(clickUSD * rate);
+    const terminalUZS = Math.round(terminalUSD * rate);
+    const debtUZS = Math.round(debtUSD * rate);
     
     const payments = [
         { name: '💵 Naqd pul', usd: cashUSD, uzs: cashUZS, isDebt: false },
