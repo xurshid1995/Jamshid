@@ -2205,7 +2205,7 @@ def api_add_product():
             for product_data in data['products']:
                 cost_price = Decimal(str(product_data['costPrice']))
                 sell_price = Decimal(str(product_data['sellPrice']))
-                quantity = product_data.get('quantity', 0)
+                quantity = Decimal(str(product_data.get('quantity', 0)))
                 logger.info(f"📊 Mahsulot: {product_data['name']}, Miqdor: {quantity}, Location: {product_data.get('locationValue', 'N/A')}")
 
                 # Validatsiya
