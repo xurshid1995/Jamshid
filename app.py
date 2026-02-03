@@ -2448,7 +2448,7 @@ def api_batch_products():
             logger.info(f"🔍 Location: type={location_type}, id={location_id} (raw: {location_id_raw})")
             name = product_data['name']
             barcode = product_data.get('barcode', None)  # Barcode olish
-            quantity = float(product_data['quantity'])
+            quantity = Decimal(str(product_data['quantity']))
             cost_price = Decimal(str(product_data['cost_price']))
             sell_price = Decimal(str(product_data['sell_price']))
             min_stock = int(float(product_data['min_stock']))
