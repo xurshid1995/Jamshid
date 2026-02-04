@@ -2675,14 +2675,23 @@ def get_product_history():
 # Mahsulot qidirish API
 @app.route('/api/search-product/<product_name>')
 def search_product(product_name):
-    """Mahsulot nomiga qarab joylashuvlarini topish (partial search)"""
+    """Mahsulot nomiga qarab joylashuvlarini topish (partial search with multiple words)"""
     try:
         logger.debug(f"🔍 Qidiruv so'rovi: '{product_name}'")
 
+        # Qisman so'zlar bilan qidirish - har bir so'z alohida
+        search_words = product_name.strip().split()
+        
+        # Birinchi so'z bo'yicha boshlang'ich query
+        query = Product.query
+        
+        # Har bir so'z uchun filtr qo'shish
+        for word in search_words:
+            if word:
+                query = query.filter(Product.name.ilike(f'%{word}%'))
+        
         # Optimized query - eager loading va limit
-        products = Product.query.filter(
-            Product.name.ilike(f'%{product_name}%')
-        ).options(
+        products = query.options(
             db.joinedload(Product.warehouse_stocks).joinedload(WarehouseStock.warehouse),
             db.joinedload(Product.store_stocks).joinedload(StoreStock.store)
         ).limit(10).all()  # Faqat birinchi 10 ta natija
