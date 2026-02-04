@@ -64,7 +64,7 @@
 
     .search-box input {
         width: 100%;
-        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        padding: 0.75rem 2.8rem 0.75rem 2.5rem;
         border: 2px solid #e9ecef;
         border-radius: 25px;
         font-size: 1rem;
@@ -955,31 +955,62 @@
 
     // Qidiruv inputini boshqarish va X tugmasini ko'rsatish/yashirish
     function handleSearchInput() {
+        updateClearButton();
+        searchCustomers();
+    }
+
+    // X tugmasini ko'rsatish/yashirish - qidiruv yoki filtr mavjud bo'lsa
+    function updateClearButton() {
         const searchInput = document.getElementById('customerSearch');
         const clearBtn = document.getElementById('clearSearchBtn');
         
-        // Agar matn bo'lsa, X tugmasini ko'rsatish
-        if (searchInput.value.trim().length > 0) {
+        // Agar qidiruv maydoni to'ldirilgan yoki biror filtr qo'llanilgan bo'lsa, X tugmasini ko'rsatish
+        const hasSearch = searchInput.value.trim().length > 0;
+        const hasStoreFilter = currentStoreFilter !== '';
+        const hasTimeFilter = currentTimeFilter !== '';
+        const hasAnalysisFilter = currentAnalysisFilter !== '';
+        
+        if (hasSearch || hasStoreFilter || hasTimeFilter || hasAnalysisFilter) {
             clearBtn.classList.add('show');
         } else {
             clearBtn.classList.remove('show');
         }
-        
-        // Filtrni qo'llash
-        searchCustomers();
     }
 
-    // Qidiruvni tozalash
+    // Qidiruvni tozalash va barcha filtrlarni bekor qilish
     function clearSearch() {
         const searchInput = document.getElementById('customerSearch');
         const clearBtn = document.getElementById('clearSearchBtn');
         
+        // Qidiruv maydonini tozalash
         searchInput.value = '';
         clearBtn.classList.remove('show');
         searchInput.focus();
         
-        // Filtrni qayta qo'llash (qidiruv bo'sh holatda)
-        searchCustomers();
+        // Barcha filtrlarni bekor qilish
+        currentStoreFilter = '';
+        currentTimeFilter = '';
+        currentAnalysisFilter = '';
+        
+        // Barcha tugmalardan active class ni olib tashlash
+        document.querySelectorAll('.store-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.time-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.analysis-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // "Hammasi" tugmasini aktiv qilish (dokonlar uchun)
+        const allBtn = document.getElementById('allStoresBtn');
+        if (allBtn) {
+            allBtn.classList.add('active');
+        }
+        
+        // Mijozlarni qayta yuklash
+        loadCustomers();
     }
 
     let currentStoreFilter = '';
@@ -1006,6 +1037,7 @@
             }
         }
         
+        updateClearButton();
         applyFilters();
     }
 
@@ -1028,6 +1060,7 @@
             return matchesSearch && matchesStore;
         });
         
+        updateClearButton();
         displayCustomers();
     }
 
@@ -1244,6 +1277,7 @@
         event.target.classList.add('active');
         
         // Mijozlarni qayta saralash
+        updateClearButton();
         applyFilters();
     }
 
@@ -1256,6 +1290,9 @@
             btn.classList.remove('active');
         });
         event.target.classList.add('active');
+        
+        // X tugmasini yangilash
+        updateClearButton();
         
         // Mijozlarni qayta yuklash (backend'dan filtr bilan)
         loadCustomers();
