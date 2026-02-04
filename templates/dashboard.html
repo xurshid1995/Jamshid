@@ -672,17 +672,17 @@ async function loadSalesChart(locationId = null, period = null, locationType = n
                                 const terminal = currentSalesData && currentSalesData.terminal_list ? currentSalesData.terminal_list[dataIndex] : 0;
                                 
                                 const exchangeRateTooltip = window.currentExchangeRate || 12500;
-                                const formattedAmount = Math.floor(savdoSummasi).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedAmount = savdoSummasi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedAmountUZS = Math.floor(savdoSummasi * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                                const formattedProfit = Math.floor(savdoFoydasi).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedProfit = savdoFoydasi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedProfitUZS = Math.floor(savdoFoydasi * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                                const formattedDebt = Math.floor(qarzSummasi).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedDebt = qarzSummasi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedDebtUZS = Math.floor(qarzSummasi * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                                const formattedCash = Math.floor(naqdPul).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedCash = naqdPul.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedCashUZS = Math.floor(naqdPul * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                                const formattedClick = Math.floor(click).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedClick = click.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedClickUZS = Math.floor(click * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                                const formattedTerminal = Math.floor(terminal).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                                const formattedTerminal = terminal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 const formattedTerminalUZS = Math.floor(terminal * exchangeRateTooltip).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
                                 
                                 const tooltipLines = [
@@ -744,7 +744,7 @@ async function loadSalesChart(locationId = null, period = null, locationType = n
                                 size: 11
                             },
                             callback: function(value, index, values) {
-                                return '$' + value.toLocaleString();
+                                return '$' + value.toFixed(2);
                             }
                         }
                     },
@@ -832,7 +832,7 @@ function updateStatistics(data) {
     
     // Formatlash va ko'rsatish
     document.getElementById('totalSales').textContent = totalSales.toLocaleString();
-    document.getElementById('totalAmount').textContent = Math.floor(totalAmount).toLocaleString() + '$';
+    document.getElementById('totalAmount').textContent = totalAmount.toFixed(2) + '$';
     document.getElementById('totalAmountUZS').textContent = Math.floor(totalAmount * exchangeRate).toLocaleString() + ' UZS';
     
     // To'lov turlarini ko'rsatish
@@ -840,22 +840,22 @@ function updateStatistics(data) {
         console.log('💰 To\'lov turlari yangilanmoqda:', data.payment_totals);
         const payments = [];
         if (data.payment_totals.cash > 0) {
-            const cashUSD = Math.floor(data.payment_totals.cash);
+            const cashUSD = data.payment_totals.cash.toFixed(2);
             const cashUZS = Math.floor(data.payment_totals.cash * exchangeRate);
             payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #28a745; font-size: 14px;">💵 Naqd: <strong>$${cashUSD}</strong><br><span style="font-size: 11px; color: #666;">${cashUZS.toLocaleString()} UZS</span></span>`);
         }
         if (data.payment_totals.click > 0) {
-            const clickUSD = Math.floor(data.payment_totals.click);
+            const clickUSD = data.payment_totals.click.toFixed(2);
             const clickUZS = Math.floor(data.payment_totals.click * exchangeRate);
             payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #007bff; font-size: 14px;">📱 Click: <strong>$${clickUSD}</strong><br><span style="font-size: 11px; color: #666;">${clickUZS.toLocaleString()} UZS</span></span>`);
         }
         if (data.payment_totals.terminal > 0) {
-            const termUSD = Math.floor(data.payment_totals.terminal);
+            const termUSD = data.payment_totals.terminal.toFixed(2);
             const termUZS = Math.floor(data.payment_totals.terminal * exchangeRate);
             payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #17a2b8; font-size: 14px;">💳 Terminal: <strong>$${termUSD}</strong><br><span style="font-size: 11px; color: #666;">${termUZS.toLocaleString()} UZS</span></span>`);
         }
         if (data.payment_totals.debt > 0) {
-            const debtUSD = Math.floor(data.payment_totals.debt);
+            const debtUSD = data.payment_totals.debt.toFixed(2);
             const debtUZS = Math.floor(data.payment_totals.debt * exchangeRate);
             payments.push(`<span style="display: inline-block; background: #f8f9fa; padding: 4px 10px; margin-right: 8px; border-radius: 4px; border-left: 3px solid #dc3545; font-size: 14px;">📝 Qarz: <strong>$${debtUSD}</strong><br><span style="font-size: 11px; color: #666;">${debtUZS.toLocaleString()} UZS</span></span>`);
         }
@@ -869,7 +869,7 @@ function updateStatistics(data) {
     
     // Foyda faqat sotuvchi bo'lmasa yangilanadi
     if (userRole !== 'sotuvchi') {
-        document.getElementById('totalProfit').textContent = Math.floor(totalProfit).toLocaleString() + '$';
+        document.getElementById('totalProfit').textContent = totalProfit.toFixed(2) + '$';
         document.getElementById('totalProfitUZS').textContent = Math.floor(totalProfit * exchangeRate).toLocaleString() + ' UZS';
     }
     
