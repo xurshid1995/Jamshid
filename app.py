@@ -7916,16 +7916,16 @@ def get_customers():
         now = datetime.now()
         
         # Vaqt oralig'ini aniqlash
-        if time_filter == 'today':
-            start_date = datetime(now.year, now.month, now.day)
-        elif time_filter == 'week':
-            start_date = now - timedelta(days=7)
-        elif time_filter == 'month':
-            start_date = datetime(now.year, now.month, 1)
-        elif time_filter == 'year':
-            start_date = datetime(now.year, 1, 1)
-        else:  # 'all'
-            start_date = None
+        start_date = None
+        if time_filter and time_filter != 'all':
+            if time_filter == 'today':
+                start_date = datetime(now.year, now.month, now.day)
+            elif time_filter == 'week':
+                start_date = now - timedelta(days=7)
+            elif time_filter == 'month':
+                start_date = datetime(now.year, now.month, 1)
+            elif time_filter == 'year':
+                start_date = datetime(now.year, 1, 1)
 
         result = []
         for customer in customers:
@@ -7939,6 +7939,10 @@ def get_customers():
                 
                 sales = sales_query.all()
                 total_sales = len(sales)
+                
+                # Agar vaqt filtri mavjud bo'lsa (va bo'sh emas), faqat o'sha vaqtda savdo qilgan mijozlarni ko'rsatish
+                if start_date and total_sales == 0:
+                    continue  # Bu mijozni o'tkazib yuborish
                 
                 # Total amount va profit ni hisoblash (allaqachon USD da)
                 total_amount = 0
