@@ -86,6 +86,37 @@
         font-size: 1rem;
     }
 
+    .search-box .clear-search {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.2s ease;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .search-box .clear-search:hover {
+        background: #c0392b;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .search-box .clear-search.show {
+        display: flex;
+    }
+
     .add-customer-btn {
         background: #28a745;
         color: white;
@@ -749,7 +780,8 @@
             <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: nowrap;">
                 <div class="search-box" style="flex: 1 1 auto; max-width: 450px; min-width: 250px;">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="customerSearch" placeholder="Mijozlarni qidirish..." oninput="searchCustomers()">
+                    <input type="text" id="customerSearch" placeholder="Mijozlarni qidirish..." oninput="handleSearchInput()">
+                    <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()" title="Qidiruvni tozalash">✕</button>
                 </div>
                 <span id="resultsInfo">Mijozlar yuklanmoqda...</span>
                 <div class="time-filter-buttons">
@@ -919,6 +951,35 @@
     // Mijozlarni qidirish va filtrash
     function searchCustomers() {
         applyFilters();
+    }
+
+    // Qidiruv inputini boshqarish va X tugmasini ko'rsatish/yashirish
+    function handleSearchInput() {
+        const searchInput = document.getElementById('customerSearch');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        
+        // Agar matn bo'lsa, X tugmasini ko'rsatish
+        if (searchInput.value.trim().length > 0) {
+            clearBtn.classList.add('show');
+        } else {
+            clearBtn.classList.remove('show');
+        }
+        
+        // Filtrni qo'llash
+        searchCustomers();
+    }
+
+    // Qidiruvni tozalash
+    function clearSearch() {
+        const searchInput = document.getElementById('customerSearch');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        
+        searchInput.value = '';
+        clearBtn.classList.remove('show');
+        searchInput.focus();
+        
+        // Filtrni qayta qo'llash (qidiruv bo'sh holatda)
+        searchCustomers();
     }
 
     let currentStoreFilter = '';
