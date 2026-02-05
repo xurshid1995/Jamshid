@@ -3970,13 +3970,21 @@
                 
                 if (matchingStock && modalAvailable && modalQuantity) {
                     const stockQuantity = matchingStock.quantity || 0;
+                    const unitType = product.unit_type || 'dona';
+                    const unitText = unitType === 'litr' ? 'L' : 'dona';
+                    const formattedQuantity = unitType === 'litr' 
+                        ? `${parseFloat(stockQuantity).toFixed(2)} ${unitText}`
+                        : (stockQuantity % 1 === 0 ? `${Math.floor(stockQuantity)} ${unitText}` : `${parseFloat(stockQuantity).toFixed(1)} ${unitText}`);
+                    
                     console.log('📊 Modal stock ma\'lumoti:', {
                         product_id: item.id,
                         product_name: item.name,
                         database_stock: stockQuantity,
+                        unit_type: unitType,
+                        formatted_display: formattedQuantity,
                         editing_mode: true
                     });
-                    modalAvailable.value = stockQuantity;
+                    modalAvailable.value = formattedQuantity;
                     modalQuantity.max = stockQuantity;
                 }
             }
@@ -4019,7 +4027,25 @@
         const modalAvailableElement = getActiveTabElement('modalAvailable');
         let availableQuantity = 0;
         if (modalAvailableElement && modalAvailableElement.value) {
-            availableQuantity = parseInt(modalAvailableElement.value) || 0;
+            // String'dan raqamni extract qilish (masalan: "100 dona" -> 100)
+            const match = modalAvailableElement.value.match(/[\d.]+/);
+            if (match) {
+                availableQuantity = parseFloat(match[0]) || 0;
+            }
+        }
+        
+        // unit_type ni ham qo'shish
+        let unitType = 'dona';
+        try {
+            const response2 = await fetch(`/api/products?location=${locationValue}`);
+            const data2 = await response2.json();
+            const products2 = Array.isArray(data2) ? data2 : (data2.products || []);
+            const product2 = products2.find(p => p.id === item.id);
+            if (product2 && product2.unit_type) {
+                unitType = product2.unit_type;
+            }
+        } catch (error) {
+            console.error('Unit type olishda xatolik:', error);
         }
         
         currentProduct = { 
@@ -4027,7 +4053,8 @@
             name: item.name, 
             available: availableQuantity,
             price: item.priceUSD,
-            costPrice: costPrice
+            costPrice: costPrice,
+            unitType: unitType
         };
         
         console.log('✅ currentProduct o\'rnatildi:', currentProduct);
