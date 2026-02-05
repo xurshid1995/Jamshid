@@ -10975,10 +10975,23 @@ def monitoring_status():
             func.date(Sale.sale_date) == func.current_date()
         ).scalar()
         
-        # Active users (logged in last hour)
-        active_users = db.session.query(func.count(User.id)).filter(
+        # Active users - oxirgi 15 daqiqada activity ko'rsatgan foydalanuvchilar
+        # Session-based tracking: oxirgi 15 daqiqada biror savdo qilgan yoki login qilgan
+        from datetime import timedelta
+        fifteen_minutes_ago = get_tashkent_time() - timedelta(minutes=15)
+        
+        # Oxirgi 15 daqiqada savdo qilgan unique userlar
+        active_users_sales = db.session.query(func.count(func.distinct(Sale.user_id))).filter(
+            Sale.sale_date >= fifteen_minutes_ago,
+            Sale.user_id.isnot(None)
+        ).scalar() or 0
+        
+        # Umumiy faol foydalanuvchilar (system'da enabled)
+        total_active_users = db.session.query(func.count(User.id)).filter(
             User.is_active == True
-        ).scalar()
+        ).scalar() or 0
+        
+        active_users = active_users_sales  # Real-time active users
         
         # Table count
         table_count = db.session.execute(text(

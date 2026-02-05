@@ -350,6 +350,16 @@
             <div class="status-value" id="todaySales">--</div>
             <div class="status-label">Total transactions</div>
         </div>
+        
+        <!-- Active Users -->
+        <div class="status-card healthy">
+            <div class="status-header">
+                <div class="status-title">👥 Active Users</div>
+                <span class="status-icon">🟢</span>
+            </div>
+            <div class="status-value" id="activeUsersCard">--</div>
+            <div class="status-label">Last 15 minutes</div>
+        </div>
     </div>
     
     <!-- Detailed Metrics -->
@@ -367,7 +377,7 @@
                     <span class="metric-value" id="totalSales">--</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Active Users</span>
+                    <span class="metric-label">Active Users (15 min)</span>
                     <span class="metric-value" id="activeUsers">--</span>
                 </div>
             </div>
@@ -473,10 +483,14 @@ function updateDashboard(data) {
     // Today's Sales
     document.getElementById('todaySales').textContent = data.stats.today_sales || '--';
     
-    // Detailed Metrics
+    // Active Users - ikkala joyda ham
+    const activeUsersCount = data.stats.active_users || 0;
+    document.getElementById('activeUsersCard').textContent = activeUsersCount;
+    document.getElementById('activeUsers').textContent = activeUsersCount;
+    
+    // Detailed Metrics - System
     document.getElementById('totalProducts').textContent = data.stats.total_products || '--';
     document.getElementById('totalSales').textContent = data.stats.total_sales || '--';
-    document.getElementById('activeUsers').textContent = data.stats.active_users || '--';
     
     // Performance Metrics (mock data for now)
     document.getElementById('avgResponseTime').textContent = '45 ms';
