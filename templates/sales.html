@@ -3315,8 +3315,10 @@
             // Farq bo'lsa, stock'ni yangilash
             if (quantityDiff !== 0) {
                 // Agar ortsa, qo'shimcha miqdor mavjudligini tekshirish
-                if (quantityDiff > 0 && quantityDiff > currentProduct.available) {
-                    alert(`Stokda faqat ${currentProduct.available} dona qo\'shimcha mahsulot mavjud!`);
+                // Database stock ishlatamiz (korzina miqdori emas)
+                const databaseStock = currentProduct.databaseStock || 0;
+                if (quantityDiff > 0 && quantityDiff > databaseStock) {
+                    alert(`Stokda faqat ${databaseStock} dona qo\'shimcha mahsulot mavjud!`);
                     return;
                 }
                 
@@ -3938,22 +3940,29 @@
                 
                 if (matchingStock && modalAvailable && modalQuantity) {
                     const stockQuantity = matchingStock.quantity || 0;
+                    // Haqiqiy mavjud miqdor = database stock + korzinada allaqachon bor
+                    const realAvailableQuantity = stockQuantity + item.quantity;
                     const unitType = product.unit_type || 'dona';
                     const unitText = unitType === 'litr' ? 'L' : 'dona';
                     const formattedQuantity = unitType === 'litr' 
-                        ? `${parseFloat(stockQuantity).toFixed(2)} ${unitText}`
-                        : (stockQuantity % 1 === 0 ? `${Math.floor(stockQuantity)} ${unitText}` : `${parseFloat(stockQuantity).toFixed(1)} ${unitText}`);
+                        ? `${parseFloat(realAvailableQuantity).toFixed(2)} ${unitText}`
+                        : (realAvailableQuantity % 1 === 0 ? `${Math.floor(realAvailableQuantity)} ${unitText}` : `${parseFloat(realAvailableQuantity).toFixed(1)} ${unitText}`);
                     
                     console.log('📊 Modal stock ma\'lumoti:', {
                         product_id: item.id,
                         product_name: item.name,
                         database_stock: stockQuantity,
+                        cart_quantity: item.quantity,
+                        real_available: realAvailableQuantity,
                         unit_type: unitType,
                         formatted_display: formattedQuantity,
                         editing_mode: true
                     });
                     modalAvailable.value = formattedQuantity;
-                    modalQuantity.max = stockQuantity;
+                    modalQuantity.max = realAvailableQuantity;
+                    
+                    // Database stock ni window ga saqlash (keyinchalik ishlatish uchun)
+                    window.editingDatabaseStock = stockQuantity;
                 }
             }
         } catch (error) {
@@ -4016,10 +4025,14 @@
             console.error('Unit type olishda xatolik:', error);
         }
         
+        // Database stock ni olish
+        const databaseStock = window.editingDatabaseStock || 0;
+        
         currentProduct = { 
             id: item.id, 
             name: item.name, 
-            available: availableQuantity,
+            available: availableQuantity, // To'liq mavjud (modal display uchun)
+            databaseStock: databaseStock,  // Faqat database stock (tekshirish uchun)
             price: item.priceUSD,
             costPrice: costPrice,
             unitType: unitType
