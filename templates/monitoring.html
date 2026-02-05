@@ -426,12 +426,16 @@
     </div>
     
     <!-- Recent Errors -->
-    <div class="chart-container" id="errorsContainer" style="display: none;">
+    <div class="chart-container" id="errorsContainer">
         <h3 style="margin-top: 0; margin-bottom: 15px; color: #F44336; display: flex; align-items: center; gap: 10px;">
             <span>⚠️ Oxirgi Xatoliklar</span>
             <span style="font-size: 14px; font-weight: normal; color: #666;">(Eng so'nggi 20 ta)</span>
         </h3>
-        <ul class="error-list" id="errorsList"></ul>
+        <div id="errorsList" style="min-height: 60px;">
+            <div style="text-align: center; padding: 30px; color: #999;">
+                Xatolik topilmadi ✅
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -515,32 +519,35 @@ function updateDashboard(data) {
     document.getElementById('avgQueryTime').textContent = '12 ms';
     
     // Recent Errors
+    const errorsList = document.getElementById('errorsList');
     if (data.recent_errors && data.recent_errors.length > 0) {
-        document.getElementById('errorsContainer').style.display = 'block';
-        const errorsList = document.getElementById('errorsList');
-        errorsList.innerHTML = data.recent_errors.map(err => {
-            const levelColor = err.level === 'CRITICAL' ? '#d32f2f' : 
-                              err.level === 'WARNING' ? '#f57c00' : '#e64a19';
-            return `<li class="error-item">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
-                    <strong style="color: ${levelColor};">${err.time}</strong>
-                    <span style="background: ${levelColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">${err.level}</span>
-                </div>
-                <div style="color: #333; margin-bottom: 5px;">${escapeHtml(err.message)}</div>
-                <div style="font-size: 11px; color: #666; display: flex; gap: 15px; flex-wrap: wrap;">
-                    ${err.endpoint ? `<span>📍 ${err.method} ${err.endpoint}</span>` : ''}
-                    ${err.user ? `<span>👤 ${err.user}</span>` : ''}
-                    ${err.ip ? `<span>🌐 ${err.ip}</span>` : ''}
-                </div>
-            </li>`;
-        }).join('');
+        const errorsHtml = '<ul class="error-list" style="margin: 0; padding: 0;">' + 
+            data.recent_errors.map(err => {
+                const levelColor = err.level === 'CRITICAL' ? '#d32f2f' : 
+                                  err.level === 'WARNING' ? '#f57c00' : '#e64a19';
+                return `<li class="error-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
+                        <strong style="color: ${levelColor};">${err.time}</strong>
+                        <span style="background: ${levelColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">${err.level}</span>
+                    </div>
+                    <div style="color: #333; margin-bottom: 5px;">${escapeHtml(err.message)}</div>
+                    <div style="font-size: 11px; color: #666; display: flex; gap: 15px; flex-wrap: wrap;">
+                        ${err.endpoint ? `<span>📍 ${err.method} ${err.endpoint}</span>` : ''}
+                        ${err.user ? `<span>👤 ${err.user}</span>` : ''}
+                        ${err.ip ? `<span>🌐 ${err.ip}</span>` : ''}
+                    </div>
+                </li>`;
+            }).join('') + '</ul>';
+        errorsList.innerHTML = errorsHtml;
         
         // Error Rate ni hisoblash
-        const errorRate = data.recent_errors.length > 0 ? 
-            ((data.recent_errors.length / 100) * 100).toFixed(1) + '%' : '0%';
+        const errorRate = ((data.recent_errors.length / 100) * 100).toFixed(1) + '%';
         document.getElementById('errorRate').textContent = errorRate;
     } else {
-        document.getElementById('errorsContainer').style.display = 'none';
+        errorsList.innerHTML = `<div style="text-align: center; padding: 30px; color: #4CAF50; font-size: 16px;">
+            ✅ Xatolik topilmadi!
+            <div style="font-size: 13px; color: #999; margin-top: 10px;">Barcha tizimlar normal ishlayapti</div>
+        </div>`;
         document.getElementById('errorRate').textContent = '0%';
     }
 }
