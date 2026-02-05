@@ -3969,8 +3969,15 @@
                 });
                 
                 if (matchingStock && modalAvailable && modalQuantity) {
-                    modalAvailable.value = matchingStock.quantity || 0;
-                    modalQuantity.max = matchingStock.quantity || 0;
+                    const stockQuantity = matchingStock.quantity || 0;
+                    console.log('📊 Modal stock ma\'lumoti:', {
+                        product_id: item.id,
+                        product_name: item.name,
+                        database_stock: stockQuantity,
+                        editing_mode: true
+                    });
+                    modalAvailable.value = stockQuantity;
+                    modalQuantity.max = stockQuantity;
                 }
             }
         } catch (error) {
