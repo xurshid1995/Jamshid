@@ -10981,9 +10981,9 @@ def monitoring_status():
         fifteen_minutes_ago = get_tashkent_time() - timedelta(minutes=15)
         
         # Oxirgi 15 daqiqada savdo qilgan unique userlar
-        active_users_sales = db.session.query(func.count(func.distinct(Sale.user_id))).filter(
+        active_users_sales = db.session.query(func.count(func.distinct(Sale.seller_id))).filter(
             Sale.sale_date >= fifteen_minutes_ago,
-            Sale.user_id.isnot(None)
+            Sale.seller_id.isnot(None)
         ).scalar() or 0
         
         # Umumiy faol foydalanuvchilar (system'da enabled)
