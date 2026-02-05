@@ -655,8 +655,17 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(errorData)
-                }).catch(err => {
-                    console.error('Failed to log error to backend:', err);
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('✅ Error logged to database with ID:', data.id);
+                    } else {
+                        console.error('❌ Failed to log error:', data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Failed to send error to backend:', err);
                 });
             } catch (e) {
                 // Error logging xatosi bo'lsa, console'ga yozish

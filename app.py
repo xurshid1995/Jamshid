@@ -11114,9 +11114,12 @@ def monitoring_status():
 
 @app.route('/api/log-frontend-error', methods=['POST'])
 def log_frontend_error():
-    """Frontend JavaScript xatoliklarni saqlash"""
+    """Frontend JavaScript xatoliklarni saqlash - public endpoint"""
     try:
         data = request.get_json()
+        if not data:
+            logger.error("No JSON data received in log_frontend_error")
+            return jsonify({'success': False, 'error': 'No data'}), 400
         
         message = data.get('message', 'Unknown error')
         stack = data.get('stack', '')
@@ -11124,13 +11127,16 @@ def log_frontend_error():
         line = data.get('line', 0)
         column = data.get('column', 0)
         
+        logger.info(f"Frontend error received: {message[:100]}")
+        
         # Current user
         user_id = None
         try:
             if 'user_id' in session:
                 user_id = session['user_id']
-        except:
-            pass
+                logger.info(f"Frontend error from user_id: {user_id}")
+        except Exception as e:
+            logger.warning(f"Could not get user_id: {str(e)}")
         
         # IP address
         ip_address = request.remote_addr
@@ -11151,10 +11157,13 @@ def log_frontend_error():
         db.session.add(error_log)
         db.session.commit()
         
-        return jsonify({'success': True}), 200
+        logger.info(f"Frontend error saved to database with ID: {error_log.id}")
+        return jsonify({'success': True, 'id': error_log.id}), 200
     except Exception as e:
         logger.error(f"Failed to log frontend error: {str(e)}")
-        return jsonify({'success': False}), 500
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/health', methods=['GET'])
