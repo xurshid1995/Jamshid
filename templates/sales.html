@@ -3193,7 +3193,28 @@
     }
     
     // Modal yopish
-    function closeModal() {
+    async function closeModal() {
+        // Agar tahrirlash rejimida bo'lsak va stock qaytarilgan bo'lsa, uni yana rezerv qilish
+        if (window.editingStockReturned && window.editingCartIndex !== undefined) {
+            console.log('⚠️ Tahrirlash bekor qilindi, stock\'ni yana rezerv qilamiz:', window.editingStockReturned.quantity, 'dona');
+            try {
+                const response = await fetch('/api/reserve-stock', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(window.editingStockReturned)
+                });
+                
+                const result = await response.json();
+                if (!result.success) {
+                    console.error('❌ Stock\'ni yana rezerv qilishda xatolik:', result.error);
+                } else {
+                    console.log('✅ Stock yana rezerv qilindi (tahrirlash bekor qilindi):', window.editingStockReturned.quantity, 'dona');
+                }
+            } catch (error) {
+                console.error('❌ Stock rezerv qilish xatosi:', error);
+            }
+        }
+        
         const quantityModal = getActiveTabElement('quantityModal');
         if (quantityModal) {
             quantityModal.style.display = 'none';
@@ -3205,6 +3226,7 @@
         
         currentProduct = null;
         delete window.editingCartIndex; // Tahrirlash rejimini tozalash
+        delete window.editingStockReturned; // Stock flag'ini tozalash
         
         // Warning xabarini yashirish
         const warningDiv = getActiveTabElement('priceWarning');
@@ -3337,6 +3359,7 @@
             cart[window.editingCartIndex].priceUZS = priceUZS;
             
             delete window.editingCartIndex;
+            delete window.editingStockReturned; // Tahrirlash muvaffaqiyatli, flag'ni tozalash
             updateCart();
             closeModal();
             
@@ -3892,6 +3915,13 @@
                 console.error('Stokka qaytarishda xatolik:', result.error);
             } else {
                 console.log('✅ Tahrirlash uchun stokka qaytarildi:', item.quantity, 'dona');
+                // Stock qaytarilganini belgilash (modal yopilganda yana rezerv qilish uchun)
+                window.editingStockReturned = {
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    location_id: selectedLocationId,
+                    location_type: selectedLocationType
+                };
             }
         } catch (error) {
             console.error('Stok qaytarish xatosi:', error);
