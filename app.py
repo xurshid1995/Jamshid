@@ -12852,6 +12852,11 @@ def handle_exception(e):
     """Barcha xatoliklarni database'ga saqlash"""
     try:
         import traceback
+        from werkzeug.exceptions import HTTPException
+        
+        # HTTP xatoliklarni (404, 500, etc) o'tkazib yuborish - ular juda ko'p
+        if isinstance(e, HTTPException) and e.code in [404, 401, 403]:
+            return e
         
         # Request ma'lumotlarini olish
         endpoint = request.endpoint if request else None
