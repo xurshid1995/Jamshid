@@ -10935,6 +10935,54 @@ def get_currency_rate():
 
 
 # ================== HEALTH CHECK & MONITORING ==================
+def get_recent_errors(limit=10):
+    """Oxirgi xatoliklarni olish - journalctl log'laridan"""
+    try:
+        import subprocess
+        from datetime import timedelta
+        
+        # Oxirgi 1 soatdagi ERROR level log'larni olish
+        result = subprocess.run(
+            ['journalctl', '-u', 'jamshid.service', '--since', '1 hour ago', 
+             '-p', 'err', '-n', str(limit), '--no-pager', '-o', 'json'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode != 0:
+            return []
+        
+        errors = []
+        for line in result.stdout.strip().split('\n'):
+            if not line:
+                continue
+            try:
+                import json
+                log_entry = json.loads(line)
+                message = log_entry.get('MESSAGE', '')
+                timestamp = log_entry.get('__REALTIME_TIMESTAMP', '')
+                
+                # Timestamp'ni o'qiladigan formatga o'zgartirish
+                if timestamp:
+                    from datetime import datetime
+                    ts = datetime.fromtimestamp(int(timestamp) / 1000000)
+                    time_str = ts.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    time_str = 'Unknown'
+                
+                errors.append({
+                    'time': time_str,
+                    'message': message[:200]  # Birinchi 200 belgini olish
+                })
+            except:
+                continue
+        
+        return errors
+    except Exception as e:
+        logger.error(f"Error fetching recent errors: {str(e)}")
+        return []
+
 @app.route('/monitoring')
 @role_required('admin')
 def monitoring_dashboard():
@@ -11036,7 +11084,7 @@ def monitoring_status():
                     'today_sales': today_sales,
                     'active_users': active_users
                 },
-                'errors': []  # Could add recent errors from logs
+                'recent_errors': get_recent_errors()
             }
         }), 200
         
