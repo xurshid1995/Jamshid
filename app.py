@@ -11112,6 +11112,51 @@ def monitoring_status():
         }), 500
 
 
+@app.route('/api/log-frontend-error', methods=['POST'])
+def log_frontend_error():
+    """Frontend JavaScript xatoliklarni saqlash"""
+    try:
+        data = request.get_json()
+        
+        message = data.get('message', 'Unknown error')
+        stack = data.get('stack', '')
+        url = data.get('url', '')
+        line = data.get('line', 0)
+        column = data.get('column', 0)
+        
+        # Current user
+        user_id = None
+        try:
+            if 'user_id' in session:
+                user_id = session['user_id']
+        except:
+            pass
+        
+        # IP address
+        ip_address = request.remote_addr
+        
+        # Traceback formatda saqlash
+        traceback_text = f"URL: {url}\nLine: {line}, Column: {column}\n\n{stack}"
+        
+        # Database'ga saqlash
+        error_log = ErrorLog(
+            level='ERROR',
+            message=f"[Frontend] {message}"[:500],
+            traceback=traceback_text[:2000],
+            endpoint=url,
+            method='FRONTEND',
+            user_id=user_id,
+            ip_address=ip_address
+        )
+        db.session.add(error_log)
+        db.session.commit()
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logger.error(f"Failed to log frontend error: {str(e)}")
+        return jsonify({'success': False}), 500
+
+
 @app.route('/health', methods=['GET'])
 def public_health_check():
     """Public health check - monitoring uchun"""

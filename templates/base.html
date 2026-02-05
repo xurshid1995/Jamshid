@@ -618,6 +618,53 @@
         document.head.appendChild(style);
     </script>
 
+    <!-- Global Error Handler - Frontend xatoliklarni log qilish -->
+    <script>
+        // JavaScript error handler
+        window.addEventListener('error', function(event) {
+            logFrontendError({
+                message: event.message || 'Unknown error',
+                stack: event.error ? event.error.stack : '',
+                url: event.filename || window.location.href,
+                line: event.lineno || 0,
+                column: event.colno || 0
+            });
+        });
+        
+        // Promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            logFrontendError({
+                message: event.reason ? event.reason.message || event.reason : 'Unhandled promise rejection',
+                stack: event.reason ? event.reason.stack || '' : '',
+                url: window.location.href,
+                line: 0,
+                column: 0
+            });
+        });
+        
+        // Frontend errorni backend'ga yuborish
+        function logFrontendError(errorData) {
+            try {
+                // Console'ga ham yozish
+                console.error('Frontend error logged:', errorData);
+                
+                // Backend'ga yuborish
+                fetch('/api/log-frontend-error', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(errorData)
+                }).catch(err => {
+                    console.error('Failed to log error to backend:', err);
+                });
+            } catch (e) {
+                // Error logging xatosi bo'lsa, console'ga yozish
+                console.error('Error in logFrontendError:', e);
+            }
+        }
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
