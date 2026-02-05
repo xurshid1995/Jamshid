@@ -65,29 +65,6 @@
         z-index: 1;
     }
 
-    /* Traktor animatsiyasi */
-    .tractor-container {
-        position: fixed;
-        bottom: 20px;
-        left: -200px;
-        z-index: 1000;
-        animation: moveTractor 10s linear infinite;
-    }
-
-    @keyframes moveTractor {
-        0% {
-            left: -200px;
-        }
-        100% {
-            left: calc(100% + 200px);
-        }
-    }
-
-    .tractor {
-        display: inline-block;
-        font-size: 40px;
-    }
-
     .login-header {
         margin-bottom: 2rem;
     }
@@ -287,11 +264,6 @@
     </style>
 </head>
 <body>
-    <!-- Traktor animatsiyasi -->
-    <div class="tractor-container">
-        <span class="tractor">🚜🛒🛒🛒</span>
-    </div>
-
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
