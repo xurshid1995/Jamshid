@@ -11,6 +11,16 @@ CREATE TABLE IF NOT EXISTS error_logs (
     ip_address VARCHAR(50)
 );
 
+-- Table owner'ini o'zgartirish
+ALTER TABLE error_logs OWNER TO sayt_user;
+
+-- Sequence owner'ini o'zgartirish
+ALTER SEQUENCE error_logs_id_seq OWNER TO sayt_user;
+
+-- Ruxsatlar
+GRANT ALL PRIVILEGES ON TABLE error_logs TO sayt_user;
+GRANT USAGE, SELECT ON SEQUENCE error_logs_id_seq TO sayt_user;
+
 -- Index'lar - tezkor qidirish uchun
 CREATE INDEX IF NOT EXISTS idx_error_logs_timestamp ON error_logs(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_error_logs_level ON error_logs(level);
