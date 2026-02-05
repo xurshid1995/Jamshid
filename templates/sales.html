@@ -3921,11 +3921,23 @@
         // Mavjud miqdorni olish (stokka qaytarilgandan keyin)
         const locationValue = locationSelect.value;
         const [type, id] = locationValue.split('_');
+        
+        // Product ma'lumotlarini bir martta olish (keyinchalik costPrice uchun ham kerak)
+        let product = null;
+        let costPrice = 0;
+        let unitType = 'dona';
+        
         try {
-            const response = await fetch(`/api/products?location=${locationValue}`);
+            // To'g'ridan mahsulotni ID bo'yicha olish (pagination muammosisiz)
+            const response = await fetch(`/api/products/${item.id}`);
             const data = await response.json();
-            const products = Array.isArray(data) ? data : (data.products || []);
-            const product = products.find(p => p.id === item.id);
+            product = data.success ? data.product : null;
+            
+            // Cost price va unit type ni saqlab qo'yish
+            if (product) {
+                costPrice = product.cost_price || 0;
+                unitType = product.unit_type || 'dona';
+            }
             
             if (product && product.stocks && product.stocks.length > 0) {
                 const locationId = parseInt(id);
@@ -3963,11 +3975,26 @@
                     
                     // Database stock ni window ga saqlash (keyinchalik ishlatish uchun)
                     window.editingDatabaseStock = stockQuantity;
+                } else {
+                    // Stock topilmadi - korzina miqdorini ko'rsatish
+                    console.warn('⚠️ Stock topilmadi, korzina miqdorini ko\'rsatish');
+                    if (modalAvailable) modalAvailable.value = `${item.quantity} dona`;
+                    if (modalQuantity) modalQuantity.max = item.quantity;
+                    window.editingDatabaseStock = 0;
                 }
+            } else {
+                // Product topilmadi - korzina miqdorini ko'rsatish
+                console.warn('⚠️ Product topilmadi database\'da');
+                if (modalAvailable) modalAvailable.value = `${item.quantity} dona`;
+                if (modalQuantity) modalQuantity.max = item.quantity;
+                window.editingDatabaseStock = 0;
             }
         } catch (error) {
             console.error('Mavjud miqdorni olishda xatolik:', error);
-            if (modalAvailable) modalAvailable.value = 0;
+            // Xatolik bo'lsa korzina miqdorini ko'rsatish
+            if (modalAvailable) modalAvailable.value = `${item.quantity} dona`;
+            if (modalQuantity) modalQuantity.max = item.quantity;
+            window.editingDatabaseStock = 0;
         }
         
         // Korzinada qancha bo'lsa o'sha miqdorni ko'rsatish
@@ -3984,22 +4011,6 @@
             }
         }, 100);
         
-        // currentProduct ni o'rnatish (costPrice ham qo'shish)
-        // Tan narxni mahsulot ma'lumotlaridan olish
-        let costPrice = 0;
-        try {
-            const locationValue = locationSelect.value;
-            const response = await fetch(`/api/products?location=${locationValue}`);
-            const data = await response.json();
-            const products = Array.isArray(data) ? data : (data.products || []);
-            const product = products.find(p => p.id === item.id);
-            if (product && product.cost_price) {
-                costPrice = product.cost_price;
-            }
-        } catch (error) {
-            console.error('Tan narxni olishda xatolik:', error);
-        }
-        
         // modalAvailable elementini tab-aware usulda olish
         const modalAvailableElement = getActiveTabElement('modalAvailable');
         let availableQuantity = 0;
@@ -4009,20 +4020,6 @@
             if (match) {
                 availableQuantity = parseFloat(match[0]) || 0;
             }
-        }
-        
-        // unit_type ni ham qo'shish
-        let unitType = 'dona';
-        try {
-            const response2 = await fetch(`/api/products?location=${locationValue}`);
-            const data2 = await response2.json();
-            const products2 = Array.isArray(data2) ? data2 : (data2.products || []);
-            const product2 = products2.find(p => p.id === item.id);
-            if (product2 && product2.unit_type) {
-                unitType = product2.unit_type;
-            }
-        } catch (error) {
-            console.error('Unit type olishda xatolik:', error);
         }
         
         // Database stock ni olish

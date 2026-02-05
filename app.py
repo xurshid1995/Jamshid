@@ -1606,6 +1606,30 @@ def api_products():
     })
 
 
+# API endpoint - bitta mahsulotni ID bo'yicha olish (edit mode uchun)
+@app.route('/api/products/<int:product_id>')
+@role_required('admin', 'kassir', 'sotuvchi')
+def api_product_by_id(product_id):
+    """Bitta mahsulotni ID bo'yicha qaytarish - pagination muammosisiz"""
+    try:
+        # Product'ni eager loading bilan olish
+        product = Product.query.options(
+            db.joinedload(Product.warehouse_stocks),
+            db.joinedload(Product.store_stocks)
+        ).filter_by(id=product_id).first()
+        
+        if not product:
+            return jsonify({'error': 'Mahsulot topilmadi', 'success': False}), 404
+        
+        return jsonify({
+            'success': True,
+            'product': product.to_dict()
+        })
+    except Exception as e:
+        logger.error(f"❌ Mahsulotni olishda xatolik (ID={product_id}): {str(e)}")
+        return jsonify({'error': str(e), 'success': False}), 500
+
+
 # API endpoint - dokon va omborlar ro'yxati
 @app.route('/api/locations')
 def api_locations():
