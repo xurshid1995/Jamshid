@@ -12901,6 +12901,45 @@ def api_send_bulk_telegram():
 
 
 # ================== ERROR HANDLERS ==================
+@app.errorhandler(405)
+def handle_method_not_allowed(e):
+    """405 Method Not Allowed xatolarini batafsil log qilish"""
+    try:
+        endpoint = request.endpoint if request else 'Unknown'
+        method = request.method if request else 'Unknown'
+        url = request.url if request else 'Unknown'
+        ip_address = request.remote_addr if request else 'Unknown'
+        
+        # User ID
+        user_id = session.get('user_id') if 'user_id' in session else None
+        
+        # Batafsil log
+        message = f"405 Method Not Allowed: {method} {url} (endpoint: {endpoint})"
+        logger.error(f"🚫 {message} from {ip_address}")
+        
+        # Database'ga saqlash
+        error_log = ErrorLog(
+            level='ERROR',
+            message=message[:500],
+            traceback=f"Endpoint: {endpoint}\\nMethod: {method}\\nURL: {url}",
+            endpoint=endpoint,
+            method=method,
+            user_id=user_id,
+            ip_address=ip_address
+        )
+        db.session.add(error_log)
+        db.session.commit()
+        
+    except Exception as log_error:
+        logger.error(f"❌ 405 xatoni loglashda xatolik: {log_error}")
+        db.session.rollback()
+    
+    return jsonify({
+        'success': False,
+        'error': '405 Method Not Allowed',
+        'message': f'Method {request.method} is not allowed for {request.endpoint}'
+    }), 405
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Barcha xatoliklarni database'ga saqlash"""
