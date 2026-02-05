@@ -148,6 +148,14 @@
                 </a>
             </li>
             {% endif %}
+            {% if session.role == 'admin' %}
+            <li>
+                <a href="/monitoring" {% if request.endpoint == 'monitoring_dashboard' %}class="active"{% endif %}>
+                    <span class="icon">🔍</span>
+                    <span>Monitoring</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
     </div>
 

@@ -10934,7 +10934,139 @@ def get_currency_rate():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ================== HEALTH CHECK API ==================
+# ================== HEALTH CHECK & MONITORING ==================
+@app.route('/monitoring')
+@role_required('admin')
+def monitoring_dashboard():
+    """Monitoring Dashboard page"""
+    return render_template('monitoring.html')
+
+
+@app.route('/api/monitoring-status', methods=['GET'])
+@role_required('admin')
+def monitoring_status():
+    """Get comprehensive monitoring status"""
+    try:
+        import psutil
+        from sqlalchemy import func
+        
+        # System Resources
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Database stats
+        db.session.execute(text('SELECT 1'))  # Connection check
+        
+        # Active connections
+        db_connections = db.session.execute(text(
+            "SELECT COUNT(*) FROM pg_stat_activity WHERE datname = :db_name"
+        ), {"db_name": os.getenv('DB_NAME', 'sayt_db')}).scalar()
+        
+        # Database size
+        db_size_result = db.session.execute(text(
+            "SELECT pg_size_pretty(pg_database_size(:db_name))"
+        ), {"db_name": os.getenv('DB_NAME', 'sayt_db')}).scalar()
+        
+        # Statistics
+        total_products = db.session.query(func.count(Product.id)).scalar()
+        total_sales = db.session.query(func.count(Sale.id)).scalar()
+        today_sales = db.session.query(func.count(Sale.id)).filter(
+            func.date(Sale.sale_date) == func.current_date()
+        ).scalar()
+        
+        # Active users (logged in last hour)
+        active_users = db.session.query(func.count(User.id)).filter(
+            User.is_active == True
+        ).scalar()
+        
+        # Table count
+        table_count = db.session.execute(text(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
+        )).scalar()
+        
+        # Uptime (mock - would need to track app start time)
+        uptime = "Running"
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'timestamp': get_tashkent_time().isoformat(),
+                'application': {
+                    'status': 'healthy',
+                    'uptime': uptime
+                },
+                'database': {
+                    'status': 'connected',
+                    'connections': db_connections,
+                    'size': db_size_result,
+                    'tables': table_count
+                },
+                'system': {
+                    'cpu': {
+                        'percent': cpu_percent
+                    },
+                    'memory': {
+                        'percent': memory.percent,
+                        'used_gb': round(memory.used / (1024**3), 2),
+                        'total_gb': round(memory.total / (1024**3), 2)
+                    },
+                    'disk': {
+                        'percent': disk.percent,
+                        'used_gb': round(disk.used / (1024**3), 2),
+                        'total_gb': round(disk.total / (1024**3), 2)
+                    }
+                },
+                'stats': {
+                    'total_products': total_products,
+                    'total_sales': total_sales,
+                    'today_sales': today_sales,
+                    'active_users': active_users
+                },
+                'errors': []  # Could add recent errors from logs
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Monitoring status error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/health', methods=['GET'])
+def public_health_check():
+    """Public health check - monitoring uchun"""
+    try:
+        # Database connection check
+        db.session.execute(text('SELECT 1'))
+        
+        # Get system stats
+        from sqlalchemy import func
+        total_products = db.session.query(func.count(Product.id)).scalar()
+        today_sales = db.session.query(func.count(Sale.id)).filter(
+            func.date(Sale.sale_date) == func.current_date()
+        ).scalar()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': get_tashkent_time().isoformat(),
+            'database': 'connected',
+            'stats': {
+                'total_products': total_products,
+                'today_sales': today_sales
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Health check error: {str(e)}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': get_tashkent_time().isoformat()
+        }), 500
+
+
 @app.route('/api/health-check', methods=['GET'])
 @role_required('admin', 'kassir', 'sotuvchi')
 def health_check():
