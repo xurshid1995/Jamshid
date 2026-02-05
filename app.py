@@ -749,6 +749,39 @@ class PendingTransfer(db.Model):
         }
 
 
+# Error Log modeli - xatoliklarni saqlash uchun
+class ErrorLog(db.Model):
+    __tablename__ = 'error_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=lambda: get_tashkent_time(), nullable=False)
+    level = db.Column(db.String(20), default='ERROR')  # ERROR, WARNING, CRITICAL
+    message = db.Column(db.Text, nullable=False)
+    traceback = db.Column(db.Text)
+    endpoint = db.Column(db.String(200))
+    method = db.Column(db.String(10))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    ip_address = db.Column(db.String(50))
+    
+    # Relationship
+    user = db.relationship('User', backref='error_logs')
+    
+    def __repr__(self):
+        return f'<ErrorLog {self.id}: {self.level} at {self.timestamp}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'level': self.level,
+            'message': self.message,
+            'traceback': self.traceback,
+            'endpoint': self.endpoint,
+            'method': self.method,
+            'user_id': self.user_id,
+            'ip_address': self.ip_address
+        }
+
 # Mijozlar modeli
 class Customer(db.Model):
     __tablename__ = 'customers'
@@ -10935,50 +10968,33 @@ def get_currency_rate():
 
 
 # ================== HEALTH CHECK & MONITORING ==================
-def get_recent_errors(limit=10):
-    """Oxirgi xatoliklarni olish - journalctl log'laridan"""
+def get_recent_errors(limit=20):
+    """Oxirgi xatoliklarni database'dan olish"""
     try:
-        import subprocess
-        from datetime import timedelta
+        errors = ErrorLog.query.order_by(ErrorLog.timestamp.desc()).limit(limit).all()
         
-        # Oxirgi 1 soatdagi ERROR level log'larni olish
-        result = subprocess.run(
-            ['journalctl', '-u', 'jamshid.service', '--since', '1 hour ago', 
-             '-p', 'err', '-n', str(limit), '--no-pager', '-o', 'json'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        result = []
+        for error in errors:
+            # Vaqtni formatlash
+            time_str = error.timestamp.strftime('%Y-%m-%d %H:%M:%S') if error.timestamp else 'Unknown'
+            
+            # User nomi
+            user_name = 'System'
+            if error.user_id and error.user:
+                user_name = error.user.username
+            
+            result.append({
+                'id': error.id,
+                'time': time_str,
+                'level': error.level,
+                'message': error.message,
+                'endpoint': error.endpoint,
+                'method': error.method,
+                'user': user_name,
+                'ip': error.ip_address
+            })
         
-        if result.returncode != 0:
-            return []
-        
-        errors = []
-        for line in result.stdout.strip().split('\n'):
-            if not line:
-                continue
-            try:
-                import json
-                log_entry = json.loads(line)
-                message = log_entry.get('MESSAGE', '')
-                timestamp = log_entry.get('__REALTIME_TIMESTAMP', '')
-                
-                # Timestamp'ni o'qiladigan formatga o'zgartirish
-                if timestamp:
-                    from datetime import datetime
-                    ts = datetime.fromtimestamp(int(timestamp) / 1000000)
-                    time_str = ts.strftime('%Y-%m-%d %H:%M:%S')
-                else:
-                    time_str = 'Unknown'
-                
-                errors.append({
-                    'time': time_str,
-                    'message': message[:200]  # Birinchi 200 belgini olish
-                })
-            except:
-                continue
-        
-        return errors
+        return result
     except Exception as e:
         logger.error(f"Error fetching recent errors: {str(e)}")
         return []
@@ -12828,6 +12844,52 @@ def api_send_bulk_telegram():
     except Exception as e:
         logger.error(f"Bulk Telegram xatolik: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ================== ERROR HANDLERS ==================
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Barcha xatoliklarni database'ga saqlash"""
+    try:
+        import traceback
+        
+        # Request ma'lumotlarini olish
+        endpoint = request.endpoint if request else None
+        method = request.method if request else None
+        ip_address = request.remote_addr if request else None
+        
+        # Current user
+        user_id = None
+        try:
+            if 'user_id' in session:
+                user_id = session['user_id']
+        except:
+            pass
+        
+        # Traceback
+        tb = traceback.format_exc()
+        
+        # Database'ga saqlash
+        error_log = ErrorLog(
+            level='ERROR',
+            message=str(e)[:500],  # Birinchi 500 belgi
+            traceback=tb[:2000],  # Birinchi 2000 belgi
+            endpoint=endpoint,
+            method=method,
+            user_id=user_id,
+            ip_address=ip_address
+        )
+        db.session.add(error_log)
+        db.session.commit()
+        
+        logger.error(f"Error logged to database: {str(e)}")
+    except Exception as log_error:
+        logger.error(f"Failed to log error to database: {str(log_error)}")
+    
+    # HTTP xatolik kodini aniqlash
+    if hasattr(e, 'code'):
+        return jsonify({'success': False, 'error': str(e)}), e.code
+    return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
 if __name__ == '__main__':
