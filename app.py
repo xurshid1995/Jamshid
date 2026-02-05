@@ -3421,14 +3421,14 @@ def api_sales_by_product(product_id):
 
 
 @app.route('/operations-history')
-@role_required('admin', 'kassir')
+@role_required('admin', 'kassir', 'sotuvchi')
 def operations_history():
     """Amaliyotlar tarixi sahifasi"""
     return render_template('operations_history.html')
 
 
 @app.route('/api/operations-history')
-@role_required('admin', 'kassir')
+@role_required('admin', 'kassir', 'sotuvchi')
 def api_operations_history():
     """Amaliyotlar tarixini olish API"""
     try:
