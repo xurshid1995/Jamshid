@@ -94,13 +94,13 @@
                 </a>
             </li>
             {% endif %}
-            {% if session.role != 'sotuvchi' %}
             <li>
                 <a href="/add_product" {% if request.endpoint == 'add_product' %}class="active"{% endif %}>
                     <span class="icon">➕</span>
                     <span>Mahsulot qo'shish</span>
                 </a>
             </li>
+            {% if session.role != 'sotuvchi' %}
             <li>
                 <a href="/stores" {% if request.endpoint == 'stores' %}class="active"{% endif %}>
                     <span class="icon">🏬</span>

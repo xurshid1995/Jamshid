@@ -1479,7 +1479,7 @@ def index():
 
 
 @app.route('/add_product', methods=['GET'])
-@role_required('admin', 'kassir')
+@role_required('admin', 'kassir', 'sotuvchi')
 def add_product():
     return render_template('add_product.html')
 
@@ -2251,6 +2251,7 @@ def migrate_barcodes_to_8_digits():
 
 
 @app.route('/api/products', methods=['POST'])
+@role_required('admin', 'kassir', 'sotuvchi')
 def api_add_product():
     try:
         data = request.get_json()
