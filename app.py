@@ -295,7 +295,7 @@ def check_password(password, hashed):
         return False
 
 
-def log_operation(operation_type, table_name=None, record_id=None, description=None, 
+def log_operation(operation_type, table_name=None, record_id=None, description=None,
                   old_data=None, new_data=None, location_id=None, location_type=None,
                   location_name=None, amount=None):
     """
@@ -447,7 +447,7 @@ def extract_location_ids(locations, location_type):
 
     # Eski format (ID'lar ro'yxati) tekshirish
     if isinstance(locations[0], int):
-        print(f"🔍 extract_location_ids: Old format detected (int list)")
+        print("🔍 extract_location_ids: Old format detected (int list)")
         # Eski format: [1, 2, 3]
         # Type bo'yicha filtrlash uchun ma'lumotlar bazasidan tekshirish kerak
         
@@ -464,7 +464,7 @@ def extract_location_ids(locations, location_type):
 
     # Yangi format: [{'id': 1, 'type': 'store'}, {'id': 2, 'type':
     # 'warehouse'}]
-    print(f"🔍 extract_location_ids: New format detected (dict list)")
+    print("🔍 extract_location_ids: New format detected (dict list)")
     result = [loc['id'] for loc in locations if isinstance(
         loc, dict) and loc.get('type') == location_type]
     print(f"🔍 extract_location_ids: Result: {result}")
@@ -1714,7 +1714,7 @@ def api_locations():
             # Oddiy foydalanuvchilar faqat allowed_locations dan ruxsat etilgan
             # joylashuvlarni ko'radi (savdo uchun)
             allowed_locations = current_user.allowed_locations or []
-            print(f"🔍 Non-admin user - filtering locations")
+            print("🔍 Non-admin user - filtering locations")
             print(f"🔍 allowed_locations: {allowed_locations}")
 
             # Helper funksiya bilan ID'larni olish (eski va yangi formatlar uchun)
@@ -10333,7 +10333,7 @@ def delete_sale_with_stock_return(sale_id):
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
-        print(f"🔴 Sale o'chirishda xatolik!")
+        print("🔴 Sale o'chirishda xatolik!")
         print(f"🔴 Sale ID: {sale_id}")
         print(f"🔴 Xatolik: {error_msg}")
         import traceback
