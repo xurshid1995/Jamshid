@@ -12951,50 +12951,6 @@ def api_send_bulk_telegram():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ================== FRONTEND ERROR LOGGING ==================
-@app.route('/api/log-frontend-error', methods=['POST'])
-def log_frontend_error():
-    """Frontend'dan JavaScript xatolarini qabul qilish"""
-    try:
-        data = request.get_json()
-        
-        # Frontend'dan kelgan ma'lumotlar
-        error_message = data.get('message', 'Unknown error')
-        error_url = data.get('url', 'Unknown')
-        error_line = data.get('lineno', 0)
-        error_col = data.get('colno', 0)
-        error_stack = data.get('stack', '')
-        user_agent = request.headers.get('User-Agent', '')
-        
-        # "Script error." ni ignore qilish (CORS)
-        if error_message == 'Script error.':
-            return jsonify({'success': True, 'ignored': True}), 200
-        
-        # User ID
-        user_id = session.get('user_id') if 'user_id' in session else None
-        
-        # Database'ga saqlash
-        error_log = ErrorLog(
-            level='ERROR',
-            message=f'[Frontend] {error_message}'[:500],
-            traceback=f'URL: {error_url}\nLine: {error_line}:{error_col}\n{error_stack}'[:2000],
-            endpoint=f'FRONTEND {error_url}',
-            method='JAVASCRIPT',
-            user_id=user_id,
-            ip_address=request.remote_addr
-        )
-        db.session.add(error_log)
-        db.session.commit()
-        
-        logger.error(f"🌐 Frontend error: {error_message} at {error_url}:{error_line}")
-        
-        return jsonify({'success': True}), 200
-        
-    except Exception as e:
-        logger.error(f"Frontend error logging xatosi: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
 # ================== ERROR HANDLERS ==================
 @app.errorhandler(405)
 def handle_method_not_allowed(e):
