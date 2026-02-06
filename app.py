@@ -105,6 +105,27 @@ getcontext().prec = 10
 # O'zbekiston vaqt zonasi
 TASHKENT_TZ = pytz.timezone('Asia/Tashkent')
 
+
+# Security Headers
+@app.after_request
+def add_security_headers(response):
+    """Xavfsizlik header'larini qo'shish"""
+    # CORS - Frontend xatolarni to'g'ri ko'rish uchun
+    if request.path.startswith('/static/'):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+    
+    # XSS Protection
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # HTTPS Redirect (production'da)
+    if app.config.get('SESSION_COOKIE_SECURE'):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
+
 def get_tashkent_time():
     """O'zbekiston vaqtini qaytaradi"""
     return datetime.now(TASHKENT_TZ)
@@ -1469,8 +1490,13 @@ def favicon():
 
 
 # Asosiy sahifa - login sahifasiga yo'naltirish
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    # POST so'rovlarni ignore qilish (bot/webhook so'rovlari)
+    if request.method == 'POST':
+        logger.warning(f"POST so'rov '/' route'ga: {request.remote_addr}")
+        return jsonify({'success': False, 'error': 'Method not allowed'}), 405
+    
     if 'user_id' in session:
         return redirect('/dashboard')
     return redirect('/login')
@@ -12922,6 +12948,50 @@ def api_send_bulk_telegram():
         
     except Exception as e:
         logger.error(f"Bulk Telegram xatolik: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ================== FRONTEND ERROR LOGGING ==================
+@app.route('/api/log-frontend-error', methods=['POST'])
+def log_frontend_error():
+    """Frontend'dan JavaScript xatolarini qabul qilish"""
+    try:
+        data = request.get_json()
+        
+        # Frontend'dan kelgan ma'lumotlar
+        error_message = data.get('message', 'Unknown error')
+        error_url = data.get('url', 'Unknown')
+        error_line = data.get('lineno', 0)
+        error_col = data.get('colno', 0)
+        error_stack = data.get('stack', '')
+        user_agent = request.headers.get('User-Agent', '')
+        
+        # "Script error." ni ignore qilish (CORS)
+        if error_message == 'Script error.':
+            return jsonify({'success': True, 'ignored': True}), 200
+        
+        # User ID
+        user_id = session.get('user_id') if 'user_id' in session else None
+        
+        # Database'ga saqlash
+        error_log = ErrorLog(
+            level='ERROR',
+            message=f'[Frontend] {error_message}'[:500],
+            traceback=f'URL: {error_url}\nLine: {error_line}:{error_col}\n{error_stack}'[:2000],
+            endpoint=f'FRONTEND {error_url}',
+            method='JAVASCRIPT',
+            user_id=user_id,
+            ip_address=request.remote_addr
+        )
+        db.session.add(error_log)
+        db.session.commit()
+        
+        logger.error(f"🌐 Frontend error: {error_message} at {error_url}:{error_line}")
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        logger.error(f"Frontend error logging xatosi: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

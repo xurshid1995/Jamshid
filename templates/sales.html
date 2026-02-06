@@ -3278,7 +3278,8 @@
                 
                 if (!confirmation) {
                     // Agar bekor qilinsa, fokusni narx maydoniga qaytarish
-                    document.getElementById('modalPriceUSD').focus();
+                    const modalPriceUSD = document.getElementById('modalPriceUSD');
+                    if (modalPriceUSD) modalPriceUSD.focus();
                     return;
                 }
             }

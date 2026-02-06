@@ -31,6 +31,72 @@ window.fetch = function(...args) {
         });
 };
 
+// Global JavaScript xatolarni ushlash va serverga yuborish
+window.addEventListener('error', function(event) {
+    // Script error xatolarini ignore qilish (CORS muammolaridan kelib chiqadi)
+    if (event.message === 'Script error.') {
+        console.warn('Script error (CORS) detected, ignoring');
+        event.preventDefault();
+        return false;
+    }
+    
+    // Xatolikni log qilish
+    console.error('Global error caught:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+    });
+    
+    // Serverga yuborish
+    try {
+        fetch('/api/log-frontend-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: event.message,
+                url: event.filename || window.location.href,
+                lineno: event.lineno,
+                colno: event.colno,
+                stack: event.error ? event.error.stack : ''
+            }),
+            credentials: 'same-origin'
+        }).catch(err => console.warn('Failed to log error to server:', err));
+    } catch(e) {
+        console.warn('Error logging failed:', e);
+    }
+});
+
+// Promise rejection xatolarni ushlash
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    
+    // Serverga yuborish
+    try {
+        fetch('/api/log-frontend-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Unhandled Promise Rejection: ${event.reason}`,
+                url: window.location.href,
+                lineno: 0,
+                colno: 0,
+                stack: event.reason && event.reason.stack ? event.reason.stack : ''
+            }),
+            credentials: 'same-origin'
+        }).catch(err => console.warn('Failed to log rejection to server:', err));
+    } catch(e) {
+        console.warn('Rejection logging failed:', e);
+    }
+    
+    event.preventDefault();
+});
+
 // Sahifa yuklanganda ishga tushadi
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
