@@ -3924,12 +3924,13 @@ def api_check_stock_search():
             return jsonify({'success': False, 'message': 'Qidiruv parametrlari to\'liq emas'}), 400
 
         # Mahsulotlarni qidirish (nom yoki barkod bo'yicha)
+        # Limitni 200 ga oshiramiz
         products = Product.query.filter(
             db.or_(
                 Product.name.ilike(f'%{query}%'),
                 Product.barcode.ilike(f'%{query}%')
             )
-        ).limit(50).all()
+        ).limit(200).all()
 
         products_data = []
         for product in products:
@@ -3946,7 +3947,9 @@ def api_check_stock_search():
                 ).first()
 
             system_quantity = stock.quantity if stock else 0
-
+            
+            # Faqat ombor/do'kondagi mavjud mahsulotlarni qo'shamiz
+            # (quantity > 0 bo'lganlarni yoki qidiruv natijasini ko'rsatish uchun hamma)
             products_data.append({
                 'id': product.id,
                 'name': product.name,

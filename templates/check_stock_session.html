@@ -410,34 +410,33 @@ async function loadAllProducts() {
     }
 }
 
+// Qidiruv uchun debounce timer
+let searchTimer = null;
+
 // Mahsulotni qidirish
 document.getElementById('productSearch').addEventListener('input', function(e) {
-    const query = e.target.value.trim().toLowerCase();
-    if (query.length === 0) {
-        displayProducts(allProducts);
-    } else {
-        const filtered = allProducts.filter(p => 
-            p.name.toLowerCase().includes(query) || 
-            (p.barcode && p.barcode.toLowerCase().includes(query))
-        );
-        console.log(`Qidiruv: "${query}" - Topildi: ${filtered.length} / ${allProducts.length}`);
-        displayProducts(filtered);
-        
-        // Agar qidiruv natijasi bo'sh bo'lsa
-        if (filtered.length === 0) {
-            const tbody = document.getElementById('productsTableBody');
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px 20px; color: #999;">
-                        <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">🔍</div>
-                        <div>"${query}" bo'yicha mahsulot topilmadi</div>
-                        <div style="font-size: 12px; margin-top: 10px;">Jami: ${allProducts.length} ta mahsulot</div>
-                    </td>
-                </tr>
-            `;
-            document.getElementById('productsPagination').style.display = 'none';
-        }
+    const query = e.target.value.trim();
+    
+    // Timer ni tozalash
+    if (searchTimer) {
+        clearTimeout(searchTimer);
     }
+    
+    if (query.length === 0) {
+        // Agar qidiruv bo'sh bo'lsa, barcha mahsulotlarni ko'rsatish
+        loadAllProducts();
+        return;
+    }
+    
+    // Agar qidiruv 2 ta belgidan kamroq bo'lsa, kutish
+    if (query.length < 2) {
+        return;
+    }
+    
+    // 300ms kutgandan keyin serverdan qidirish
+    searchTimer = setTimeout(async () => {
+        await searchProductsFromServer(query);
+    }, 300);
 });
 
 // Tekshirilganlardan qidirish
@@ -495,21 +494,83 @@ function filterAndDisplayChecked(searchQuery = '') {
     displayCheckedTable(filtered);
 }
 
-// Mahsulotlarni qidirish
-async function searchProducts(query) {
+// Serverdan mahsulotlarni qidirish
+async function searchProductsFromServer(query) {
     try {
+        const tbody = document.getElementById('productsTableBody');
+        
+        // Loading ko'rsatish
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 40px 20px; color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">⏳</div>
+                    <div>Qidirilmoqda...</div>
+                </td>
+            </tr>
+        `;
+        
         const response = await fetch(`/api/check_stock/search?query=${encodeURIComponent(query)}&location_type=${locationType}&location_id=${locationId}`);
         const data = await response.json();
         
-        if (data.success && data.products.length > 0) {
-            displayProducts(data.products);
+        if (data.success) {
+            if (data.products.length > 0) {
+                // Tekshirilganlarni olib tashlash
+                const checkedIds = checkedProducts.map(p => p.id);
+                const filteredProducts = data.products.filter(p => !checkedIds.includes(p.id));
+                
+                if (filteredProducts.length > 0) {
+                    displayProducts(filteredProducts);
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 40px 20px; color: #999;">
+                                <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">✅</div>
+                                <div>Topilgan barcha mahsulotlar allaqachon tekshirilgan</div>
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('productsPagination').style.display = 'none';
+                }
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px 20px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">🔍</div>
+                            <div>"${query}" bo'yicha mahsulot topilmadi</div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('productsPagination').style.display = 'none';
+            }
         } else {
-            alert('Mahsulot topilmadi');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px 20px; color: #dc3545;">
+                        <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">❌</div>
+                        <div>Qidiruvda xatolik yuz berdi</div>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('productsPagination').style.display = 'none';
         }
     } catch (error) {
         console.error('Qidiruv xatosi:', error);
-        alert('Qidiruvda xatolik yuz berdi');
+        const tbody = document.getElementById('productsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 40px 20px; color: #dc3545;">
+                    <div style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;">❌</div>
+                    <div>Qidiruvda xatolik yuz berdi</div>
+                </td>
+            </tr>
+        `;
+        document.getElementById('productsPagination').style.display = 'none';
     }
+}
+
+// Mahsulotlarni qidirish (eski funksiya, kerak bo'lsa)
+async function searchProducts(query) {
+    await searchProductsFromServer(query);
 }
 
 // Mahsulotlarni ko'rsatish (Pagination bilan)
