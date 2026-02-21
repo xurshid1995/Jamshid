@@ -3923,14 +3923,27 @@ def api_check_stock_search():
         if not query or not location_type or not location_id:
             return jsonify({'success': False, 'message': 'Qidiruv parametrlari to\'liq emas'}), 400
 
-        # Mahsulotlarni qidirish (nom yoki barkod bo'yicha)
-        # Limitni 200 ga oshiramiz
-        products = Product.query.filter(
-            db.or_(
-                Product.name.ilike(f'%{query}%'),
-                Product.barcode.ilike(f'%{query}%')
-            )
-        ).limit(200).all()
+        # Qidiruv so'zlarini bo'lib, har bir so'z uchun alohida ILIKE filtr
+        # Bu ikki probellik nomlarni ham topadi ("LASETTI  ORQA" vs "LASETTI ORQA")
+        search_words = query.split()
+        
+        if len(search_words) > 1:
+            # Ko'p so'zli qidiruv: har bir so'z nomda bo'lishi kerak (AND)
+            name_filters = [Product.name.ilike(f'%{word}%') for word in search_words]
+            products = Product.query.filter(
+                db.or_(
+                    db.and_(*name_filters),
+                    Product.barcode.ilike(f'%{query}%')
+                )
+            ).limit(200).all()
+        else:
+            # Bitta so'zli qidiruv yoki barkod
+            products = Product.query.filter(
+                db.or_(
+                    Product.name.ilike(f'%{query}%'),
+                    Product.barcode.ilike(f'%{query}%')
+                )
+            ).limit(200).all()
 
         products_data = []
         for product in products:
