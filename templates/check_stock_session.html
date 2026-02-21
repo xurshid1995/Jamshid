@@ -302,6 +302,7 @@ const locationId = {{ location_id }};
 let checkedProducts = [];
 let allProducts = [];
 let currentFilter = 'all'; // Filtr holati: 'all', 'error', 'correct'
+let isServerSearchActive = false; // Server qidiruv faolmi - sync ustiga yozmasin
 
 // Pagination uchun o'zgaruvchilar
 let currentProductsPage = 1;
@@ -339,17 +340,9 @@ async function syncCheckedProducts() {
             // Chap jadvaldan tekshirilganlarni olib tashlash
             allProducts = allProducts.filter(p => !serverCheckedIds.includes(p.id));
             
-            // Qidiruv maydonidagi qiymatni saqlab qolish
-            const currentSearch = document.getElementById('productSearch').value.trim().toLowerCase();
-            
-            // Agar qidiruv mavjud bo'lsa, filtrni qayta qo'llash
-            if (currentSearch.length > 0) {
-                const filtered = allProducts.filter(p => 
-                    p.name.toLowerCase().includes(currentSearch) || 
-                    (p.barcode && p.barcode.toLowerCase().includes(currentSearch))
-                );
-                displayProducts(filtered);
-            } else {
+            // MUHIM: Agar server qidiruvi faol bo'lsa, chap panelni qayta renderlamaymiz
+            // chunki server qidiruv natijalarini ustiga yozib yuboradi
+            if (!isServerSearchActive) {
                 displayProducts(allProducts);
             }
             
@@ -423,15 +416,20 @@ document.getElementById('productSearch').addEventListener('input', function(e) {
     }
     
     if (query.length === 0) {
+        // Server qidiruv flagini o'chirish
+        isServerSearchActive = false;
         // Agar qidiruv bo'sh bo'lsa, barcha mahsulotlarni ko'rsatish
-        loadAllProducts();
+        displayProducts(allProducts);
         return;
     }
     
-    // Agar qidiruv 2 ta belgidan kamroq bo'lsa, kutish
-    if (query.length < 2) {
+    // Agar qidiruv 1 ta belgidan kamroq bo'lsa, kutish
+    if (query.length < 1) {
         return;
     }
+    
+    // Server qidiruv flagini yoqish
+    isServerSearchActive = true;
     
     // 300ms kutgandan keyin serverdan qidirish
     searchTimer = setTimeout(async () => {

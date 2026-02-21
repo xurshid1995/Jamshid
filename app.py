@@ -3948,12 +3948,11 @@ def api_check_stock_search():
 
             system_quantity = stock.quantity if stock else 0
             
-            # Faqat ombor/do'kondagi mavjud mahsulotlarni qo'shamiz
-            # (quantity > 0 bo'lganlarni yoki qidiruv natijasini ko'rsatish uchun hamma)
             products_data.append({
                 'id': product.id,
                 'name': product.name,
                 'barcode': product.barcode,
+                'price': float(product.sell_price) if product.sell_price else 0,
                 'system_quantity': float(system_quantity)
             })
 
