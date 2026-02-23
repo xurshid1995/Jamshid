@@ -11740,8 +11740,8 @@ def api_login():
                 'message': 'Login va parol talab qilinadi'
             }), 400
 
-        # Foydalanuvchini topish
-        user = User.query.filter_by(username=username).first()
+        # Foydalanuvchini topish (katta-kichik harfga sezgir emas)
+        user = User.query.filter(User.username.ilike(username)).first()
 
         if not user:
             return jsonify({
