@@ -392,7 +392,7 @@
             </a>
             <button data-store-id="{{ store.id }}" 
                     data-store-name="{{ store.name }}"
-                    onclick="deleteStore(this.dataset.storeId, this.dataset.storeName)" 
+                    onclick="deleteStore('{{ store.id }}', '{{ store.name }}')" 
                     class="btn-small btn-delete">
                 🗑️ O'chirish
             </button>
